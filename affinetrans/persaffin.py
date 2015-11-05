@@ -33,7 +33,7 @@ def rotate_about_center(src, angle, scale=1.):
 
 def add_value(pts,idx):
 	c = idx % 2
-	r = (idx - c) /2
+	r = int((idx - c) /2)
 	try:
 		pts[r][c] += 1
 	except:
@@ -44,7 +44,7 @@ def add_value(pts,idx):
 
 def sub_value(pts,idx):
 	c = idx % 2
-	r = (idx - c)/2
+	r = int((idx - c)/2)
 	try:
 		pts[r][c] -= 1
 	except:
@@ -53,17 +53,17 @@ def sub_value(pts,idx):
 	return pts
 
 def add_affine_pts(pts1,pts2,curidx):
-	if curidx < 6:
+	if curidx < 8:
 		pts1 = add_value(pts1,curidx)
 	else:
-		pts2 = add_value(pts2,curidx - 6)
+		pts2 = add_value(pts2,curidx - 8)
 	return pts1,pts2
 
 def sub_affine_pts(pts1,pts2,curidx):
-	if curidx < 6:
+	if curidx < 8:
 		pts1 = sub_value(pts1,curidx)
 	else:
-		pts2 = sub_value(pts2,curidx - 6)
+		pts2 = sub_value(pts2,curidx - 8)
 	return pts1,pts2
 
 
@@ -75,13 +75,13 @@ def TransAffine(infile,args):
 		rows = args.rows
 	if args.cols > 0:
 		cols = args.cols
-	pts1 = np.float32([[50,50],[200,50],[50,200]])
-	pts2 = np.float32([[10,100],[200,50],[100,250]])
+	pts1 = np.float32([[56,65],[368,52],[28,387],[389,390]])
+	pts2 = np.float32([[0,0],[300,0],[0,300],[300,300]])
 	print 'len(pts1) = %d len(pts2)  = %d'%(len(pts1),len(pts2))
 	curidx = 0
 	while True:
-		M = cv2.getAffineTransform(pts1,pts2)
-		dimg = cv2.warpAffine(simg,M,(rows,cols))
+		M = cv2.getPerspectiveTransform(pts1,pts2)
+		dimg = cv2.warpPerspective(simg,M,(rows,cols))
 		cv2.imshow('img',dimg)
 		k = cv2.waitKey(0)
 		cv2.destroyAllWindows()
@@ -93,12 +93,12 @@ def TransAffine(infile,args):
 			pts1,pts2 = sub_affine_pts(pts1,pts2,curidx)
 		elif k == LEFTKEY:
 			curidx += 1
-			curidx %= 12			
+			curidx %= 16			
 			print 'curidx %d'%(curidx)
 			print 'pts1(%s) pts2(%s)'%(pts1,pts2)
 		elif k == RIGHTKEY :
 			curidx -= 1
-			curidx %= 12
+			curidx %= 16
 			print 'curidx %d'%(curidx)
 			print 'pts1(%s) pts2(%s)'%(pts1,pts2)
 
@@ -111,7 +111,7 @@ def main():
 	parser.add_argument('-r','--rows',type=int,nargs=1,dest='rows',default=0,help='specify the rows')
 	args,files= parser.parse_known_args()
 	if len(files) < 1:
-		sys.stderr.write('need infile\n')
+		sys.stderr.write('need infile \n')
 		parser.print_help(sys.stderr)
 		sys.exit(3)
 	TransAffine(files[0],args)
