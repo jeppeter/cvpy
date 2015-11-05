@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import math
 import argparse
+from matplotlib import pyplot as plt
 
 UPKEY=2490368
 DOWNKEY=2621440
@@ -30,30 +31,76 @@ def rotate_about_center(src, angle, scale=1.):
     rot_mat[1,2] += rot_move[1]
     return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LINEAR)
 
-def TransAffine(infile,outfile,args):
-	simg = cv2.imread(infile,1)	
+def add_value(pts,idx):
+	c = idx % 2
+	r = (idx - c) /2
+	try:
+		pts[r][c] += 1
+	except:
+		print 'pts[%d][%d] error'%(c,r)
+		sys.exit(3)
+
+	return pts
+
+def sub_value(pts,idx):
+	c = idx % 2
+	r = (idx - c)/2
+	try:
+		pts[r][c] -= 1
+	except:
+		print 'pts[%d][%d] error'%(c,r)
+		sys.exit(3)
+	return pts
+
+def add_affine_pts(pts1,pts2,curidx):
+	if curidx < 6:
+		pts1 = add_value(pts1,curidx)
+	else:
+		pts2 = add_value(pts2,curidx - 6)
+	return pts1,pts2
+
+def sub_affine_pts(pts1,pts2,curidx):
+	if curidx < 6:
+		pts1 = sub_value(pts1,curidx)
+	else:
+		pts2 = sub_value(pts2,curidx - 6)
+	return pts1,pts2
+
+
+def TransAffine(infile,args):
+	simg = cv2.imread(infile)
+	cols = simg.shape[0]
+	rows = simg.shape[1]
 	if args.rows > 0 :
 		rows = args.rows
 	if args.cols > 0:
 		cols = args.cols
-	angle = 15
-	scale = 1
+	pts1 = np.float32([[50,50],[200,50],[50,200]])
+	pts2 = np.float32([[10,100],[200,50],[100,250]])
+	print 'len(pts1) = %d len(pts2)  = %d'%(len(pts1),len(pts2))
+	curidx = 0
 	while True:
-		dimg = rotate_about_center(simg,angle,scale)	
+		M = cv2.getAffineTransform(pts1,pts2)
+		dimg = cv2.warpAffine(simg,M,(rows,cols))
 		cv2.imshow('img',dimg)
 		k = cv2.waitKey(0)
 		cv2.destroyAllWindows()
-		print 'key %s'%(k)
 		if k not in [UPKEY,RIGHTKEY,LEFTKEY,DOWNKEY]:
 			break
 		if k == UPKEY :
-			angle += 1
+			pts1,pts2 = add_affine_pts(pts1,pts2,curidx)
 		elif k == DOWNKEY:
-			angle -= 1
+			pts1,pts2 = sub_affine_pts(pts1,pts2,curidx)
 		elif k == LEFTKEY:
-			scale *= 0.9
+			curidx += 1
+			curidx %= 12			
+			print 'curidx %d'%(curidx)
+			print 'pts1(%s) pts2(%s)'%(pts1,pts2)
 		elif k == RIGHTKEY :
-			scale *= 1.1
+			curidx -= 1
+			curidx %= 12
+			print 'curidx %d'%(curidx)
+			print 'pts1(%s) pts2(%s)'%(pts1,pts2)
 
 	return
 
@@ -67,7 +114,7 @@ def main():
 		sys.stderr.write('need infile and outfile\n')
 		parser.print_help(sys.stderr)
 		sys.exit(3)
-	TransAffine(files[0],files[1],args)
+	TransAffine(files[0],args)
 
 if __name__ == '__main__':
 	main()
