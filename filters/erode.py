@@ -19,6 +19,7 @@ def ErodeFile(infile):
 	iterate = 1
 	while True:
 		eimg = cv2.erode(simg,kernel,iterations =iterate)
+		cv2.imshow('orig',simg)
 		cv2.imshow('img',eimg)
 		k = cv2.waitKey(0)
 		if k not in [UPKEY,RIGHTKEY,LEFTKEY,DOWNKEY]:
