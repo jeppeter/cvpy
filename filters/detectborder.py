@@ -6,6 +6,8 @@ UPKEY=2490368
 DOWNKEY=2621440
 LEFTKEY=2424832
 RIGHTKEY=2555904
+AKEY=97
+SKEY=115
 
 
 def ShowBorder(infile):
@@ -19,19 +21,21 @@ def ShowBorder(infile):
 	typearr = [cv2.MORPH_RECT,cv2.MORPH_CROSS,cv2.MORPH_ELLIPSE]
 	typename = ['RECT','CROSS','ELLIPSE']
 	typeint = 0
+	thrsh = 40	
 	while True:
 		elem = cv2.getStructuringElement(typearr[typeint],(elmsize,elmsize))
 		dilate = cv2.dilate(img,elem)
 		erode = cv2.erode(img,elem)
 
 		result = cv2.absdiff(dilate,erode)
-		retval,result = cv2.threshold(result,40,255,cv2.THRESH_BINARY)
+		retval,result = cv2.threshold(result,thrsh,255,cv2.THRESH_BINARY)
 		result = cv2.bitwise_not(result)
-		imgshow = 'img %s %d'%(typename[typeint],elmsize)
+		imgshow = 'img %s %d thrsh %d'%(typename[typeint],elmsize,thrsh)
 		cv2.imshow(imgshow,result)
 		k = cv2.waitKey(0)
 		cv2.destroyAllWindows()
-		if k not in [UPKEY,RIGHTKEY,LEFTKEY,DOWNKEY]:
+		if k not in [UPKEY,RIGHTKEY,LEFTKEY,DOWNKEY,AKEY,SKEY]:
+			sys.stdout.write('k %d'%(k))
 			break
 		if k == UPKEY :
 			elmsize += 1
@@ -45,6 +49,13 @@ def ShowBorder(infile):
 		elif k == RIGHTKEY:
 			typeint += 1
 			typeint %= len(typearr)
+		elif k == AKEY:
+			thrsh -= 1
+			if thrsh < 0 :
+				thrsh = 0
+		elif k == SKEY:
+			thrsh += 1			
+
 	return
 
 
