@@ -9,6 +9,8 @@ LEFTKEY=2424832
 RIGHTKEY=2555904
 AKEY=97
 SKEY=115
+
+
 GAUSSIANBLUR=1
 MEDIABLUR=2
 COMMONBLUR=3
@@ -16,12 +18,20 @@ COMMONBLUR=3
 SMOOTHTYPE=[GAUSSIANBLUR,MEDIABLUR,COMMONBLUR]
 SMOOTHNAME=['GAUSSIANBLUR','MEDIABLUR','COMMONBLUR']
 
+
+def key_usage():
+	sys.stdout.write('UP to increase x weight\n')
+	sys.stdout.write('DOWN to decrease x weight\n')
+	sys.stdout.write('LEFT  RIGHT to change y weight\n')
+	return
+
 class BlurArgs:
 	def __init__(self):
 		self.num = 5
 		self.flt = 1.5
 		self.typesmooth = SMOOTHTYPE[0]
 		self.typeint = 0
+		self.lap = 1
 		return 
 
 	def incnum(self):
@@ -54,22 +64,24 @@ class BlurArgs:
 		self.typesmooth = SMOOTHTYPE[self.typeint]
 		return
 
+	def inclap(self):
+		self.lap += 2
+		return
+
+	def declap(self):
+		self.lap -= 2
+		if self.lap < 1:
+			self.lap = 1
+		return
 
 	def name(self):
 		typestr = SMOOTHNAME[self.typeint]
 		return 'num %d type %s flt %f'%(self.num,typestr,self.flt)
 
 
-
-
-
-def key_usage():
-	sys.stdout.write('UP to increase \n')
-	sys.stdout.write('DOWN to decrease x weight\n')
-	sys.stdout.write('LEFT  RIGHT to change y weight\n')
-	sys.stdout.write('AKEY SKEY to change blur type\n')
-	return
-
+def LaplacianImage(img,args):
+	dst = cv2.Laplacian(img,cv2.CV_16S,args.lap)
+	return cv2.convertScaleAbs(dst)
 
 def FilterSmooth(img,args):
 	if args.typesmooth == COMMONBLUR:
@@ -83,43 +95,25 @@ def FilterSmooth(img,args):
 		dst = cv2.GaussianBlur(img,(num,num),args.flt)
 	return dst
 
-def SaltImage(img,n):
-    dst = img
-    for k in range(n) :
-        i = int(np.random.random() * dst.shape[1]);    
-        j = int(np.random.random() * dst.shape[0]);    
-        if dst.ndim == 2:     
-            dst[j,i] = 255    
-        elif dst.ndim == 3:     
-            dst[j,i,0]= 255    
-            dst[j,i,1]= 255    
-            dst[j,i,2]= 255    
-    return dst
 
-def key_usage():
-	sys.stdout.write('UP to increase num\n')
-	sys.stdout.write('DOWN to decrease num\n')
-	sys.stdout.write('LEFT to increase flt\n')
-	sys.stdout.write('RIGHT to decrease flt\n')
-	sys.stdout.write('AKEY SKEY to change blur type\n')
-	return
 
-def FilterSmootShow(infile):
+def LaplacianShow(infile):
 	try:
 		img = cv2.imread(infile,0)
 		assert(len(img.shape) >=2)
 	except:
 		sys.stderr.write('can not open %s as picture\n'%(infile))
 		sys.exit(3)
-
 	args = BlurArgs()
 	key_usage()
-	saltimg = SaltImage(img,1000)
+	args.num = 2
+	args.flt = 1.0
+	#simg = FilterSmooth(img,args)
+	simg = img
 	while True:
-		dst = FilterSmooth(img,args)
+		dst = LaplacianImage(simg,args)
 		name = args.name()
 		cv2.imshow(name,dst)
-		cv2.imshow('salt image',saltimg)
 		k = cv2.waitKey(0)
 		cv2.destroyAllWindows()
 		if k not in [UPKEY,RIGHTKEY,LEFTKEY,DOWNKEY,AKEY,SKEY]:
@@ -143,7 +137,7 @@ def main():
 	if len(sys.argv) < 2:
 		sys.stderr.write('%s infile to erode'%(sys.argv[0]))
 		sys.exit(3)
-	FilterSmootShow(sys.argv[1])
+	LaplacianShow(sys.argv[1])
 
 if __name__ == '__main__':
 	main()
