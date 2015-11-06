@@ -9,6 +9,14 @@ RIGHTKEY=2555904
 AKEY=97
 SKEY=115
 
+def key_usage():
+	sys.stdout.write('UP to increase array size\n')
+	sys.stdout.write('DOWN to decrease array size\n')
+	sys.stdout.write('LEFT  RIGHT to change type of MORPH from [RECT ,CROSS,ELLIPSE]\n')
+	sys.stdout.write('A  to decrease thresh hold\n')
+	sys.stdout.write('S to increase thresh hold\n')
+	return
+
 
 def ShowBorder(infile):
 	try:
@@ -17,6 +25,7 @@ def ShowBorder(infile):
 	except:
 		sys.stderr.write('can not open %s as picture\n'%(infile))
 		sys.exit(3)
+	key_usage()
 	elmsize = 3
 	typearr = [cv2.MORPH_RECT,cv2.MORPH_CROSS,cv2.MORPH_ELLIPSE]
 	typename = ['RECT','CROSS','ELLIPSE']
