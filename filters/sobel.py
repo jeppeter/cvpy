@@ -17,6 +17,14 @@ def key_usage():
 	return
 
 
+def SobelImage(img,xw,yw):
+	x = cv2.Sobel(img,cv2.CV_16S,1,0)
+	y = cv2.Sobel(img,cv2.CV_16S,0,1)
+	absx = cv2.convertScaleAbs(x)
+	absy = cv2.convertScaleAbs(y)
+	dst = cv2.addWeighted(absx,xw,absy,yw,0)
+	return dst
+
 
 def SobelHandle(infile):
 	try:
@@ -29,14 +37,7 @@ def SobelHandle(infile):
 	yw = 0.5
 	key_usage()
 	while True:
-		x = cv2.Sobel(img,cv2.CV_16S,1,0)
-		y = cv2.Sobel(img,cv2.CV_16S,0,1)
-		absx = cv2.convertScaleAbs(x)
-		absy = cv2.convertScaleAbs(y)
-
-		dst = cv2.addWeighted(absx,xw,absy,yw,0)
-		cv2.imshow('absx',absx)
-		cv2.imshow('absy',absy)
+		dst = SobelImage(img,xw,yw)
 		imgname = 'xw %f yw %f'%(xw,yw)
 		cv2.imshow(imgname,dst)
 		k = cv2.waitKey(0)
