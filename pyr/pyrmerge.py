@@ -60,6 +60,7 @@ def MergeFilePyramid(afile,bfile):
 		sys.stderr.write('can not open (%s/%s) for file read\n'%(afile,bfile))
 		return -3
 	# now for make the whole size
+	key_usage()
 	arows,acols,achl = aimg.shape
 	brows,bcols,bchl = bimg.shape
 	mrows = arows
