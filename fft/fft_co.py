@@ -5,8 +5,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import logging
+import os
+
+def OutMatrix(name,mat):
+	logging.info('out %s [%d:%d]'%(name,mat.shape[0],mat.shape[1]))
+	r,c=mat.shape[:2]
+	for y in range(0,r):
+		s = ''
+		for x in range(0,c):
+			s += ' %s '%(mat[y][x])
+		logging.info('[%d] %s'%(y,s))
+	return
+
 
 def CoBine(afile,bfile):
+	afile_base=os.path.basename(afile)
+	bfile_base=os.path.basename(bfile)
 	img_flower = cv2.imread(afile,0) #直接读为灰度图像
 	img_man = cv2.imread(bfile,0) #直接读为灰度图像
 	arows,acols = img_flower.shape[:2]
@@ -43,10 +57,12 @@ def CoBine(afile,bfile):
 	img_new1 = np.fft.ifft2(f3shift)
 	#出来的是复数，无法显示
 	img_new1 = np.abs(img_new1)
+	img_new1 = np.uint8(img_new1)
 	#调整大小范围便于显示
 	outname='%s-phase-%s-between'%(afile,bfile)	
+	# to just show gray mode
 	cv2.imshow(outname,img_new1)
-	cv2.imwrite('ab.bmp',img_new1)
+	cv2.imwrite('%s_%s.bmp'%(afile_base,bfile_base),img_new1)
 	#---图2的振幅--图1的相位--------------------
 	img_new2_f = np.zeros(img_flower.shape,dtype=complex) 
 	img2_real = f2_A*np.cos(f1_P) #取实部
@@ -57,10 +73,11 @@ def CoBine(afile,bfile):
 	img_new2 = np.fft.ifft2(f4shift)
 	#出来的是复数，无法显示
 	img_new2 = np.abs(img_new2)
+	img_new2 = np.uint8(img_new2)
 	#调整大小范围便于显示
 	outname = '%s-phase-%s-between'%(bfile,afile)
 	cv2.imshow(outname,img_new2)
-	cv2.imwrite('ba.bmp',img_new2)
+	cv2.imwrite('%s_%s.bmp'%(bfile_base,afile_base),img_new2)
 	cv2.waitKey(0)
 	return
 

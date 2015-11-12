@@ -17,23 +17,20 @@ def ShowFFT2(infile):
 	fshift = np.fft.fftshift(f)
 	s1 = np.log(np.abs(fshift))
 	outfile='%s.gray2.bmp'%(infile)
-	cv2.imwrite(outfile,simg)
 	cv2.imshow('gray',simg)
 
 	# now get inverse trans
 	ifshift = np.fft.ifftshift(np.abs(fshift))
 	isimg = np.fft.ifft2(ifshift)
 	isimg = np.abs(isimg)
-	outfile='%s.inverse2.bmp'%(infile)
-	cv2.imwrite(outfile,isimg)
+	isimg = np.uint8(isimg)
 	cv2.imshow('invers',isimg)
 
 	# get phase
 	if2shift = np.fft.ifftshift(np.angle(fshift))
 	is2img = np.fft.ifft2(if2shift)
 	is2img = np.abs(is2img)
-	outfile='%s.phase2.bmp'%(infile)
-	cv2.imwrite(outfile,is2img)
+	is2img = np.uint8(is2img)
 	cv2.imshow('only phase',is2img)
 
 	# combine inserve and phase
@@ -48,8 +45,7 @@ def ShowFFT2(infile):
 	if3shift = np.fft.ifftshift(s3)
 	is3img = np.fft.ifft2(if3shift)
 	is3img = np.abs(is3img)
-	outfile='%s.combine2.bmp'%(infile)
-	cv2.imwrite(outfile,is3img)
+	is3img = np.uint8(is3img)
 	cv2.imshow('reverse back',is3img)
 	cv2.waitKey(0)
 	return
