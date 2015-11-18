@@ -101,11 +101,14 @@ def EdmondsKarp(capacity, neighbors, start, end):
     flow = 0
     flows = {}
     maxval = 0
-    for k in capacity.keys():
-        for j in capacity.keys():
+    for k in sorted(capacity.keys()):
+        for j in sorted(capacity.keys()):
             flows = SetDictDefValue(flows,k,j,0)
             capacity = SetDictDefValue(capacity,k,j,0)
             maxval += capacity[k][j]
+            logging.info('capacity[%s][%s]=%d'%(k,j,capacity[k][j]))
+    logging.info('capacity %s neighbors %s'%(capacity,neighbors))
+    logging.info('maxval %d'%(maxval))
     while True:
         max, parent = BFS(capacity, neighbors, flows, start, end,maxval)
         if max == 0:
