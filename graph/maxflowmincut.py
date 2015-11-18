@@ -107,7 +107,7 @@ def EdmondsKarp(capacity, neighbors, start, end):
             capacity = SetDictDefValue(capacity,k,j,0)
             maxval += capacity[k][j]
     while True:
-        max, parent = BreadthFirstSearch(capacity, neighbors, flows, start, end,maxval)
+        max, parent = BFS(capacity, neighbors, flows, start, end,maxval)
         if max == 0:
             break
         flow = flow + max
@@ -120,7 +120,7 @@ def EdmondsKarp(capacity, neighbors, start, end):
     return (flow, flows)
 
 
-def BreadthFirstSearch(capacity, neighbors, flows, start, end,maxval):
+def BFS(capacity, neighbors, flows, start, end,maxval):
     length = len(capacity)    
     parents = {}
     curmax = 0
