@@ -90,6 +90,42 @@ func IsInArray(arr []string, key string) int {
 	return 0
 }
 
+func DebugMapString(caps map[string]map[string]int, format string, a ...interface{}) {
+	var sortkeys []string
+	var longestkey int
+	longestkey = 4
+	sortkeys = MakeSortKeys(caps)
+	if format != "" {
+		s := fmt.Sprintf(format, a...)
+		fmt.Fprintf(os.Stdout, s)
+		fmt.Fprintf(os.Stdout, "\n")
+	}
+	for _, k1 := range sortkeys {
+		if longestkey < len(k1) {
+			longestkey = len(k1)
+		}
+	}
+
+	fmt.Fprintf(os.Stdout, "%*s[", longestkey, "tags")
+	for _, k1 := range sortkeys {
+		fmt.Fprintf(os.Stdout, "%*s", longestkey, k1)
+	}
+	fmt.Fprintf(os.Stdout, "]\n")
+
+	for _, k1 := range sortkeys {
+		fmt.Fprintf(os.Stdout, "%*s[", longestkey, k1)
+		for _, k2 := range sortkeys {
+			val := 0
+			if _, ok := caps[k1][k2]; ok {
+				val = caps[k1][k2]
+			}
+			fmt.Fprintf(os.Stdout, "%*d", longestkey, val)
+
+		}
+		fmt.Fprintf(os.Stdout, "]\n")
+	}
+}
+
 func (f *FlowNetwork) Get_Cap_Neighbour() (capcities map[string]map[string]int,
 	neighbours map[string][]string) {
 	var sortkeys []string
@@ -279,6 +315,8 @@ func main() {
 	}
 	caps, neighs := f.Get_Cap_Neighbour()
 	flow, flows := EdmondsWarp(caps, neighs, s, t)
-	fmt.Fprintf(os.Stdout, "flow %d flows %v\n", flow, flows)
+	fmt.Fprintf(os.Stdout, "flow %d\n", flow)
+	DebugMapString(caps, "caps ")
+	DebugMapString(flows, "flows ")
 	return
 }
