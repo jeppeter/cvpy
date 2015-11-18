@@ -1,0 +1,7 @@
+sink=d
+source=a
+a,b,200
+a,c,100
+b,c,1
+b,d,1000
+c,d,1000
