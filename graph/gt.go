@@ -33,6 +33,7 @@ func SetNextNodes(n string, neighbours map[string][]string, nextnodes map[string
 			}
 		}
 	}
+	Debug("set nextnodes[%s] = %d\n", n, (1 + minval))
 	nextnodes[n] = 1 + minval
 	return nextnodes
 }
