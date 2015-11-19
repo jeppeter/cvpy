@@ -1,5 +1,9 @@
 package main
 
+import (
+	"os"
+)
+
 func FindNextnodesMaxValue(nextnodes map[string]int) int {
 	maxval := 0
 	for _, kv := range nextnodes {
@@ -42,6 +46,7 @@ func FindNextNodes(n string, neighbours map[string][]string, nextnodes map[strin
 			if fval > overflow[n] {
 				fval = overflow[n]
 			}
+			Debug("Set [%s]->[%s] fval %d\n", n, k, fval)
 			overflow[k] += fval
 			overflow[n] -= fval
 			flows[n][k] += fval
@@ -67,6 +72,10 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 		for _, k2 := range sortkeys {
 			flows = SetDictDefValue(flows, k1, k2, 0)
 			caps = SetDictDefValue(caps, k1, k2, 0)
+			if k1 == k2 && caps[k1][k2] != 0 {
+				Debug("can not be set for %s %s value %d\n", k1, k2, caps[k1][k2])
+				os.Exit(4)
+			}
 			maxval += caps[k1][k2]
 		}
 		overflow[k1] = 0
@@ -78,25 +87,30 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 		flows[n][source] = -caps[source][n]
 		overflow[n] = caps[source][n]
 		queue = append(queue, n)
+		Debug("push %s\n", n)
 	}
 
 	for len(queue) > 0 {
-		Debug("queue %v\n", queue)
 		maxval = FindNextnodesMaxValue(nextnodes)
 		n = queue[len(queue)-1]
 		queue = queue[:(len(queue) - 1)]
+		Debug("queue %v n %s\n", queue, n)
+		Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
 		if !CanPush(n, neighs, nextnodes, caps, flows) {
+			Debug("push %s for nextnodes\n", n)
 			nextnodes = SetNextNodes(n, neighs, nextnodes, caps, flows, maxval)
 		}
 		flows, overflow = FindNextNodes(n, neighs, nextnodes, caps, flows, overflow)
 
 		if n != source && n != sink && overflow[n] > 0 {
 			queue = append(queue, n)
+			Debug("push %s to queue\n", n)
 		}
 
 		for _, k := range neighs[n] {
 			if k != source && k != sink && overflow[k] > 0 {
 				queue = append(queue, k)
+				Debug("push %s to queue\n", k)
 			}
 		}
 

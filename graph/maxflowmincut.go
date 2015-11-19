@@ -241,7 +241,7 @@ func MakeSortKeys(caps map[string]map[string]int) []string {
 
 func main() {
 	var flow int
-	var flows map[string]map[string]int
+	//var flows map[string]map[string]int
 	var stime, etime time.Time
 	if len(os.Args) < 3 {
 		fmt.Fprintf(os.Stdout, "%s [ed|gt] infile\n", os.Args[0])
@@ -256,17 +256,20 @@ func main() {
 		os.Exit(4)
 	}
 	caps, neighs := f.Get_Cap_Neighbour()
-	if os.Args[1] == "edmonds" {
+	if os.Args[1] == "ed" {
 		stime = time.Now()
-		flow, flows = EdmondsWarp(caps, neighs, s, t)
+		flow, _ = EdmondsWarp(caps, neighs, s, t)
+		etime = time.Now()
+	} else if os.Args[1] == "gt" {
+		stime = time.Now()
+		flow, _ = GoldbergTarjan(caps, neighs, s, t)
 		etime = time.Now()
 	} else {
-		stime = time.Now()
-		flow, flows = GoldbergTarjan(caps, neighs, s, t)
-		etime = time.Now()
+		fmt.Fprintf(os.Stderr, "can not find algorithm for %s\n", os.Args[1])
+		os.Exit(4)
 	}
 	fmt.Fprintf(os.Stdout, "time %s -> %s(%s) flow %d\n", stime, etime, etime.Sub(stime), flow)
-	DebugMapString(caps, "caps ")
-	DebugMapString(flows, "flows ")
+	//DebugMapString(caps, "caps ")
+	//DebugMapString(flows, "flows ")
 	return
 }

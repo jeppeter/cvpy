@@ -19,6 +19,9 @@ func Debug(format string, a ...interface{}) {
 
 func SetGraphs(graph map[int]map[int]int, k1 int, k2 int, cap32 int) (gr map[int]map[int]int, bret bool) {
 	var ok bool
+	if k1 == k2 || cap32 == 0 {
+		return graph, false
+	}
 	_, ok = graph[k1][k2]
 	if ok {
 		return graph, false
