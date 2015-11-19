@@ -143,7 +143,7 @@ def SetNextNodes(n,neighbours,nextnodes,capcity,flows,maxval):
 	nextnodes[n] = 1 + minval
 	return nextnodes
 
-def FinMaxValueInNextNodes(nextnodes):
+def FindMaxValueInNextNodes(nextnodes):
 	maxval = 0
 	for k in nextnodes.keys():
 		if nextnodes[k] > maxval :
@@ -183,7 +183,7 @@ def GoldbergTarjan(capcity,neighbours,source,sink):
 		active_nodes.add(n)
 
 	while len(active_nodes) > 0:
-		maxval = FinMaxValueInNextNodes(nextnodes)
+		maxval = FindMaxValueInNextNodes(nextnodes)
 		n = active_nodes.pop()
 		if not CanPush(n,neighbours,nextnodes,capcity,flows):
 			nextnodes = SetNextNodes(n,neighbours,nextnodes,capcity,flows,maxval)
