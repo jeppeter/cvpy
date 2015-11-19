@@ -183,6 +183,7 @@ def GoldbergTarjan(capcity,neighbours,source,sink):
 		active_nodes.add(n)
 
 	while len(active_nodes) > 0:
+		logging.info('active nodes %s'%(active_nodes))
 		maxval = FindMaxValueInNextNodes(nextnodes)
 		n = active_nodes.pop()
 		if not CanPush(n,neighbours,nextnodes,capcity,flows):

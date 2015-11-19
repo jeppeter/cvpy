@@ -73,7 +73,7 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 		nextnodes[k1] = 0
 	}
 	nextnodes[source] = len(sortkeys)
-	for n = range neighs {
+	for _, n = range neighs[source] {
 		flows[source][n] = caps[source][n]
 		flows[n][source] = -caps[source][n]
 		overflow[n] = caps[source][n]
@@ -81,6 +81,7 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 	}
 
 	for len(queue) > 0 {
+		Debug("queue %v\n", queue)
 		maxval = FindNextnodesMaxValue(nextnodes)
 		n = queue[len(queue)-1]
 		queue = queue[:(len(queue) - 1)]

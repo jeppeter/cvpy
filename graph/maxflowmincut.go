@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Edge struct {
@@ -241,6 +242,7 @@ func MakeSortKeys(caps map[string]map[string]int) []string {
 func main() {
 	var flow int
 	var flows map[string]map[string]int
+	var stime, etime time.Time
 	if len(os.Args) < 3 {
 		fmt.Fprintf(os.Stdout, "%s [ed|gt] infile\n", os.Args[0])
 		fmt.Fprintf(os.Stdout, "\ted for Edmonds-Karp algorithm\n")
@@ -255,11 +257,15 @@ func main() {
 	}
 	caps, neighs := f.Get_Cap_Neighbour()
 	if os.Args[1] == "edmonds" {
+		stime = time.Now()
 		flow, flows = EdmondsWarp(caps, neighs, s, t)
+		etime = time.Now()
 	} else {
+		stime = time.Now()
 		flow, flows = GoldbergTarjan(caps, neighs, s, t)
+		etime = time.Now()
 	}
-	fmt.Fprintf(os.Stdout, "flow %d\n", flow)
+	fmt.Fprintf(os.Stdout, "time %s -> %s(%s) flow %d\n", stime, etime, etime.Sub(stime), flow)
 	DebugMapString(caps, "caps ")
 	DebugMapString(flows, "flows ")
 	return
