@@ -1,6 +1,6 @@
+#!python
 import sys
 import logging
-
 
 class Edge(object):
     def __init__(self, u, v, w):
@@ -85,69 +85,122 @@ class FlowNetwork(object):
             neighbor[k] = curnei
         return cap ,neighbor
 
-def SetDictDefValue(dictarr,k1,k2,v):
-    if k1 not in dictarr.keys():
-        dictarr[k1] = {}
-    if k2 not in dictarr[k1].keys():
-        dictarr[k1][k2] = v
-    return dictarr
 
-def SetDicArrValue(dictarr,k1,v):
-    if k1 not in dictarr.keys():
-        dictarr[k1] = v
-    return dictarr[k1]
+'''
+  we use this file to make the max flow min cut algorithm of goldberg tarjan
+'''
 
-def EdmondsKarp(capacity, neighbors, start, end):
-    flow = 0
-    flows = {}
-    maxval = 0
-    for k in sorted(capacity.keys()):
-        for j in sorted(capacity.keys()):
-            flows = SetDictDefValue(flows,k,j,0)
-            capacity = SetDictDefValue(capacity,k,j,0)
-            maxval += capacity[k][j]
-            logging.info('capacity[%s][%s]=%d'%(k,j,capacity[k][j]))
-    logging.info('capacity %s neighbors %s'%(capacity,neighbors))
-    logging.info('maxval %d'%(maxval))
-    while True:
-        max, parent = BFS(capacity, neighbors, flows, start, end,maxval)
-        if max == 0:
-            break
-        flow = flow + max
-        v = end
-        while v != start:
-            u = parent[v]
-            flows[u][v] = flows[u][v] + max
-            flows[v][u] = flows[v][u] - max
-            v = u
-    return (flow, flows)
+def UniqueSortArray(neighbours):
+	sortarray = []
+	for k in neighbours.keys():
+		if k not in sortarray:
+			sortarray.append(k)
+		v = neighbours[k]
+		for k2 in v:
+			if k2 not in sortarray:
+				sortarray.append(k2)
+	# now sort the array
+	i = 0
+	while i < len(sortarray) :
+		j = i + 1
+		while j < len(sortarray):
+			if sortarray[i] > sortarray[j]:
+				tmp =sortarray[i]
+				sortarray[i] = sortarray[j]
+				sortarray[j] = tmp
+			j = j + 1
+		i = i + 1
+	return sortarray
+
+def SetNotUsedValue(capcity,sortarray):
+	for k in sortarray:
+		if k not in capcity.keys():
+			capcity[k] = {}
+		for k2 in sortarray:
+			if k2 not in capcity[k].keys():
+				capcity[k][k2] = 0
+	return capcity
+
+def SetNotUsedArr(overflow,sortarray):
+	for k in sortarray:
+		if k not in overflow.keys():
+			overflow[k] = 0
+	return overflow
 
 
-def BFS(capacity, neighbors, flows, start, end,maxval):
-    length = len(capacity)    
-    parents = {}
-    curmax = 0
-    M = {}
-    for k in capacity.keys():
-        parents[k] = -1
-        M[k] = 0
-    parents[start] = -2
-    M[start] = maxval
-    queue = []
-    queue.append(start)
-    while queue:
-        u = queue.pop(0)
-        for v in SetDicArrValue(neighbors,u,[]):
-            # if there is available capacity and v is is not seen before in search
-            if capacity[u][v] - flows[u][v] > 0 and parents[v] == -1:
-                parents[v] = u
-                # it will work because at the beginning M[u] is Infinity
-                M[v] = min(M[u], capacity[u][v] - flows[u][v]) # try to get smallest
-                if v != end:
-                    queue.append(v)
-                else:
-                    return M[end], parents
-    return 0, parents
+def CanPush(n,neigbours ,nextnodes,capcity,flows):
+	for k in neigbours[n]:
+		if ((nextnodes[k] + 1 ) == nextnodes[n] ) and \
+			(capcity[n][k] - flows[n][k]) > 0 :
+			return True
+	return False
+
+def SetNextNodes(n,neighbours,nextnodes,capcity,flows,maxval):
+	minval = maxval
+	for k in neighbours[n]:
+		if capcity[n][k] - flows[n][k] > 0:
+			minval = min(minval,nextnodes[k])
+	nextnodes[n] = 1 + minval
+	return nextnodes
+
+def FinMaxValueInNextNodes(nextnodes):
+	maxval = 0
+	for k in nextnodes.keys():
+		if nextnodes[k] > maxval :
+			maxval = nextnodes[k]
+	return maxval
+
+def FindNextNode(n,neighbours,nextnodes,capacity,flows,overflow):
+	for k in neighbours[n]:
+		if nextnodes[k] + 1 == nextnodes[n]:
+			fval = (capacity[n][k] - flows[n][k])
+			if fval > overflow[n]:
+				fval = overflow[n]
+			overflow[k] += fval
+			overflow[n] -= fval
+			flows[n][k] += fval
+			flows[k][n] -= fval
+
+	return flows,overflow
+
+
+def GoldbergTarjan(capcity,neighbours,source,sink):
+	# first to set for not used value
+	sortarray = UniqueSortArray(neighbours)
+	capcity = SetNotUsedValue(capcity,sortarray)
+	flows = {}
+	flows = SetNotUsedValue(flows,sortarray)
+	overflow = {}
+	overflow = SetNotUsedArr(overflow,sortarray)
+	nextnodes = {}
+	nextnodes = SetNotUsedArr(nextnodes,sortarray)
+	active_nodes = set([])
+	nextnodes[source] = len(sortarray)
+	for n in neighbours[source]:
+		flows[source][n] = capcity[source][n]
+		flows[n][source] = - capcity[source][n]
+		overflow[n] = capcity[source][n]
+		active_nodes.add(n)
+
+	while len(active_nodes) > 0:
+		maxval = FinMaxValueInNextNodes(nextnodes)
+		n = active_nodes.pop()
+		if not CanPush(n,neighbours,nextnodes,capcity,flows):
+			nextnodes = SetNextNodes(n,neighbours,nextnodes,capcity,flows,maxval)
+		flows,overflow = FindNextNode(n,neighbours,nextnodes,capcity,flows,overflow)
+
+		if n != source and n != sink and overflow[n] > 0:
+			active_nodes.add(n)
+		for k in neighbours[n]:
+			if k != source and k != sink and overflow[k] > 0 :
+				active_nodes.add(k)
+
+	sumval = 0
+	for k in neighbours[source]:
+		sumval += flows[source][k]
+		sumval -= flows[k][source]
+	sumval = sumval / 2
+	return sumval , flows
 
 def ParseAndGetValue(infile):
     sink = ''
@@ -189,8 +242,13 @@ def main():
         sys.exit(4)
     logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
     cap,neighbor,source,sink = ParseAndGetValue(sys.argv[1])
-    flow,flows = EdmondsKarp(cap,neighbor,source,sink)
+    flow,flows = GoldbergTarjan(cap,neighbor,source,sink)
     logging.info('flow %d flows %s'%(flow,flows))
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
