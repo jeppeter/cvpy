@@ -106,8 +106,6 @@ def EdmondsKarp(capacity, neighbors, start, end):
             flows = SetDictDefValue(flows,k,j,0)
             capacity = SetDictDefValue(capacity,k,j,0)
             maxval += capacity[k][j]
-            logging.info('capacity[%s][%s]=%d'%(k,j,capacity[k][j]))
-    logging.info('capacity %s neighbors %s'%(capacity,neighbors))
     logging.info('maxval %d'%(maxval))
     while True:
         max, parent = BFS(capacity, neighbors, flows, start, end,maxval)
@@ -179,6 +177,7 @@ def ParseAndGetValue(infile):
         sys.exit(4)
 
     #print network.max_flow(source,sink)
+    logging.info('parse neighbour')
     cap,neighbor = network.get_cap_neighbour()
     return cap,neighbor,source,sink
 
@@ -188,6 +187,7 @@ def main():
         sys.stderr.write('%s inputfile\n'%(sys.argv[0]))
         sys.exit(4)
     logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+    logging.info('start parse %s'%(sys.argv[1]))
     cap,neighbor,source,sink = ParseAndGetValue(sys.argv[1])
     flow,flows = EdmondsKarp(cap,neighbor,source,sink)
     logging.info('flow %d flows %s'%(flow,flows))

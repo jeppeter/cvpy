@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type StringGraph struct {
 	inner map[string]map[string]int
 }
@@ -114,33 +116,27 @@ func (p *StringInt) Iter() []string {
 	return q
 }
 
-type StringNode struct {
-	n    string
-	next *StringNode
-}
-
 type StringStack struct {
-	cnt  int
-	node *StringNode
+	cnt    int
+	conmap map[string]int
+	conarr []string
 }
 
 func NewStringStack() *StringStack {
 	p := &StringStack{}
 	p.cnt = 0
-	p.node = nil
+	p.conmap = make(map[string]int)
+	p.conarr = []string{}
 	return p
 }
 
-func NewStringNode(n string, nnode *StringNode) *StringNode {
-	node := &StringNode{}
-	node.n = n
-	node.next = nnode
-	return node
-}
-
 func (p *StringStack) PushValue(n string) {
+	if _, ok := p.conmap[n]; ok {
+		return
+	}
+	p.conmap[n] = 1
+	p.conarr = append(p.conarr, n)
 	p.cnt += 1
-	p.node = NewStringNode(n, p.node)
 	return
 }
 
@@ -148,13 +144,43 @@ func (p *StringStack) PopValue() string {
 	if p.cnt == 0 {
 		return ""
 	}
-
-	n := p.node.n
-	p.node = p.node.next
 	p.cnt -= 1
+	n := p.conarr[p.cnt]
+	delete(p.conmap, n)
+	if p.cnt > 0 {
+		p.conarr = p.conarr[:p.cnt]
+	} else {
+		p.conarr = []string{}
+	}
+	return n
+}
+
+func (p *StringStack) ShiftValue() string {
+	if p.cnt == 0 {
+		return ""
+	}
+	p.cnt -= 1
+	n := p.conarr[0]
+	delete(p.conmap, n)
+	if p.cnt > 0 {
+		p.conarr = p.conarr[1:]
+	} else {
+		p.conarr = []string{}
+	}
 	return n
 }
 
 func (p *StringStack) Length() int {
 	return p.cnt
+}
+
+func (p *StringStack) String() string {
+	s := fmt.Sprintf("cnt %d[", p.cnt)
+	for _, k := range p.conarr {
+		s += fmt.Sprintf(" %s", k)
+	}
+
+	s += "]"
+	return s
+
 }
