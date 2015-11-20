@@ -1,5 +1,10 @@
 package main
 
+/*********************************************************
+      this file is for the Goldberg-Tarjan algorithm for
+      maxflow -mincut graph search
+*********************************************************/
+
 import (
 	"os"
 )

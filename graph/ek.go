@@ -1,5 +1,10 @@
 package main
 
+/*********************************************************
+      this file is for the Edmonds-Karp algorithm for
+      maxflow -mincut graph search
+*********************************************************/
+
 func BSF(caps *StringGraph, neighs *Neigbour, flows *StringGraph,
 	source string, sink string, maxval int) (max int, parent map[string]string) {
 	var queue []string
