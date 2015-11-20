@@ -88,8 +88,8 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 			maxval += caps.GetValue(k1, k2)
 		}
 	}
-	//nextnodes.SetValue(source, len(sortkeys))
-	nextnodes.SetValue(source, 3)
+	nextnodes.SetValue(source, len(sortkeys))
+	//nextnodes.SetValue(source, 3)
 	queue := NewStringStack()
 	for _, n = range neighs.GetValue(source) {
 		flows.SetValue(source, n, caps.GetValue(source, n))
