@@ -1,5 +1,9 @@
 package main
 
+import (
+	"time"
+)
+
 /*********************************************************
       this file is for the Goldberg-Tarjan algorithm for
       maxflow -mincut graph search
@@ -65,9 +69,10 @@ func FindNextNodes(n string, neighbours *Neigbour, nextnodes *StringInt, caps *S
 }
 
 func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink string) (flow int, flows *StringGraph) {
-	var queue []string
+
 	var n string
 	var k string
+
 	flow = 0
 	flows = NewStringGraph()
 	sortkeys := MakeSortKeys(caps)
@@ -84,18 +89,25 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 		}
 	}
 	nextnodes.SetValue(source, len(sortkeys))
+	queue := NewStringStack()
 	for _, n = range neighs.GetValue(source) {
 		flows.SetValue(source, n, caps.GetValue(source, n))
 		flows.SetValue(n, source, -caps.GetValue(source, n))
 		overflow.SetValue(n, caps.GetValue(source, n))
-		queue = append(queue, n)
+		queue.PushValue(n)
 		//Debug("push %s\n", n)
 	}
 
-	for len(queue) > 0 {
+	stime := time.Now()
+
+	for queue.Length() > 0 {
 		maxval = FindNextnodesMaxValue(nextnodes)
-		n = queue[len(queue)-1]
-		queue = queue[:(len(queue) - 1)]
+		n = queue.PopValue()
+		etime := time.Now()
+		if etime.Sub(stime) > time.Second*2 {
+			stime = etime
+			Debug("time %s queue len(%d) n %s\n", etime, queue.Length(), n)
+		}
 		//Debug("queue %v n %s\n", queue, n)
 		//Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
 		if !CanPush(n, neighs, nextnodes, caps, flows) {
@@ -105,13 +117,13 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 		FindNextNodes(n, neighs, nextnodes, caps, flows, overflow)
 
 		if n != source && n != sink && overflow.GetValue(n) > 0 {
-			queue = append(queue, n)
+			queue.PushValue(n)
 			//Debug("push %s to queue\n", n)
 		}
 
 		for _, k := range neighs.GetValue(n) {
 			if k != source && k != sink && overflow.GetValue(k) > 0 {
-				queue = append(queue, k)
+				queue.PushValue(k)
 				//Debug("push %s to queue\n", k)
 			}
 		}

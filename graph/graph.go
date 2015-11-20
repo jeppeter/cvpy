@@ -113,3 +113,48 @@ func (p *StringInt) Iter() []string {
 	}
 	return q
 }
+
+type StringNode struct {
+	n    string
+	next *StringNode
+}
+
+type StringStack struct {
+	cnt  int
+	node *StringNode
+}
+
+func NewStringStack() *StringStack {
+	p := &StringStack{}
+	p.cnt = 0
+	p.node = nil
+	return p
+}
+
+func NewStringNode(n string, nnode *StringNode) *StringNode {
+	node := &StringNode{}
+	node.n = n
+	node.next = nnode
+	return node
+}
+
+func (p *StringStack) PushValue(n string) {
+	p.cnt += 1
+	p.node = NewStringNode(n, p.node)
+	return
+}
+
+func (p *StringStack) PopValue() string {
+	if p.cnt == 0 {
+		return ""
+	}
+
+	n := p.node.n
+	p.node = p.node.next
+	p.cnt -= 1
+	return n
+}
+
+func (p *StringStack) Length() int {
+	return p.cnt
+}
