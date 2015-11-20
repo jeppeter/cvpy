@@ -100,7 +100,7 @@ func Debug(format string, a ...interface{}) {
 	return
 }
 
-func DebugMapString(caps map[string]map[string]int, format string, a ...interface{}) {
+func DebugMapString(caps *StringGraph, format string, a ...interface{}) {
 	var sortkeys []string
 	var longestkey int
 	longestkey = 4
@@ -125,10 +125,7 @@ func DebugMapString(caps map[string]map[string]int, format string, a ...interfac
 	for _, k1 := range sortkeys {
 		fmt.Fprintf(os.Stdout, "%*s[", longestkey, k1)
 		for _, k2 := range sortkeys {
-			val := 0
-			if _, ok := caps[k1][k2]; ok {
-				val = caps[k1][k2]
-			}
+			val := caps.GetValue(k1, k2)
 			fmt.Fprintf(os.Stdout, "%*d", longestkey, val)
 
 		}
@@ -136,23 +133,23 @@ func DebugMapString(caps map[string]map[string]int, format string, a ...interfac
 	}
 }
 
-func (f *FlowNetwork) Get_Cap_Neighbour() (capcities map[string]map[string]int,
-	neighbours map[string][]string) {
+func (f *FlowNetwork) Get_Cap_Neighbour() (capcities *StringGraph,
+	neighbours *Neigbour) {
 	var sortkeys []string
-	caps := make(map[string]map[string]int)
-	neigh := make(map[string][]string)
+	caps := NewStringGraph()
+	neigh := NewNeighbour()
 	for k := range f.adj {
 		sortkeys = append(sortkeys, k)
 	}
 
 	for k, ev := range f.adj {
 		for _, edge := range ev {
-			caps = SetDictDefValue(caps, edge.source, edge.sink, edge.capcity)
-			if IsInArray(neigh[k], edge.sink) == 0 {
-				neigh[k] = append(neigh[k], edge.sink)
+			caps.SetValue(edge.source, edge.sink, edge.capcity)
+			if IsInArray(neigh.GetValue(k), edge.sink) == 0 {
+				neigh.PushValue(k, edge.sink)
 			}
-			if IsInArray(neigh[edge.sink], edge.source) == 0 {
-				neigh[edge.sink] = append(neigh[edge.sink], edge.source)
+			if IsInArray(neigh.GetValue(edge.sink), edge.source) == 0 {
+				neigh.PushValue(edge.sink, edge.source)
 			}
 		}
 	}
@@ -219,11 +216,9 @@ func GetGraphFromFile(infile string) (f *FlowNetwork, source string, sink string
 	return f, source, sink, nil
 }
 
-func MakeSortKeys(caps map[string]map[string]int) []string {
+func MakeSortKeys(caps *StringGraph) []string {
 	var retstr []string
-	for k := range caps {
-		retstr = append(retstr, k)
-	}
+	retstr = caps.Iter()
 
 	for i := 0; i < len(retstr); i++ {
 		for j := (i + 1); j < len(retstr); j++ {

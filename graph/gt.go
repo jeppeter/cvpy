@@ -4,9 +4,10 @@ import (
 	"os"
 )
 
-func FindNextnodesMaxValue(nextnodes map[string]int) int {
+func FindNextnodesMaxValue(nextnodes *StringInt) int {
 	maxval := 0
-	for _, kv := range nextnodes {
+	for _, k := range nextnodes.Iter() {
+		kv := nextnodes.GetValue(k)
 		if kv > maxval {
 			maxval = kv
 		}
@@ -15,78 +16,73 @@ func FindNextnodesMaxValue(nextnodes map[string]int) int {
 
 }
 
-func CanPush(n string, neighbours map[string][]string, nextnodes map[string]int, caps map[string]map[string]int, flows map[string]map[string]int) bool {
-	for _, k := range neighbours[n] {
-		if ((nextnodes[k] + 1) == nextnodes[n]) && (caps[n][k]-flows[n][k]) > 0 {
+func CanPush(n string, neighbours *Neigbour, nextnodes *StringInt, caps *StringGraph, flows *StringGraph) bool {
+	for _, k := range neighbours.GetValue(n) {
+		if ((nextnodes.GetValue(k) + 1) == nextnodes.GetValue(n)) && (caps.GetValue(n, k)-flows.GetValue(n, k)) > 0 {
 			return true
 		}
 	}
 	return false
 }
 
-func SetNextNodes(n string, neighbours map[string][]string, nextnodes map[string]int, caps map[string]map[string]int, flows map[string]map[string]int, maxval int) map[string]int {
+func SetNextNodes(n string, neighbours *Neigbour, nextnodes *StringInt, caps *StringGraph, flows *StringGraph, maxval int) {
 	minval := maxval
-	for _, k := range neighbours[n] {
-		if (caps[n][k] - flows[n][k]) > 0 {
-			if nextnodes[n] < minval {
-				minval = nextnodes[n]
+	for _, k := range neighbours.GetValue(n) {
+		if (caps.GetValue(n, k) - flows.GetValue(n, k)) > 0 {
+			if nextnodes.GetValue(n) < minval {
+				minval = nextnodes.GetValue(n)
 			}
 		}
 	}
 	Debug("set nextnodes[%s] = %d\n", n, (1 + minval))
-	nextnodes[n] = 1 + minval
-	return nextnodes
+	nextnodes.SetValue(n, 1+minval)
+	return
 }
 
-func FindNextNodes(n string, neighbours map[string][]string, nextnodes map[string]int, caps map[string]map[string]int,
-	flows map[string]map[string]int, overflow map[string]int) (rflows map[string]map[string]int, roverflow map[string]int) {
+func FindNextNodes(n string, neighbours *Neigbour, nextnodes *StringInt, caps *StringGraph,
+	flows *StringGraph, overflow *StringInt) {
 
-	for _, k := range neighbours[n] {
-		if (nextnodes[k] + 1) == nextnodes[n] {
-			fval := (caps[n][k] - flows[n][k])
-			if fval > overflow[n] {
-				fval = overflow[n]
+	for _, k := range neighbours.GetValue(n) {
+		if (nextnodes.GetValue(k) + 1) == nextnodes.GetValue(n) {
+			fval := (caps.GetValue(n, k) - flows.GetValue(n, k))
+			if fval > overflow.GetValue(n) {
+				fval = overflow.GetValue(n)
 			}
 			Debug("Set [%s]->[%s] fval %d\n", n, k, fval)
-			overflow[k] += fval
-			overflow[n] -= fval
-			flows[n][k] += fval
-			flows[k][n] -= fval
+			overflow.SetValue(k, overflow.GetValue(k)+fval)
+			overflow.SetValue(n, overflow.GetValue(n)-fval)
+			flows.SetValue(n, k, flows.GetValue(n, k)+fval)
+			flows.SetValue(k, n, flows.GetValue(k, n)-fval)
 		}
 	}
-
-	return flows, overflow
+	return
 
 }
 
-func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, source string, sink string) (flow int, flows map[string]map[string]int) {
+func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink string) (flow int, flows *StringGraph) {
 	var queue []string
 	var n string
 	var k string
 	flow = 0
-	flows = make(map[string]map[string]int)
+	flows = NewStringGraph()
 	sortkeys := MakeSortKeys(caps)
-	overflow := make(map[string]int)
-	nextnodes := make(map[string]int)
+	overflow := NewStringInt()
+	nextnodes := NewStringInt()
 	maxval := 0
 	for _, k1 := range sortkeys {
 		for _, k2 := range sortkeys {
-			flows = SetDictDefValue(flows, k1, k2, 0)
-			caps = SetDictDefValue(caps, k1, k2, 0)
-			if k1 == k2 && caps[k1][k2] != 0 {
-				Debug("can not be set for %s %s value %d\n", k1, k2, caps[k1][k2])
+			if k1 == k2 && caps.GetValue(k1, k2) != 0 {
+				Debug("can not be set for %s %s value %d\n", k1, k2, caps.GetValue(k1, k2))
 				os.Exit(4)
 			}
-			maxval += caps[k1][k2]
+			maxval += caps.GetValue(k1, k2)
 		}
-		overflow[k1] = 0
-		nextnodes[k1] = 0
 	}
-	nextnodes[source] = len(sortkeys)
-	for _, n = range neighs[source] {
-		flows[source][n] = caps[source][n]
-		flows[n][source] = -caps[source][n]
-		overflow[n] = caps[source][n]
+	nextnodes.SetValue(source, len(sortkeys))
+	for _, n = range neighs.GetValue(source) {
+		flows.SetValue(source, n, caps.GetValue(source, n))
+		flows.SetValue(n, source, -caps.GetValue(source, n))
+		overflow.SetValue(n, caps.GetValue(source, n))
 		queue = append(queue, n)
 		Debug("push %s\n", n)
 	}
@@ -99,17 +95,17 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 		Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
 		if !CanPush(n, neighs, nextnodes, caps, flows) {
 			Debug("push %s for nextnodes\n", n)
-			nextnodes = SetNextNodes(n, neighs, nextnodes, caps, flows, maxval)
+			SetNextNodes(n, neighs, nextnodes, caps, flows, maxval)
 		}
-		flows, overflow = FindNextNodes(n, neighs, nextnodes, caps, flows, overflow)
+		FindNextNodes(n, neighs, nextnodes, caps, flows, overflow)
 
-		if n != source && n != sink && overflow[n] > 0 {
+		if n != source && n != sink && overflow.GetValue(n) > 0 {
 			queue = append(queue, n)
 			Debug("push %s to queue\n", n)
 		}
 
-		for _, k := range neighs[n] {
-			if k != source && k != sink && overflow[k] > 0 {
+		for _, k := range neighs.GetValue(n) {
+			if k != source && k != sink && overflow.GetValue(k) > 0 {
 				queue = append(queue, k)
 				Debug("push %s to queue\n", k)
 			}
@@ -118,9 +114,9 @@ func GoldbergTarjan(caps map[string]map[string]int, neighs map[string][]string, 
 	}
 
 	flow = 0
-	for _, k = range neighs[source] {
-		flow += flows[source][k]
-		flow -= flows[k][source]
+	for _, k = range neighs.GetValue(source) {
+		flow += flows.GetValue(source, k)
+		flow -= flows.GetValue(k, source)
 	}
 
 	flow = flow >> 1
