@@ -263,7 +263,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "can not find algorithm for %s\n", os.Args[1])
 		os.Exit(4)
 	}
-	fmt.Fprintf(os.Stdout, "time(%s) flow %d\n", etime.Sub(stime), flow)
+	etime.Sub(stime)
+	//fmt.Fprintf(os.Stderr, "time(%s) flow %d\n", etime.Sub(stime), flow)
+	fmt.Fprintf(os.Stderr, "%d\n", flow)
 	//DebugMapString(caps, "caps ")
 	//DebugMapString(flows, "flows ")
 	return

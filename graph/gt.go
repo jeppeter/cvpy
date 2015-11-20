@@ -88,7 +88,8 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 			maxval += caps.GetValue(k1, k2)
 		}
 	}
-	nextnodes.SetValue(source, len(sortkeys))
+	//nextnodes.SetValue(source, len(sortkeys))
+	nextnodes.SetValue(source, 3)
 	queue := NewStringStack()
 	for _, n = range neighs.GetValue(source) {
 		flows.SetValue(source, n, caps.GetValue(source, n))
@@ -111,6 +112,7 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 		}
 		Debug("queue %s n %s\n", queue.String(), n)
 		Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
+		Debug("caps %v\n", caps)
 		if !CanPush(n, neighs, nextnodes, caps, flows) {
 			Debug("push %s for nextnodes\n", n)
 			SetNextNodes(n, neighs, nextnodes, caps, flows, maxval)
