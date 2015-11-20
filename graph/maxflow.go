@@ -251,7 +251,7 @@ func main() {
 		os.Exit(4)
 	}
 	caps, neighs := f.Get_Cap_Neighbour()
-	if os.Args[1] == "ed" {
+	if os.Args[1] == "ek" {
 		stime = time.Now()
 		flow, _ = EdmondsWarp(caps, neighs, s, t)
 		etime = time.Now()
@@ -263,7 +263,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "can not find algorithm for %s\n", os.Args[1])
 		os.Exit(4)
 	}
-	fmt.Fprintf(os.Stdout, "time %s -> %s(%s) flow %d\n", stime, etime, etime.Sub(stime), flow)
+	fmt.Fprintf(os.Stdout, "time(%s) flow %d\n", etime.Sub(stime), flow)
 	//DebugMapString(caps, "caps ")
 	//DebugMapString(flows, "flows ")
 	return

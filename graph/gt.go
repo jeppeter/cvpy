@@ -34,7 +34,7 @@ func SetNextNodes(n string, neighbours *Neigbour, nextnodes *StringInt, caps *St
 			}
 		}
 	}
-	Debug("set nextnodes[%s] = %d\n", n, (1 + minval))
+	//Debug("set nextnodes[%s] = %d\n", n, (1 + minval))
 	nextnodes.SetValue(n, 1+minval)
 	return
 }
@@ -48,7 +48,7 @@ func FindNextNodes(n string, neighbours *Neigbour, nextnodes *StringInt, caps *S
 			if fval > overflow.GetValue(n) {
 				fval = overflow.GetValue(n)
 			}
-			Debug("Set [%s]->[%s] fval %d\n", n, k, fval)
+			//Debug("Set [%s]->[%s] fval %d\n", n, k, fval)
 			overflow.SetValue(k, overflow.GetValue(k)+fval)
 			overflow.SetValue(n, overflow.GetValue(n)-fval)
 			flows.SetValue(n, k, flows.GetValue(n, k)+fval)
@@ -84,30 +84,30 @@ func GoldbergTarjan(caps *StringGraph, neighs *Neigbour, source string, sink str
 		flows.SetValue(n, source, -caps.GetValue(source, n))
 		overflow.SetValue(n, caps.GetValue(source, n))
 		queue = append(queue, n)
-		Debug("push %s\n", n)
+		//Debug("push %s\n", n)
 	}
 
 	for len(queue) > 0 {
 		maxval = FindNextnodesMaxValue(nextnodes)
 		n = queue[len(queue)-1]
 		queue = queue[:(len(queue) - 1)]
-		Debug("queue %v n %s\n", queue, n)
-		Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
+		//Debug("queue %v n %s\n", queue, n)
+		//Debug("flows %v nextnodes %v overflow %v\n", flows, nextnodes, overflow)
 		if !CanPush(n, neighs, nextnodes, caps, flows) {
-			Debug("push %s for nextnodes\n", n)
+			//Debug("push %s for nextnodes\n", n)
 			SetNextNodes(n, neighs, nextnodes, caps, flows, maxval)
 		}
 		FindNextNodes(n, neighs, nextnodes, caps, flows, overflow)
 
 		if n != source && n != sink && overflow.GetValue(n) > 0 {
 			queue = append(queue, n)
-			Debug("push %s to queue\n", n)
+			//Debug("push %s to queue\n", n)
 		}
 
 		for _, k := range neighs.GetValue(n) {
 			if k != source && k != sink && overflow.GetValue(k) > 0 {
 				queue = append(queue, k)
-				Debug("push %s to queue\n", k)
+				//Debug("push %s to queue\n", k)
 			}
 		}
 
