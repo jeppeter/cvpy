@@ -35,6 +35,10 @@ class Node:
 class Edge:
 	pass
 
+class EdgeMat:
+	def __init__(self):
+		
+
 class StartingEdge:
 	def __init__(self):
 		self.__startingedge=[]
@@ -60,6 +64,7 @@ class StartingEdge:
 #           node[]
 #           edge[]
 #           startingedge[][]
+#           curedge
 #           
 ########################################
 class GraphCutBoykovKolmogorov:
@@ -81,6 +86,7 @@ class GraphCutBoykovKolmogorov:
 			for y in xrange(self.h):
 				i1 = x * self.h + y + 2
 				self.node[i1].SetIdx(i1)
+		self.curedge = 0
 		self.startingedge=StartingEdge()
 		self.startingedge.SetEdgeCnt(0,(self.nbNode-2))
 		self.startingedge.SetEdgeCnt(1,(self.nbNode-2))
@@ -89,7 +95,27 @@ class GraphCutBoykovKolmogorov:
 			for x in xrange(self.w):
 				for y in xrange(self.h):
 					if (x * (x + 1 - self.w)) == 0 and (y * (y+1-self.h)) == 0:
-						self.
+						# for coins
+						self.startingedge.SetEdgeCnt((x*self.h+y+2),1+1)
+					elif (x*(x+1-self.w)) == 0 or (y * (y + 1-self.h)) == 0 :
+						# edges
+						self.startingedge.SetEdgeCnt((x*self.h+y+2),2+1)
+		else:
+			for x in xrange(self.w):
+				for y in xrange(self.h):
+					if (x*(x+1-self.w)) == 0 and (y*(y+1-self.h)) == 0:
+						# coins
+						self.startingedge.SetEdgeCnt((x*self.h+y+2),3+2)
+					elif (x*(x+1-self.w)) == 0 or (y*(y+1-self.h))==0:
+						# edges
+						self.startingedge.SetEdgeCnt((x*self.h+y+2),5+2)
+					else:
+						# in middle
+						self.startingedge.SetEdgeCnt((x*self.h+y+2),8+2)
+		for x in xrange(self.w):
+			for y in xrange(self.h):
+				i1 = x*self.h + y + 2
+				i2 = 1
 
 
 
