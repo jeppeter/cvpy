@@ -48,6 +48,10 @@ unsigned char *loadSimplePPM(int &w, int &h, const string &filename) {
       ifstream ifs(filename.c_str(), ios_base::binary);*/
 
   FILE *fh = fopen(filename.c_str(), "rb");
+  if (fh == NULL){
+    cerr << "can not open " << filename.c_str() << endl;
+    exit(4);
+  }
   
   w = 0, h = 0;
 
