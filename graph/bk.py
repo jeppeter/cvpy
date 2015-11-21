@@ -35,6 +35,21 @@ class Node:
 class Edge:
 	pass
 
+class StartingEdge:
+	def __init__(self):
+		self.__startingedge=[]
+		self.__startingcnt=0
+		self.__startcap = 0
+		return
+
+	def SetEdgeCnt(self,idx,cnt):
+		if self.__startcap <= idx:
+			for x in xrange((idx-self.__startcap-1)):
+				self.__startingedge.append([])
+				self.__startcap += 1
+		self.__startingedge[idx] = cnt*[0]
+		return
+
 ########################################
 # GraphCutBoykovKolmogorov member
 #           debug = true
@@ -66,7 +81,15 @@ class GraphCutBoykovKolmogorov:
 			for y in xrange(self.h):
 				i1 = x * self.h + y + 2
 				self.node[i1].SetIdx(i1)
-		
+		self.startingedge=StartingEdge()
+		self.startingedge.SetEdgeCnt(0,(self.nbNode-2))
+		self.startingedge.SetEdgeCnt(1,(self.nbNode-2))
+
+		if self.w == 1 or self.h == 1:
+			for x in xrange(self.w):
+				for y in xrange(self.h):
+					if (x * (x + 1 - self.w)) == 0 and (y * (y+1-self.h)) == 0:
+						self.
 
 
 
