@@ -47,6 +47,13 @@ class EdgeMat:
 
 class LinkedListInt:
 	def __init__(self):
+		self.__listarr = []
+		self.__listnum = 0
+		return
+
+	def add(self,i):
+		self.__listarr.append(i)
+		self.__listnum += 1
 		return
 
 class BoolArray:
@@ -287,7 +294,17 @@ class GraphCutBoykovKolmogorov:
 	def do_cut(self):
 		self.reset_flow()
 		self.isInS = BoolArray(self.nbNode)
+		self.isInS.SetTrue(0)
 		self.active = LinkedListInt()
+		self.active.add(0)
+		self.isInA = BoolArray(self.nbNode)
+		self.isInA.SetTrue(0)
+		self.orphan = LinkedListInt()
+
+
+		for i in xrange(len(self.node)):
+			
+
 
 
 
