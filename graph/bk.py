@@ -437,3 +437,14 @@ class GraphCutBoykovKolmogorov:
 					if self.node[curedge.terminal_vertex].prevedgeindex == self.startingedge.GetArrayNumber(curnodeidx,curstartedgeidx):
 						self.node[curedge.terminal_vertex].prevedgeindex = -1
 						self.orphan.add_last(curedge.terminal_vertex)
+					if self.isInS.Get(curedge.terminal_vertex) == 0 :
+						continue
+					curedge = self.edges[curedge.invedgeindex]
+					if (curedge.capacity - curedge.flow) > eps and self.isInS.Get(curedge.initial_vertex) == 0 :
+						self.active.add(curedge.initial_vertex)
+						self.isInA.SetTrue(curedge.initial_vertex)
+
+
+
+
+def 
