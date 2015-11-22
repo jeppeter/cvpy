@@ -81,6 +81,11 @@ class LinkedListInt:
 		self.__listnum += 1
 		return
 
+	def add_last(self,idx):
+		self.__listarr.append(idx)
+		self.__listnum += 1
+		return
+
 class BoolArray:
 	def __init__(self,num):
 		self.__arr = num *[0]
@@ -404,7 +409,31 @@ class GraphCutBoykovKolmogorov:
 	def adoption_stage(self):
 		while not self.orphan.is_empty():
 			curnodeidx = self.orphan.poll()
-			hasfinishedparent = false
+			hasfindparent = false
 			curstartedgeidx = 0
-			while  not hasfinishedparent and curstartedgeidx < self.startingedge.GetLengthFromIdx(curnodeidx):
-				
+			while  not hasfindparent and curstartedgeidx < self.startingedge.GetLengthFromIdx(curnodeidx):
+				curedge = self.edges[self.edges[self.startingedge.GetArrayNumber(curnodeidx,curstartedgeidx)].invedgeindex]
+				if (curedge.capacity - curedge.flow) <= eps:
+					curstartedgeidx += 1
+					continue
+				if self.isInS.Get(curedge.initial_vertex) == 0 :
+					curstartedgeidx += 1
+					continue
+				currootnodeidx = curedge.initial_vertex
+				while self.node[currootnodeidx].prevedgeindex > 0 :
+					currootnodeidx = self.edges[self.node[currootnodeidx].prevedgeindex].initial_vertex
+				if currootnodeidx != 0 :
+					curstartedgeidx += 1
+					continue
+				hasfindparent = True
+				self.node[curnodeidx].prevedgeindex = self.edges[self.startingedge.GetArrayNumber(curnodeidx,curstartedgeidx)].invedgeindex
+				break
+
+			if not hasfindparent :
+				self.isInS.SetFalse(curnodeidx)
+				self.isInA.SetFalse(curnodeidx)
+				for curstartedgeidx in xrange(self.startingedge.GetLengthFromIdx(curnodeidx)):
+					curedge = self.edges[self.startingedge.GetArrayNumber(curnodeidx,curstartedgeidx)]
+					if self.node[curedge.terminal_vertex].prevedgeindex == self.startingedge.GetArrayNumber(curnodeidx,curstartedgeidx):
+						self.node[curedge.terminal_vertex].prevedgeindex = -1
+						self.orphan.add_last(curedge.terminal_vertex)
