@@ -45,6 +45,22 @@ class Edge:
 class EdgeMat:
 	def __init__(self):
 
+class LinkedListInt:
+	def __init__(self):
+		return
+
+class BoolArray:
+	def __init__(self,num):
+		self.__arr = num *[0]
+		self.__cnt = num
+		return 
+
+	def SetTrue(self,idx):
+		assert(len(self.__arr) > idx)
+		assert(self.__cnt > idx)
+		self.__arr[idx] = 1
+		return
+
 
 class StartingEdge:
 	def __init__(self):
@@ -99,6 +115,8 @@ class GraphCutBoykovKolmogorov:
 	def __init__(self,width,height):
 		self.w = width
 		self.h = height
+		self.orphan = LinkedListInt()
+		self.active = LinkedListInt()
 		voisinsEdgeACreer=[[1,0],[1,-1],[0,-1],[-1,-1]]
 		self.nbNode = self.w * self.h + 2
 		self.nbEdges = (self.w * self.h * 4) + (self.h - 2)* (self.w - 2)*8 +\
@@ -108,6 +126,8 @@ class GraphCutBoykovKolmogorov:
 		self.curNbVoisins = self.nbNode * [0]
 		self.node[0].SetIdx(0)
 		self.node[1].SetIdx(1)
+		self.isInS = BoolArray(self.nbNode)
+		self.isInA = BoolArray(self.nbNode)
 		for x in xrange(self.w):
 			for y in xrange(self.h):
 				i1 = x * self.h + y + 2
@@ -264,7 +284,11 @@ class GraphCutBoykovKolmogorov:
 			self.edges[i].flow = 0
 		return
 
-	
+	def do_cut(self):
+		self.reset_flow()
+		self.isInS = BoolArray(self.nbNode)
+		self.active = LinkedListInt()
+
 
 
 
