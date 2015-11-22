@@ -45,6 +45,7 @@ class Edge:
 
 class EdgeMat:
 	def __init__(self):
+		pass
 
 class LinkedListInt:
 	def __init__(self):
@@ -447,4 +448,86 @@ class GraphCutBoykovKolmogorov:
 
 
 
-def 
+def Calculate(bkgraph):
+	bkgraph.do_cut()
+	flow = bkgraph.get_flow()
+	sys.stdout.write('graph flow is %d\n'%(flow))
+	return
+
+def MakeGraph(infile):
+	sink = 0
+	source = 0
+	w = 0
+	h = 0
+	bkgraph = None
+	with open(infile) as f:
+		for l in f:
+			if l.startswith('#'):
+				continue
+			l = l.rstrip('\r\n')
+			if l.startswith('source='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				source = int(sarr[1])
+				continue
+			elif l.startswith('sink='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				sink = int(sarr[1])
+				continue
+			elif l.startswith('width='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				w = int(sarr[1])
+				continue
+			elif l.startswith('height='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				h = int(sarr[1])
+				continue
+			sarr = l.split(',')
+			if len(sarr) < 3:
+				continue
+			if sink == 0  or w == 0 or h == 0:
+				sys.stderr.write('can not define sink or not define width or height\n')
+				sys.exit(4)
+			if bkgraph is None:
+				bkgraph = GraphCutBoykovKolmogorov(w,h)
+			curs = int(sarr[0])
+			curt = int(sarr[1])
+			curw = int(sarr[2])
+			y1 = curs / w
+			x1 = curs - (y1 * w)
+
+			y2 = curt / w
+			x2 = curt - (y2 * w)
+
+			if curs == source :
+				bkgraph.set_source_weight(x2,y2,w)
+				continue
+
+			if curt == sink :
+				bkgraph.set_sink_weight(x1,y1,w)
+				continue
+
+			bkgraph.set_intern_weight(x1,y1,x2,y2,w)
+
+	return bkgraph
+
+
+def main():
+	if len(sys.argv) < 2:
+		sys.stderr.write('%s infile\n'%(sys.argv[0]))
+		sys.exit(4)
+	bkgraph = MakeGraph(sys.argv[1])
+	assert( not (bkgraph is None))
+	Calculate(bkgraph)
+	return
+
+if __name__ == '__main__':
+	main()
+

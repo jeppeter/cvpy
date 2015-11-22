@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"runtime"
@@ -129,6 +130,10 @@ func RandMake(pntcnt int, edgecnt int, maxcap int) *IntGraph {
 func OutPutGraph(graph *IntGraph, source int, sink int) {
 	fmt.Fprintf(os.Stdout, "source=%d\n", source)
 	fmt.Fprintf(os.Stdout, "sink=%d\n", sink)
+	w := int(math.Sqrt(float64(sink + 1)))
+	h := w + 1
+	fmt.Fprintf(os.Stdout, "width=%d\n", w)
+	fmt.Fprintf(os.Stdout, "height=%d\n", h)
 	for _, from := range graph.Iter() {
 		for _, to := range graph.IterIdx(from) {
 			fmt.Fprintf(os.Stdout, "%d,%d,%d\n", from, to, graph.GetValue(from, to))
