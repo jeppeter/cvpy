@@ -18,6 +18,7 @@ import logging
 class Node:
 	def __init__(self):
 		self.index = 0
+		self.prevedgeindex = -1
 		return
 
 	def SetIdx(self,ind):
@@ -56,6 +57,30 @@ class LinkedListInt:
 		self.__listnum += 1
 		return
 
+	def is_empty(self):
+		if self.__listnum == 0 :
+			return True
+		return False
+	def peek(self):
+		if self.__listnum == 0:
+			return None
+		return self.__listarr[0]
+
+	def poll(self):
+		if self.__listnum == 0:
+			return None
+		iret = self.__listarr[0]
+		self.__listarr = self.__listarr[1:]
+		self.__listnum -= 1
+		return iret
+
+	def add_first(self,idx):
+		tmparr = [idx]
+		tmparr.extend(self.__listarr)
+		self.__listarr = tmparr
+		self.__listnum += 1
+		return
+
 class BoolArray:
 	def __init__(self,num):
 		self.__arr = num *[0]
@@ -67,6 +92,19 @@ class BoolArray:
 		assert(self.__cnt > idx)
 		self.__arr[idx] = 1
 		return
+
+	def SetFalse(self,idx):
+		assert(len(self.__arr) > idx)
+		assert(self.__cnt > idx)
+		self.__arr[idx] = 0
+		return
+
+
+	def Get(self,idx):
+		assert(len(self.__arr) > idx)
+		assert(self.__cnt > idx)		
+		return self.__arr[idx]
+
 
 
 class StartingEdge:
@@ -303,9 +341,70 @@ class GraphCutBoykovKolmogorov:
 
 
 		for i in xrange(len(self.node)):
-			
+			self.node[i].prevedgeindex = -1
 
+		while True:
+			lastedge = self.growth_stage()
+			if lastedge == -1:
+				return
+			self.augmentation_state(lastedge)
+			self.adoption_state()
+		return
+	
+	def growth_stage(self):
+		if self.isInS.Get(1):
+			return self.node[1].prevedgeindex
+		while not self.active.is_empty():
+			curnodeindex = self.active.peek()
+			if self.isInA.Get(curnodeindex) == 0 :
+				self.active.poll()
+				continue
+			for curstartedgeidx in xrange(self.startingedge.GetLengthFromIdx(curnodeindex)):
+				curedge = self.edges[self.startingedge.GetArrayNumber(curnodeindex,curstartedgeidx)]
+				if (curedge.capacity - curedge.flow) < eps:
+					continue
+				if self.isInS.Get(curedge.terminal_vertex) == 0 :
+					self.active.add(curedge.terminal_vertex)
+					self.isInA.SetTrue(curedge.terminal_vertex)
+					self.isInS.SetTrue(curedge.terminal_vertex)
+					self.node[curedge.terminal_vertex].prevedgeindex = self.startingedge.GetArrayNumber(curnodeindex,curstartedgeidx)
+				if curedge.terminal_vertex == 1:
+					return self.startingedge.GetArrayNumber(curnodeindex,curstartedgeidx)
+			self.active.poll()
+			self.isInA.SetFalse(curnodeindex)
 
+		return -1
 
+	def augmentation_stage(self,lastidx):
+		bottlecap = self.edges[lastidx].capacity - self.edges[lastidx].flow
+		curnodeindex = self.edges[lastidx].initial_vertex
+		while curnodeindex != 0 :
+			prevedge = self.edges[self.node[curnodeindex].prevedgeindex]
+			if bottlecap > (prevedge.capacity - prevedge.flow):
+				bottlecap = prevedge.capacity - prevedge.flow
+			curnodeindex = prevedge.initial_vertex
 
+		prevedgeindex = -1
+		curedgeindex = lastidx
+		while curedgeindex != -1:
+			self.edges[curedgeindex].flow += bottlecap
+			self.edges[self.edges[curnodeindex].invedgeindex].flow -= bottlecap
+			prevedgeindex = self.node[self.edges[curedgeindex].initial_vertex].prevedgeindex
+			if (self.edges[curedgeindex].capacity - self.edges[curedgeindex].flow) <= esp:
+				self.node[self.edges[curedgeindex].terminal_vertex].prevedgeindex = -1
+				self.orphan.add_first(self.edges[curedgeindex].terminal_vertex)
+		return
 
+	def get_root_of(self,nodeidx):
+		currootidx = nodeidx
+		while self.node[currootidx].prevedgeindex > 0 :
+			currootidx = self.edges[self.node[currootidx].prevedgeindex].initial_vertex
+		return currootidx
+
+	def adoption_stage(self):
+		while not self.orphan.is_empty():
+			curnodeidx = self.orphan.poll()
+			hasfinishedparent = false
+			curstartedgeidx = 0
+			while  not hasfinishedparent and curstartedgeidx < self.startingedge.GetLengthFromIdx(curnodeidx):
+				
