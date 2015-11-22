@@ -7,6 +7,7 @@ import logging
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Graphs/Maximum_flow/Boykov_%26_Kolmogorov
 # and it will be for the boykov kolmogorov 
 #########################################
+eps = 0.001
 
 #######################################
 # node member 
@@ -121,11 +122,14 @@ class StartingEdge:
 		return
 
 	def SetIntArray(self,idx,cnt):
-		if self.__startcap <= idx:
-			for x in xrange((idx-self.__startcap-1)):
+		if self.__startcap <= idx :
+			for x in xrange((idx-self.__startcap+1)):
 				self.__startingedge.append([])
 				self.__startcap += 1
-		self.__startingedge[idx] = cnt*[0]
+		tmparr = []
+		for i in xrange(cnt):
+			tmparr.append(0)
+		self.__startingedge[idx] = tmparr
 		return
 	def SetArrayNumber(self,k1,k2,num):
 		assert(len(self.__startingedge) == self.__startcap)
@@ -140,7 +144,7 @@ class StartingEdge:
 		return len(self.__startingedge[idx])
 
 	def GetArrayNumber(self,k1,k2):
-		assert(len(self.__startingedge) > idx)
+		assert(len(self.__startingedge) > k1)
 		assert(len(self.__startingedge[k1]) > k2)
 		return self.__startingedge[k1][k2]
 
@@ -159,7 +163,6 @@ class StartingEdge:
 #           
 ########################################
 class GraphCutBoykovKolmogorov:
-	eps = 0.001
 	def __indice_part(self,x,y):
 		return x*self.h + y
 
@@ -168,12 +171,12 @@ class GraphCutBoykovKolmogorov:
 		self.h = height
 		self.orphan = LinkedListInt()
 		self.active = LinkedListInt()
-		voisinsEdgeACreer=[[1,0],[1,-1],[0,-1],[-1,-1]]
+		self.voisinsEdgeACreer=[[1,0],[1,-1],[0,-1],[-1,-1]]
 		self.nbNode = self.w * self.h + 2
 		self.nbEdges = (self.w * self.h * 4) + (self.h - 2)* (self.w - 2)*8 +\
 			2*5*(self.h+self.w - 4)+4*3
 		self.node = self.nbNode * [Node()]
-		self.edge = self.nbEdges * [Edge()]
+		self.edges = self.nbEdges * [Edge()]
 		self.curNbVoisins = self.nbNode * [0]
 		self.node[0].SetIdx(0)
 		self.node[1].SetIdx(1)
