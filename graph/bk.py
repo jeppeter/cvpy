@@ -330,6 +330,7 @@ class GraphCutBoykovKolmogorov:
 		f= 0
 		for x in xrange(self.w):
 			for y in xrange(self.h):
+				logging.info('get nummber(1,%d)\n'%((x*self.h+y)))
 				f += self.edges[self.edges[self.startingedge.GetArrayNumber(1,(x*self.h+y))].invedgeindex].flow
 		return f
 
@@ -521,6 +522,7 @@ def MakeGraph(infile):
 
 			logging.info('set [%d][%d]->[%d][%d] %d\n'%(x1,y1,x2,y2,curw))
 			bkgraph.set_intern_weight(x1,y1,x2,y2,curw)
+			bkgraph.set_intern_weight(x2,y2,x1,y1,curw)
 
 	return bkgraph
 
