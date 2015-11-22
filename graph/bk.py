@@ -510,13 +510,16 @@ def MakeGraph(infile):
 			x2 = curt - (y2 * w)
 
 			if curs == source :
+				logging.info('set source weight [%d][%d]=%d\n'%(x2,y2,w))
 				bkgraph.set_source_weight(x2,y2,w)
 				continue
 
 			if curt == sink :
+				logging.info('set sink weight [%d][%d]=%d\n'%(x1,y1,w))
 				bkgraph.set_sink_weight(x1,y1,w)
 				continue
 
+			logging.info('set [%d][%d]->[%d][%d] %d\n'%(x1,y1,x2,y2,w))
 			bkgraph.set_intern_weight(x1,y1,x2,y2,w)
 
 	return bkgraph
@@ -526,6 +529,7 @@ def main():
 	if len(sys.argv) < 2:
 		sys.stderr.write('%s infile\n'%(sys.argv[0]))
 		sys.exit(4)
+	logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	bkgraph = MakeGraph(sys.argv[1])
 	assert( not (bkgraph is None))
 	Calculate(bkgraph)
