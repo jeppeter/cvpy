@@ -27,4 +27,4 @@ class BKGraph:
 		self.arcs_max = 2*edgemax
 		self.flow = 0
 		self.maxflow_iteration = 0
-		return 
+		return
