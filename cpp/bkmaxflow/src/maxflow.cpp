@@ -325,6 +325,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	/* trying to find a new parent */
 	for (a0=i->first; a0; a0=a0->next)
 	{
+		DEBUG_OUT("[%d] sister[%d].r_cap %d\n",a0->arcidx,a0->sister->arcidx,a0->sister->r_cap);
 		if (a0->sister->r_cap)
 		{
 			j = a0 -> head;
@@ -339,6 +340,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 						d += j -> DIST;
 						break;
 					}
+					DEBUG_OUT("[%d].parent %d\n",j->nodeidx,((int)j->parent) < 5 ? -((int)j->parent) : j->parent->arcidx);
 					a = j -> parent;
 					d ++;
 					if (a==MAXFLOW_TERMINAL)
@@ -347,13 +349,20 @@ template <typename captype, typename tcaptype, typename flowtype>
 						j -> DIST = 1;
 						break;
 					}
-					if (a==MAXFLOW_ORPHAN) { d = MAXFLOW_INFINITE_D; break; }
+					if (a==MAXFLOW_ORPHAN)
+					{
+						DEBUG_OUT("orphan %d\n",-((int)a));
+						d = MAXFLOW_INFINITE_D; 
+						break; 
+					}
 					j = a -> head;
 				}
+				DEBUG_OUT("d %d\n",d);
 				if (d<MAXFLOW_INFINITE_D) /* j originates from the source - done */
 				{
 					if (d<d_min)
 					{
+						DEBUG_OUT("a0_min %d\n",a0 ? a0->arcidx : -1);
 						a0_min = a0;
 						d_min = d;
 					}
@@ -367,6 +376,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 			}
 		}
 	}
+	DEBUG_OUT("a0_min %d\n",a0_min ? a0_min->arcidx: - 1);
 
 	if ((i->parent = a0_min))
 	{
@@ -380,13 +390,19 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 		/* process neighbors */
 		for (a0=i->first; a0; a0=a0->next)
-		{
+		{			
 			j = a0 -> head;
+			DEBUG_OUT("nodej %d\n",j->nodeidx);
 			if (!j->is_sink && (a=j->parent))
 			{
-				if (a0->sister->r_cap) set_active(j);
+				DEBUG_OUT("[%d] sister[%d].r_cap %d\n",a0->arcidx,a0->sister->arcidx,a0->sister->r_cap);
+				if (a0->sister->r_cap)
+				{
+					set_active(j);
+				}
 				if (a!=MAXFLOW_TERMINAL && a!=MAXFLOW_ORPHAN && a->head==i)
 				{
+					DEBUG_OUT("add to rear\n");
 					set_orphan_rear(j); // add j to the end of the adoption list
 				}
 			}
@@ -496,7 +512,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	}
 	else
 	{
-		DEBUG_OUT("\n");
+		//DEBUG_OUT("\n");
 		maxflow_init();
 	}
 
@@ -507,6 +523,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 		if ((i=current_node))
 		{
+			DEBUG_OUT("i %d\n",i->nodeidx);
 			i -> next = NULL; /* remove active flag */
 			if (!i->parent) i = NULL;
 		}
@@ -515,12 +532,14 @@ template <typename captype, typename tcaptype, typename flowtype>
 			if (!(i = next_active())) break;
 		}
 
+		DEBUG_OUT("nodei %d\n",i->nodeidx);
 		/* growth */
 		if (!i->is_sink)
 		{
 			/* grow source tree */
 			for (a=i->first; a; a=a->next)
 			{
+				DEBUG_OUT("[%d].r_cap = %d\n",a->arcidx,a->r_cap);
 				if (a->r_cap)
 				{
 					j = a -> head;
@@ -550,6 +569,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 			/* grow sink tree */
 			for (a=i->first; a; a=a->next)
 			{
+				DEBUG_OUT("[%d].r_cap = %d\n",a->sister->arcidx,a->sister->r_cap);
 				if (a->sister->r_cap)
 				{
 					j = a -> head;
@@ -607,6 +627,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 					{
 						DEBUG_OUT("source orphan %d\n",i->nodeidx);
 						process_source_orphan(i);
+						DEBUG_OUT("source orphan over %d\n",i->nodeidx);
 					}
 				}
 

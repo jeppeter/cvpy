@@ -125,6 +125,9 @@ template <typename captype, typename tcaptype, typename flowtype>
 	int arc_num_max = (int)(arc_max - arcs);
 	int arc_num = (int)(arc_last - arcs);
 	arc* arcs_old = arcs;
+	node* i;
+	arc* a;
+	int idx;
 
 	arc_num_max += arc_num_max / 2; if (arc_num_max & 1) arc_num_max ++;
 	arcs = (arc*) realloc(arcs_old, arc_num_max*sizeof(arc));
@@ -135,8 +138,6 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 	if (arcs != arcs_old)
 	{
-		node* i;
-		arc* a;
 		for (i=nodes; i<node_last; i++)
 		{
 			if (i->first) i->first = (arc*) ((char*)i->first + (((char*) arcs) - ((char*) arcs_old)));
@@ -147,6 +148,19 @@ template <typename captype, typename tcaptype, typename flowtype>
 			if (a->next) a->next = (arc*) ((char*)a->next + (((char*) arcs) - ((char*) arcs_old)));
 			a->sister = (arc*) ((char*)a->sister + (((char*) arcs) - ((char*) arcs_old)));
 		}
+	}
+	idx = 0;
+	for (i=nodes;i<node_max;i++)
+	{
+		i->nodeidx = idx;
+		idx ++;
+	}
+
+	idx = 0;
+	for (a=arcs;a < arc_max;a++)
+	{
+		a->arcidx = idx;
+		idx ++;
 	}
 }
 

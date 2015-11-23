@@ -94,7 +94,9 @@
 
 #include <stdlib.h>
 
-#define DEBUG_OUT(...) do{fprintf(stdout,"%s:%d\t",__FILE__,__LINE__);fprintf(stdout,__VA_ARGS__);} while(0)
+//#define DEBUG_OUT(...) do{fprintf(stdout,"%s:%d\t",__FILE__,__LINE__);fprintf(stdout,__VA_ARGS__);} while(0)
+#define DEBUG_OUT(...) do{fprintf(stdout,__VA_ARGS__);} while(0)
+//#define DEBUG_OUT(...) do{} while(0)
 
 /***********************************************************************/
 /***********************************************************************/

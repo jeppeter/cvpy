@@ -243,7 +243,7 @@ def main():
     logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
     cap,neighbor,source,sink = ParseAndGetValue(sys.argv[1])
     flow,flows = GoldbergTarjan(cap,neighbor,source,sink)
-    logging.info('flow %d flows %s'%(flow,flows))
+    logging.info('flow %d'%(flow))
 
 if __name__ == '__main__':
     main()
