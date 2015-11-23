@@ -383,6 +383,65 @@ class BKGraph:
 				arc0 = self.arcs[arc0].arc_next
 		return
 
+	def process_source_orphan(self,nodei):
+		arc0_min = -1
+		d_min = MAXFLOW_INFINITE_D
+		arc0 = self.nodes[nodei].arc_first
+		while arc0 != -1:
+			sisidx = self.arcs[arc0].arc_sister
+			if self.arcs[sisidx].r_cap:
+				nodej = self.arcs[arc0].node_head
+				if not self.nodes[nodej].is_sink:
+					arca = self.nodes[nodej].arc_parent
+					if arca != -1:
+						d = 0 
+						while True:
+							if self.nodes[nodej].TS == self.TIME:
+								d += self.nodes[nodej].DIST
+								break
+							arca = self.nodes[nodej].arc_parent
+							d += 1
+							if arca == MAXFLOW_TERMINAL:
+								self.nodes[nodej].TS = self.TIME
+								self.nodes[nodej].DIST = 1
+								break
+							if arca == MAXFLOW_ORPHAN:
+								d = MAXFLOW_INFINITE_D
+								break
+							nodej = self.arcs[arca].node_head
+						if d < MAXFLOW_INFINITE_D:
+							if d < d_min:
+								arc0_min = arca
+								d_min = d
+							nodej = self.arcs[arc0].node_head
+							while self.nodes[nodej].TS != self.TIME:
+								self.nodes[nodej].TS =self.TIME
+								self.nodes[nodej].DIST = d
+								d -= 1
+								arc_parent = self.nodes[nodej].arc_parent
+								nodej = self.arcs[arc_parent].node_head
+			arc0 = self.arcs[arc0].arc_next
+
+		self.nodes[nodei].arc_parent = arc0_min
+		if arc0_min != -1:
+			self.nodes[nodei].TS = self.TIME
+			self.nodes[nodei].DIST = d_min + 1
+		else:
+			self.add_to_change_list(nodei)
+			arc0 = self.nodes[nodei].arc_first
+			while arc0 != -1:
+				nodej = self.arcs[arc0].node_head
+				if  not self.nodes[nodej].is_sink:
+					arca = self.nodes[nodej].arc_parent 
+					if arca != -1:
+						sisidx = self.arcs[arca].arc_sister
+						if self.arcs[sisidx].r_cap:
+							self.set_active(nodej)
+						if arca != MAXFLOW_TERMINAL and arca != MAXFLOW_ORPHAN and self.arcs[arca].node_head == nodei:
+							self.set_orphan_rear(nodej)
+				arc0 = self.arcs[arc0].arc_next
+		return
+
 
 
 
