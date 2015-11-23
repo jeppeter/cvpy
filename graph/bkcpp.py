@@ -82,13 +82,13 @@ class BKGraph:
 		# now set for the idx
 		aarc.arc_sister = arevidx
 		arevarc.arc_sister = aidx
-		aarc.node_next = nodei.arc_first
+		aarc.arc_next = nodei.arc_first
 		nodei.arc_first = aidx
 		arevarc.arc_next = nodej.arc_first
 		nodej.arc_first = arevidx
 		aarc.node_head = nodeidj
 		arevarc.node_head = nodeidi
-		aarc.r_cap = rev_cap
+		aarc.r_cap = cap
 		arevarc.r_cap = rev_cap
 
 		# now to set for the arc
