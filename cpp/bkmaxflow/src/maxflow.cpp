@@ -86,6 +86,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	np -> ptr = i;
 	np -> next = orphan_first;
 	orphan_first = np;
+	DEBUG_OUT("add node %d\n",i->nodeidx);
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
@@ -99,6 +100,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	else             orphan_first        = np;
 	orphan_last = np;
 	np -> next = NULL;
+	DEBUG_OUT("add node %d\n",i->nodeidx);
 }
 
 /***********************************************************************/
@@ -322,43 +324,45 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 	/* trying to find a new parent */
 	for (a0=i->first; a0; a0=a0->next)
-	if (a0->sister->r_cap)
 	{
-		j = a0 -> head;
-		if (!j->is_sink && (a=j->parent))
+		if (a0->sister->r_cap)
 		{
-			/* checking the origin of j */
-			d = 0;
-			while ( 1 )
+			j = a0 -> head;
+			if (!j->is_sink && (a=j->parent))
 			{
-				if (j->TS == TIME)
+				/* checking the origin of j */
+				d = 0;
+				while ( 1 )
 				{
-					d += j -> DIST;
-					break;
+					if (j->TS == TIME)
+					{
+						d += j -> DIST;
+						break;
+					}
+					a = j -> parent;
+					d ++;
+					if (a==MAXFLOW_TERMINAL)
+					{
+						j -> TS = TIME;
+						j -> DIST = 1;
+						break;
+					}
+					if (a==MAXFLOW_ORPHAN) { d = MAXFLOW_INFINITE_D; break; }
+					j = a -> head;
 				}
-				a = j -> parent;
-				d ++;
-				if (a==MAXFLOW_TERMINAL)
+				if (d<MAXFLOW_INFINITE_D) /* j originates from the source - done */
 				{
-					j -> TS = TIME;
-					j -> DIST = 1;
-					break;
-				}
-				if (a==MAXFLOW_ORPHAN) { d = MAXFLOW_INFINITE_D; break; }
-				j = a -> head;
-			}
-			if (d<MAXFLOW_INFINITE_D) /* j originates from the source - done */
-			{
-				if (d<d_min)
-				{
-					a0_min = a0;
-					d_min = d;
-				}
-				/* set marks along the path */
-				for (j=a0->head; j->TS!=TIME; j=j->parent->head)
-				{
-					j -> TS = TIME;
-					j -> DIST = d --;
+					if (d<d_min)
+					{
+						a0_min = a0;
+						d_min = d;
+					}
+					/* set marks along the path */
+					for (j=a0->head; j->TS!=TIME; j=j->parent->head)
+					{
+						j -> TS = TIME;
+						j -> DIST = d --;
+					}
 				}
 			}
 		}
@@ -485,8 +489,16 @@ template <typename captype, typename tcaptype, typename flowtype>
 	if (maxflow_iteration == 0 && reuse_trees) { if (error_function) (*error_function)("reuse_trees cannot be used in the first call to maxflow()!"); exit(1); }
 	if (changed_list && !reuse_trees) { if (error_function) (*error_function)("changed_list cannot be used without reuse_trees!"); exit(1); }
 
-	if (reuse_trees) maxflow_reuse_trees_init();
-	else             maxflow_init();
+	if (reuse_trees)
+	{
+		DEBUG_OUT("\n");
+		maxflow_reuse_trees_init();
+	}
+	else
+	{
+		DEBUG_OUT("\n");
+		maxflow_init();
+	}
 
 	// main loop
 	while ( 1 )
@@ -508,26 +520,28 @@ template <typename captype, typename tcaptype, typename flowtype>
 		{
 			/* grow source tree */
 			for (a=i->first; a; a=a->next)
-			if (a->r_cap)
 			{
-				j = a -> head;
-				if (!j->parent)
+				if (a->r_cap)
 				{
-					j -> is_sink = 0;
-					j -> parent = a -> sister;
-					j -> TS = i -> TS;
-					j -> DIST = i -> DIST + 1;
-					set_active(j);
-					add_to_changed_list(j);
-				}
-				else if (j->is_sink) break;
-				else if (j->TS <= i->TS &&
-				         j->DIST > i->DIST)
-				{
-					/* heuristic - trying to make the distance from j to the source shorter */
-					j -> parent = a -> sister;
-					j -> TS = i -> TS;
-					j -> DIST = i -> DIST + 1;
+					j = a -> head;
+					if (!j->parent)
+					{
+						j -> is_sink = 0;
+						j -> parent = a -> sister;
+						j -> TS = i -> TS;
+						j -> DIST = i -> DIST + 1;
+						set_active(j);
+						add_to_changed_list(j);
+					}
+					else if (j->is_sink) break;
+					else if (j->TS <= i->TS &&
+					         j->DIST > i->DIST)
+					{
+						/* heuristic - trying to make the distance from j to the source shorter */
+						j -> parent = a -> sister;
+						j -> TS = i -> TS;
+						j -> DIST = i -> DIST + 1;
+					}
 				}
 			}
 		}
@@ -535,26 +549,28 @@ template <typename captype, typename tcaptype, typename flowtype>
 		{
 			/* grow sink tree */
 			for (a=i->first; a; a=a->next)
-			if (a->sister->r_cap)
 			{
-				j = a -> head;
-				if (!j->parent)
+				if (a->sister->r_cap)
 				{
-					j -> is_sink = 1;
-					j -> parent = a -> sister;
-					j -> TS = i -> TS;
-					j -> DIST = i -> DIST + 1;
-					set_active(j);
-					add_to_changed_list(j);
-				}
-				else if (!j->is_sink) { a = a -> sister; break; }
-				else if (j->TS <= i->TS &&
-				         j->DIST > i->DIST)
-				{
-					/* heuristic - trying to make the distance from j to the sink shorter */
-					j -> parent = a -> sister;
-					j -> TS = i -> TS;
-					j -> DIST = i -> DIST + 1;
+					j = a -> head;
+					if (!j->parent)
+					{
+						j -> is_sink = 1;
+						j -> parent = a -> sister;
+						j -> TS = i -> TS;
+						j -> DIST = i -> DIST + 1;
+						set_active(j);
+						add_to_changed_list(j);
+					}
+					else if (!j->is_sink) { a = a -> sister; break; }
+					else if (j->TS <= i->TS &&
+					         j->DIST > i->DIST)
+					{
+						/* heuristic - trying to make the distance from j to the sink shorter */
+						j -> parent = a -> sister;
+						j -> TS = i -> TS;
+						j -> DIST = i -> DIST + 1;
+					}
 				}
 			}
 		}
@@ -582,8 +598,16 @@ template <typename captype, typename tcaptype, typename flowtype>
 					i = np -> ptr;
 					nodeptr_block -> Delete(np);
 					if (!orphan_first) orphan_last = NULL;
-					if (i->is_sink) process_sink_orphan(i);
-					else            process_source_orphan(i);
+					if (i->is_sink)
+					{
+						DEBUG_OUT("sink orphan %d\n",i->nodeidx);
+						process_sink_orphan(i);
+					}
+					else
+					{
+						DEBUG_OUT("source orphan %d\n",i->nodeidx);
+						process_source_orphan(i);
+					}
 				}
 
 				orphan_first = np_next;

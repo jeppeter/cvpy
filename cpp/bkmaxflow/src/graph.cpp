@@ -23,15 +23,26 @@ template <typename captype, typename tcaptype, typename flowtype>
 	if (node_num_max < 16) node_num_max = 16;
 	if (edge_num_max < 16) edge_num_max = 16;
 
-	nodes = (node*) malloc(node_num_max*sizeof(node));
-	arcs = (arc*) malloc(2*edge_num_max*sizeof(arc));
+#if 1
+	nodes = (node*) malloc(sizeof(node));
+	arcs = (arc*) malloc(2*sizeof(arc));
+
 	if (!nodes || !arcs) { if (error_function) (*error_function)("Not enough memory!"); exit(1); }
 
+	nodes->nodeidx = 0;
+	arcs->arcidx = 0;
 	node_last = nodes;
-	node_max = nodes + node_num_max;
+	node_max = nodes + 1;
 	arc_last = arcs;
-	arc_max = arcs + 2*edge_num_max;
-
+	arc_max = arcs + 2;
+#else
+	nodes = NULL;
+	arcs = NULL;
+	node_last = nodes;
+	node_max = nodes;
+	arc_last = arcs;
+	arc_max = arcs;
+#endif	
 	maxflow_iteration = 0;
 	flow = 0;
 }
@@ -69,6 +80,9 @@ template <typename captype, typename tcaptype, typename flowtype>
 	void Graph<captype,tcaptype,flowtype>::reallocate_nodes(int num)
 {
 	int node_num_max = (int)(node_max - nodes);
+	int idx;
+	node* i;
+	arc* a;
 	node* nodes_old = nodes;
 
 	node_num_max += node_num_max / 2;
@@ -81,8 +95,6 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 	if (nodes != nodes_old)
 	{
-		node* i;
-		arc* a;
 		for (i=nodes; i<node_last; i++)
 		{
 			if (i->next) i->next = (node*) ((char*)i->next + (((char*) nodes) - ((char*) nodes_old)));
@@ -91,6 +103,19 @@ template <typename captype, typename tcaptype, typename flowtype>
 		{
 			a->head = (node*) ((char*)a->head + (((char*) nodes) - ((char*) nodes_old)));
 		}
+	}
+	idx = 0;
+	for (i=nodes;i<node_max;i++)
+	{
+		i->nodeidx = idx;
+		idx ++;
+	}
+
+	idx = 0;
+	for (a=arcs;a < arc_max;a++)
+	{
+		a->arcidx = idx;
+		idx ++;
 	}
 }
 

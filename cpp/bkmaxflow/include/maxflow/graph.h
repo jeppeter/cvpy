@@ -295,6 +295,7 @@ private:
 
 		tcaptype	    tr_cap;		// if tr_cap > 0 then tr_cap is residual capacity of the arc SOURCE->node
 								    // otherwise         -tr_cap is residual capacity of the arc node->SINK
+		int             nodeidx;
 
 	};
 
@@ -305,6 +306,7 @@ private:
 		arc			*sister;	// reverse arc
 
 		captype		r_cap;		// residual capacity
+		int         arcidx;
 	};
 
 	struct nodeptr
@@ -382,6 +384,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 {
 	assert(num > 0);
 
+	DEBUG_OUT("node_last 0x%p num %d node_max 0x%p\n",node_last,num,node_max);
 	if (node_last + num > node_max) reallocate_nodes(num);
 
 	memset(node_last, 0, num*sizeof(node));
