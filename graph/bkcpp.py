@@ -115,14 +115,16 @@ class BKGraph:
 				if nodei == NULL_PTR:
 					break
 			logging.info('nodei %d'%(nodei))
+			self.debug_parent(7)
 
 			if not self.nodes[nodei].is_sink:
 				aidx = self.nodes[nodei].arc_first
 				while aidx != NULL_PTR:
-					logging.info('[%d].r_cap %d'%(aidx,self.arcs[aidx].r_cap))
+					logging.info('[%d].r_cap = %d'%(aidx,self.arcs[aidx].r_cap))
 					if self.arcs[aidx].r_cap:
 						nodej = self.arcs[aidx].node_head
 						if self.nodes[nodej].arc_parent == NULL_PTR:
+							logging.info('[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
 							self.nodes[nodej].is_sink = False
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS = self.nodes[nodei].TS
@@ -133,6 +135,7 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST :
+							logging.info('[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS =self.nodes[nodei].TS
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
@@ -141,10 +144,11 @@ class BKGraph:
 				aidx = self.nodes[nodei].arc_first
 				while aidx != NULL_PTR:					
 					sisidx = self.arcs[aidx].arc_sister
-					logging.info('[%d].r_cap %d'%(sisidx,self.arcs[sisidx].r_cap))
+					logging.info('[%d].r_cap = %d'%(sisidx,self.arcs[sisidx].r_cap))
 					if self.arcs[sisidx].r_cap:
 						nodej = self.arcs[aidx].node_head
 						if self.nodes[nodej].arc_parent == NULL_PTR:
+							logging.info('[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
 							self.nodes[nodej].is_sink = True
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS = self.nodes[nodei].TS
@@ -156,6 +160,7 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST:
+							logging.info('[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS = self.nodes[nodei].TS
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
@@ -180,6 +185,7 @@ class BKGraph:
 					else:
 						logging.info('source orphan %d'%(curorphnodei))
 						self.process_source_orphan(curorphnodei)
+						logging.info('source orphan over %d'%(curorphnodei))
 			else:
 				curnodeid = NULL_PTR
 		self.maxflow_iteration += 1
@@ -198,12 +204,12 @@ class BKGraph:
 			self.nodes[nodei].TS = self.TIME
 
 			if self.nodes[nodei].tr_cap > 0:
-				self.nodes[nodei].is_sink = 0
+				self.nodes[nodei].is_sink = False
 				self.nodes[nodei].arc_parent = MAXFLOW_TERMINAL
 				self.set_active(nodei)
 				self.nodes[nodei].DIST = 1
 			elif self.nodes[nodei].tr_cap < 0 :
-				self.nodes[nodei].is_sink = 1
+				self.nodes[nodei].is_sink = True
 				self.nodes[nodei].arc_parent = MAXFLOW_TERMINAL
 				self.set_active(nodei)
 				self.nodes[nodei].DIST = 1
@@ -370,10 +376,15 @@ class BKGraph:
 							self.set_orphan_rear(nodej)
 				arc0 = self.arcs[arc0].arc_next
 		return
+	def debug_parent(self,nodei):
+		if len(self.nodes) > nodei:
+			logging.info('[%d].parent = %d'%(nodei,self.nodes[nodei].arc_parent))
+		return
 
 	def process_source_orphan(self,nodei):
 		arc0_min = NULL_PTR
 		d_min = MAXFLOW_INFINITE_D
+		self.debug_parent(7)
 		arc0 = self.nodes[nodei].arc_first
 		while arc0 != NULL_PTR:
 			sisidx = self.arcs[arc0].arc_sister
@@ -421,6 +432,7 @@ class BKGraph:
 			self.nodes[nodei].TS = self.TIME
 			self.nodes[nodei].DIST = d_min + 1
 		else:
+			self.debug_parent(7)
 			self.add_to_change_list(nodei)
 			arc0 = self.nodes[nodei].arc_first
 			while arc0 != NULL_PTR:
@@ -429,8 +441,9 @@ class BKGraph:
 				if  not self.nodes[nodej].is_sink:
 					arca = self.nodes[nodej].arc_parent
 					if arca != NULL_PTR:
-						sisidx = self.arcs[arca].arc_sister
-						logging.info('[%d] sister[%d].r_cap %d'%(arca,sisidx,self.arcs[sisidx].r_cap))
+						self.debug_parent(7)
+						sisidx = self.arcs[arc0].arc_sister
+						logging.info('[%d][%d] sister[%d].r_cap %d'%(nodej,arc0,sisidx,self.arcs[sisidx].r_cap))
 						if self.arcs[sisidx].r_cap:
 							self.set_active(nodej)
 						if arca != MAXFLOW_TERMINAL and arca != MAXFLOW_ORPHAN and self.arcs[arca].node_head == nodei:
@@ -446,7 +459,7 @@ class BKGraph:
 		tmparr = [blockptr]
 		tmparr.extend(self.orphan_list)
 		self.orphan_list=tmparr
-		logging.info('set orphan %d'%(nodei))
+		logging.info('set_orphan_front %d'%(nodei))
 		return
 
 	def set_orphan_rear(self,nodei):
@@ -454,7 +467,7 @@ class BKGraph:
 		blockptr = NodeBlockPtr()
 		blockptr.array_node = nodei
 		self.orphan_list.append(blockptr)
-		logging.info('set orphan %d'%(nodei))
+		logging.info('set_orphan_rear %d'%(nodei))
 		return
 
 
@@ -554,6 +567,7 @@ def main():
 
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
 	logging.basicConfig(level=logging.INFO,format='%(message)s')
 	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()

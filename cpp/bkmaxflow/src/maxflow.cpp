@@ -9,8 +9,8 @@ using namespace maxflowLib;
 /*
 	special constants for node->parent. Duplicated in graph.cpp, both should match!
 */
-#define MAXFLOW_TERMINAL ( (arc *) 1 )		/* to terminal */
-#define MAXFLOW_ORPHAN   ( (arc *) 2 )		/* orphan */
+#define MAXFLOW_TERMINAL ( (arc *) 2 )		/* to terminal */
+#define MAXFLOW_ORPHAN   ( (arc *) 3 )		/* orphan */
 
 
 #define MAXFLOW_INFINITE_D ((int)(((unsigned)-1)/2))		/* infinite distance to the terminal */
@@ -86,7 +86,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	np -> ptr = i;
 	np -> next = orphan_first;
 	orphan_first = np;
-	DEBUG_OUT("add node %d\n",i->nodeidx);
+	DEBUG_OUT("set_orphan_front %d\n",i->nodeidx);
 }
 
 template <typename captype, typename tcaptype, typename flowtype> 
@@ -100,7 +100,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	else             orphan_first        = np;
 	orphan_last = np;
 	np -> next = NULL;
-	DEBUG_OUT("add node %d\n",i->nodeidx);
+	DEBUG_OUT("set_orphan_rear %d\n",i->nodeidx);
 }
 
 /***********************************************************************/
@@ -321,6 +321,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	node *j;
 	arc *a0, *a0_min = NULL, *a;
 	int d, d_min = MAXFLOW_INFINITE_D;
+	this->debug_parent(7);
 
 	/* trying to find a new parent */
 	for (a0=i->first; a0; a0=a0->next)
@@ -385,6 +386,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 	}
 	else
 	{
+		this->debug_parent(7);
 		/* no parent is found */
 		add_to_changed_list(i);
 
@@ -395,7 +397,8 @@ template <typename captype, typename tcaptype, typename flowtype>
 			DEBUG_OUT("nodej %d\n",j->nodeidx);
 			if (!j->is_sink && (a=j->parent))
 			{
-				DEBUG_OUT("[%d] sister[%d].r_cap %d\n",a0->arcidx,a0->sister->arcidx,a0->sister->r_cap);
+				this->debug_parent(7);
+				DEBUG_OUT("[%d][%d] sister[%d].r_cap %d\n",j->nodeidx,a0->arcidx,a0->sister->arcidx,a0->sister->r_cap);
 				if (a0->sister->r_cap)
 				{
 					set_active(j);
@@ -487,6 +490,21 @@ template <typename captype, typename tcaptype, typename flowtype>
 	}
 }
 
+template <typename captype, typename tcaptype, typename flowtype> 
+	void Graph<captype,tcaptype,flowtype>::debug_parent(int idx)
+{
+	struct node *pnode;
+	for (pnode = this->nodes ; pnode < this->node_max ; pnode ++ )
+	{
+		if(pnode->nodeidx == idx)
+		{
+			DEBUG_OUT("[%d].parent = %d\n",pnode->nodeidx,GET_IDX_ARC(pnode->parent));
+			return;
+		}
+	}
+	return;
+}
+
 /***********************************************************************/
 
 template <typename captype, typename tcaptype, typename flowtype> 
@@ -523,7 +541,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 		if ((i=current_node))
 		{
-			DEBUG_OUT("i %d\n",i->nodeidx);
+			DEBUG_OUT("nodei %d\n",i->nodeidx);
 			i -> next = NULL; /* remove active flag */
 			if (!i->parent) i = NULL;
 		}
@@ -533,6 +551,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 		}
 
 		DEBUG_OUT("nodei %d\n",i->nodeidx);
+		this->debug_parent(7);
 		/* growth */
 		if (!i->is_sink)
 		{
@@ -545,6 +564,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 					j = a -> head;
 					if (!j->parent)
 					{
+						DEBUG_OUT("[%d].parent = %d\n",j->nodeidx,a->sister->arcidx);
 						j -> is_sink = 0;
 						j -> parent = a -> sister;
 						j -> TS = i -> TS;
@@ -557,6 +577,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 					         j->DIST > i->DIST)
 					{
 						/* heuristic - trying to make the distance from j to the source shorter */
+						DEBUG_OUT("[%d].parent = %d\n",j->nodeidx,a->sister->arcidx);
 						j -> parent = a -> sister;
 						j -> TS = i -> TS;
 						j -> DIST = i -> DIST + 1;
@@ -575,6 +596,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 					j = a -> head;
 					if (!j->parent)
 					{
+						DEBUG_OUT("[%d].parent = %d\n",j->nodeidx,a->sister->arcidx);
 						j -> is_sink = 1;
 						j -> parent = a -> sister;
 						j -> TS = i -> TS;
@@ -587,6 +609,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 					         j->DIST > i->DIST)
 					{
 						/* heuristic - trying to make the distance from j to the sink shorter */
+						DEBUG_OUT("[%d].parent = %d\n",j->nodeidx,a->sister->arcidx);
 						j -> parent = a -> sister;
 						j -> TS = i -> TS;
 						j -> DIST = i -> DIST + 1;

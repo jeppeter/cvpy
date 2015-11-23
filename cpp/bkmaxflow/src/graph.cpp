@@ -11,8 +11,8 @@ using namespace maxflowLib;
 /*
 	special constants for node->parent. Duplicated in maxflow.cpp, both should match!
 */
-#define MAXFLOW_TERMINAL ( (arc *) 1 )		/* to terminal */
-#define MAXFLOW_ORPHAN   ( (arc *) 2 )		/* orphan */
+#define MAXFLOW_TERMINAL ( (arc *) 2 )		/* to terminal */
+#define MAXFLOW_ORPHAN   ( (arc *) 3 )		/* orphan */
 
 template <typename captype, typename tcaptype, typename flowtype> 
 	Graph<captype, tcaptype, flowtype>::Graph(int node_num_max, int edge_num_max, void (*err_function)(const char *))

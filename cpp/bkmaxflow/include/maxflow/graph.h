@@ -128,6 +128,8 @@ public:
 	// FOR DESCRIPTION OF changed_list, SEE remove_from_changed_list().
 	flowtype maxflow(bool reuse_trees = false, Block<node_id>* changed_list = NULL);
 
+	void debug_parent(int idx);
+
 	// After the maxflow is computed, this function returns to which
 	// segment the node 'i' belongs (Graph<captype,tcaptype,flowtype>::SOURCE or Graph<captype,tcaptype,flowtype>::SINK).
 	//
@@ -384,7 +386,7 @@ template <typename captype, typename tcaptype, typename flowtype>
 {
 	assert(num > 0);
 
-	DEBUG_OUT("node_last 0x%p num %d node_max 0x%p\n",node_last,num,node_max);
+	//DEBUG_OUT("node_last 0x%p num %d node_max 0x%p\n",node_last,num,node_max);
 	if (node_last + num > node_max) reallocate_nodes(num);
 
 	memset(node_last, 0, num*sizeof(node));
