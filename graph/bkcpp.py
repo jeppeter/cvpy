@@ -215,3 +215,41 @@ class BKGraph:
 				self.nodes[nodei].DIST = 1
 			else:
 				self.nodes[nodei].arc_parent = -1
+		return
+
+	def next_active(self):
+		while True:
+			nodei = self.queue_first[0]
+			if nodei == -1:
+				nodei = self.queue_first[1]
+				self.queue_first[0] = nodei
+				self.queue_last[0] = self.queue_last[1]
+				self.queue_first[1] = -1
+				self.queue_last[1] = -1
+				if nodei == -1:
+					return -1
+			if self.nodes[nodei].node_next == nodei:
+				self.queue_first[0] = -1
+				self.queue_last[0] = -1
+			else:
+				self.queue_first[0]= self.nodes[nodei].node_next
+			self.nodes[nodei].node_next = -1
+
+			if self.nodes[nodei].arc_parent != -1:
+				return nodei
+		return -1
+
+	def set_active(self,nodei):
+		if self.nodes[nodei].node_next == -1:
+			if self.queue_last[1] != -1:
+				self.nodes[self.queue_last[1]].node_next = nodei
+			else:
+				self.queue_first[1] = nodei
+			self.queue_last[1] = nodei
+			self.nodes[nodei].node_next = nodei
+		return
+
+	def add_to_change_list(self,nodei):
+		# nothing to add change list because we do not set change list before
+		return
+
