@@ -67,8 +67,8 @@ class BKGraph:
 		return
 
 	def add_edge(self,nodeidi,nodeidj,cap ,rev_cap):
-		assert(self.nodemax > nodeidi)
-		assert(self.nodemax > nodeidj)
+		assert(len(self.nodes) > nodeidi)
+		assert(len(self.nodes) > nodeidj)
 		assert(nodeidi != nodeidj)
 		assert(cap >= 0)
 		assert(rev_cap >= 0)
@@ -496,7 +496,7 @@ def ParseInputFile(infile):
 					sourc_sink_pair[curt][0]=curw
 					logging.info('add t-link[%d] source(%d) sink(%d)\n'%(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1]))
 					bkgraph.add_tweights(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1])
-					delete(sourc_sink_pair,curt)
+					del sourc_sink_pair[curt]
 				continue
 
 			if curt == sink and curs != source:
@@ -506,16 +506,18 @@ def ParseInputFile(infile):
 					sourc_sink_pair[curs][1]=curw
 					logging.info('add t-link[%d] source(%d) sink(%d)\n'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
 					bkgraph.add_tweights(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1])
-					delete(sourc_sink_pair,curs)
+					del sourc_sink_pair[curs]
 				continue
 
-			logging.info('set [%d][%d]->[%d][%d] %d\n'%(x1,y1,x2,y2,curw))
+			logging.info('set [%d]->[%d] %d\n'%(curs,curt,curw))
 			bkgraph.add_edge(curs,curt,curw,0)
-		for k in sourc_sink_pair.key():
-			# now to add t-link weights
-			logging.info('add t-link[%d] source(%d) sink(%d)\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
-			bkgraph.add_tweights(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1])
-		return bkgraph
+	
+
+	for k in sourc_sink_pair.keys():
+		# now to add t-link weights
+		logging.info('add t-link[%d] source(%d) sink(%d)\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
+		bkgraph.add_tweights(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1])
+	return bkgraph
 
 
 def main():
