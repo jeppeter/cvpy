@@ -3,6 +3,7 @@ import logging
 
 MAXFLOW_TERMINAL=-2
 MAXFLOW_ORPHAN=-3
+MAXFLOW_INFINITE_D=(0xffffffff >> 1)
 
 class Arc:
 	def __init__(self):
@@ -252,4 +253,137 @@ class BKGraph:
 	def add_to_change_list(self,nodei):
 		# nothing to add change list because we do not set change list before
 		return
+
+	def augment(self,aidx):
+		bottlecap = self.arcs[aidx].r_cap
+		# this is source tree
+		sisidx = self.arcs[aidx].arc_sister
+		nodei = self.arcs[sisidx].node_head
+		while True:
+			arci = self.nodes[nodei].arc_parent
+			if arci == MAXFLOW_TERMINAL:
+				break
+			sisidx = self.arcs[arci].arc_sister
+			if bottlecap > self.arcs[sisidx].r_cap:
+				bottlecap = self.arcs[sisidx].r_cap
+			nodei = self.arcs[arci].node_head
+		if bottlecap > self.nodes[nodei].tr_cap:
+			bottlecap = self.nodes[nodei].tr_cap
+
+		# this is sink tree
+		nodei = self.arcs[aidx].node_head
+		while True:
+			arci = self.nodes[nodei].arc_parent
+			if arci == MAXFLOW_TERMINAL:
+				break
+			if bottlecap > self.arcs[arci].r_cap :
+				bottlecap = self.arcs[arci].r_cap
+			nodei = self.arcs[arci].node_head
+		if bottlecap > - self.nodes[nodei].tr_cap :
+			bottlecap = - self.nodes[nodei].tr_cap
+
+		sisidx = self.arcs[aidx].arc_sister
+		self.arcs[sisidx].r_cap += bottlecap
+		self.arcs[aidx].r_cap -= bottlecap
+
+		nodei = self.arcs[sisidx].node_head
+		while True:
+			arci = self.nodes[nodei].arc_parent
+			if arci == MAXFLOW_TERMINAL:
+				break
+			self.arcs[arci].r_cap += bottlecap
+			sisidx = self.arcs[arci].arc_sister
+			self.arcs[sisidx].r_cap -= bottlecap
+			if self.arcs[sisidx].r_cap == 0 :
+				self.set_orphan_front(nodei)
+			nodei = self.arcs[arci].node_head
+		self.nodes[nodei].tr_cap -= bottlecap
+
+		if self.nodes[nodei].tr_cap == 0:
+			self.set_orphan_front(nodei)
+
+		nodei = self.arcs[aidx].node_head
+		while True:
+			arci = self.nodes[nodei].arc_parent
+			if arci == MAXFLOW_TERMINAL:
+				break
+			sisidx = self.arcs[arci].arc_sister
+			self.arcs[sisidx].r_cap += bottlecap
+			self.arcs[arci].r_cap -= bottlecap
+			if self.arcs[arci].r_cap == 0 :
+				self.set_orphan_front(nodei)
+			nodei = self.arcs[arci].node_head
+		self.nodes[nodei].tr_cap += bottlecap
+		if self.nodes[nodei].tr_cap == 0:
+			self.set_orphan_front(nodei)
+		self.flow += bottlecap
+		return
+
+	def process_sink_orphan(self,nodei):
+		d_min = MAXFLOW_INFINITE_D
+
+		arc0 = self.nodes[nodei].arc_first
+		arc0_min = -1
+		while True:
+			if arc0 == -1:
+				break
+			if self.arcs[arc0].r_cap != 0 :
+				nodej = self.arcs[arc0].node_head
+				if self.nodes[nodej].is_sink:
+					arca = self.arcs[arc0].arc_next
+					if arca != -1:
+						d = 0
+						while True:
+							if self.nodes[nodej].TS == self.TIME:
+								d += self.nodes[nodej].DIST
+								break
+							arca = self.nodes[nodej].arc_parent
+							d += 1
+							if arca == MAXFLOW_TERMINAL:
+								self.nodes[nodej].TS = self.TIME
+								self.nodes[nodej].DIST = 1
+								break
+							if arca == MAXFLOW_ORPHAN:
+								d = MAXFLOW_INFINITE_D
+								break
+							nodej = self.arcs[arca].node_head
+						if d < MAXFLOW_INFINITE_D:
+							if d < d_min:
+								arc0_min = arc0
+								d_min = d
+
+							nodej = self.arcs[arc0].node_head
+							while True:
+								if self.nodes[nodej].TS == self.TIME:
+									break
+								self.nodes[nodej].TS = self.TIME
+								self.nodes[nodej].DIST = d
+								d -= 1
+								arc_parent = self.nodes[nodej].arc_parent
+								nodej = self.arcs[arc_parent].node_head
+			arc0 = self.arcs[arc0].arc_next
+
+		self.nodes[nodei].arc_parent = arc0_min
+		if self.nodes[nodei].arc_parent != -1:
+			self.nodes[nodei].TS = self.TIME
+			self.nodes[nodei].DIST = d_min + 1
+		else:
+			self.add_to_change_list(nodei)
+			arc0 = self.nodes[nodei].arc_first
+			while arc0 != -1:
+				nodej = self.arcs[arc0].node_head
+				if self.nodes[nodej].is_sink:
+					arca = self.nodes[nodej].arc_parent
+					if arca != -1:
+						if self.arcs[arc0].r_cap :
+							self.set_active(nodej)
+						if arca != MAXFLOW_TERMINAL  and arca != MAXFLOW_ORPHAN and \
+							self.arcs[arca].node_head == nodei:
+							self.set_orphan_rear(nodej)
+				arc0 = self.arcs[arc0].arc_next
+		return
+
+
+
+
 
