@@ -457,6 +457,94 @@ class BKGraph:
 		return
 
 
+def ParseInputFile(infile):
+	source=''
+	sink=0
+	widht=0
+	height=0
+	bkgraph=None
+	sourc_sink_pair={}
+	with open(infile) as f:
+		for l in f:
+			if l.startswith('#'):
+				continue
+			l = l.rstrip('\r\n')
+			if l.startswith('source='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				source = int(sarr[1])
+				continue
+			elif l.startswith('sink='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				sink = int(sarr[1])
+				continue
+			elif l.startswith('width='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				w = int(sarr[1])
+				continue
+			elif l.startswith('height='):
+				sarr = l.split('=')
+				if len(sarr) < 2:
+					continue
+				h = int(sarr[1])
+				continue
+			sarr = l.split(',')
+			if len(sarr) < 3:
+				continue
+			if sink == 0 :
+				sys.stderr.write('can not define sink or not define width or height\n')
+				sys.exit(4)
+			if bkgraph is None:
+				bkgraph = BKGraph(sink+1,sink * (sink-1)/2)
+				bkgraph.add_node(sink+1)
+			curs = int(sarr[0])
+			curt = int(sarr[1])
+			curw = int(sarr[2])
+
+			if curs == source and curt != sink :
+				if curt not in sourc_sink_pair.keys():
+					sourc_sink_pair[curt] = [curw,0]
+				else:
+					# we have put the sink into the graph
+					sourc_sink_pair[curt][0]=curw
+					logging.info('add t-link[%d] source(%d) sink(%d)\n'%(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1]))
+					bkgraph.add_tweights(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1])
+					delete(sourc_sink_pair,curt)
+				continue
+
+			if curt == sink and curs != source:
+				if curs not in sourc_sink_pair.keys():
+					sourc_sink_pair[curs]=[0,curw]
+				else:
+					sourc_sink_pair[curs][1]=curw
+					logging.info('add t-link[%d] source(%d) sink(%d)\n'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
+					bkgraph.add_tweights(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1])
+					delete(sourc_sink_pair,curs)
+				continue
+
+			logging.info('set [%d][%d]->[%d][%d] %d\n'%(x1,y1,x2,y2,curw))
+			bkgraph.add_edge(curs,curt,curw,0)
+		for k in sourc_sink_pair.key():
+			# now to add t-link weights
+			logging.info('add t-link[%d] source(%d) sink(%d)\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
+			bkgraph.add_tweights(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1])
+		return bkgraph
 
 
+def main():
+	if len(sys.argv) < 2:
+		sys.stderr.write('%s infile\n'%(sys.argv[0]))
+		sys.exit(4)
+	bkgraph = ParseInputFile(sys.argv[1])
+	flow = bkgraph.max_flow()
+	sys.stdout.write('flow %d\n'%(flow))
+	return
 
+if __name__ == '__main__':
+	logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	main()
