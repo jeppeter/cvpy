@@ -1,6 +1,8 @@
 import sys
 import logging
 
+MAXFLOW_TERMINAL=-2
+MAXFLOW_ORPHAN=-3
 
 class Arc:
 	def __init__(self):
@@ -27,6 +29,11 @@ class Node:
 		self.tr_cap = 0
 		return
 
+class NodeBlockPtr:
+	def __init__(self):
+		self.array_node = -1
+		return
+
 class BKGraph:
 	def __init__(self,nodemax,edgemax):
 		self.node_num = 0
@@ -44,6 +51,9 @@ class BKGraph:
 		self.arcs_max = 2*edgemax
 		self.flow = 0
 		self.maxflow_iteration = 0
+		self.orphan_list = []
+		self.queue_first = [-1,-1]
+		self.queue_last = [-1,-1]
 		return
 
 	def add_node(self,num=1):
@@ -100,8 +110,7 @@ class BKGraph:
 		return
 
 	def max_flow(self):
-		self.maxflow_reuse_trees_init()
-
+		self.maxflow_init()
 		curnodeid = -1
 		nodei = None
 		while True:
@@ -169,14 +178,40 @@ class BKGraph:
 
 				self.augment(aidx)
 
-				while True:
-					np = self.orphan_first
-					if np == -1:
-						break
+				while len(self.orphan_list) > 0:
+					curorphan = self.orphan_list[0]
+					self.orphan_list = self.orphan_list[1:]
+					curorphnodei = curorphan.array_node
+					if self.nodes[curorphnodei].is_sink:
+						self.process_sink_orphan(curorphnodei)
+					else:
+						self.process_source_orphan(curorphnodei)
+			else:
+				curnodeid = -1
+		self.maxflow_iteration += 1
+		return self.flow
 
+	def max_flow_init(self):
+		self.queue_first = [-1,-1]
+		self.queue_last = [-1,-1]
+		self.orphan_list = []
+		self.TIME = 0
 
+		for nodei in xrange(len(self.nodes)):
+			self.nodes[nodei].node_next = -1
+			self.nodes[nodei].is_marked = 0
+			self.nodes[nodei].is_in_changed_list = 0
+			self.nodes[nodei].TS = self.TIME
 
-
-
-
-
+			if self.nodes[nodei].tr_cap > 0:
+				self.nodes[nodei].is_sink = 0
+				self.nodes[nodei].arc_parent = MAXFLOW_TERMINAL
+				self.set_active(nodei)
+				self.nodes[nodei].DIST = 1
+			elif self.nodes[nodei].tr_cap < 0 :
+				self.nodes[nodei].is_sink = 1
+				self.nodes[nodei].arc_parent = MAXFLOW_TERMINAL
+				self.set_active(nodei)
+				self.nodes[nodei].DIST = 1
+			else:
+				self.nodes[nodei].arc_parent = -1
