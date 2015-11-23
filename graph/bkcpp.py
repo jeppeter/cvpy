@@ -37,18 +37,8 @@ class NodeBlockPtr:
 
 class BKGraph:
 	def __init__(self,nodemax,edgemax):
-		self.node_num = 0
-		if nodemax < 16:
-			nodemax = 16
-		if edgemax < 16:
-			edgemax = 16
-
-		self.nodes = nodemax * [Node()]
-		self.arcs = (2*edgemax) * [Arc()]
-		self.node_last = self.nodes
-		self.nodes_max = nodemax
-		self.arcs_last = self.arcs
-		self.arcs_max = 2*edgemax
+		self.nodes = []
+		self.arcs = []
 		self.flow = 0
 		self.maxflow_iteration = 0
 		self.orphan_list = []
@@ -59,7 +49,6 @@ class BKGraph:
 	def add_node(self,num=1):
 		for i in xrange(num):
 			self.nodes.append(Node())
-		nodemax += num
 		return
 
 	def add_tweights(self,nodeid,cap_source,cap_sink):
