@@ -178,7 +178,7 @@ class BKGraph:
 		self.maxflow_iteration += 1
 		return self.flow
 
-	def max_flow_init(self):
+	def maxflow_init(self):
 		self.queue_first = [-1,-1]
 		self.queue_last = [-1,-1]
 		self.orphan_list = []
@@ -307,7 +307,6 @@ class BKGraph:
 
 	def process_sink_orphan(self,nodei):
 		d_min = MAXFLOW_INFINITE_D
-
 		arc0 = self.nodes[nodei].arc_first
 		arc0_min = -1
 		while True:
@@ -316,7 +315,7 @@ class BKGraph:
 			if self.arcs[arc0].r_cap != 0 :
 				nodej = self.arcs[arc0].node_head
 				if self.nodes[nodej].is_sink:
-					arca = self.arcs[arc0].arc_next
+					arca = self.nodes[nodej].arc_parent
 					if arca != -1:
 						d = 0
 						while True:
