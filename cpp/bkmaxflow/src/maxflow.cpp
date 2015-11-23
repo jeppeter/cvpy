@@ -422,43 +422,49 @@ template <typename captype, typename tcaptype, typename flowtype>
 
 	/* trying to find a new parent */
 	for (a0=i->first; a0; a0=a0->next)
-	if (a0->r_cap)
 	{
-		j = a0 -> head;
-		if (j->is_sink && (a=j->parent))
+		if (a0->r_cap)
 		{
-			/* checking the origin of j */
-			d = 0;
-			while ( 1 )
+			j = a0 -> head;
+			if (j->is_sink && (a=j->parent))
 			{
-				if (j->TS == TIME)
+				/* checking the origin of j */
+				d = 0;
+				while ( 1 )
 				{
-					d += j -> DIST;
-					break;
+					if (j->TS == TIME)
+					{
+						d += j -> DIST;
+						break;
+					}
+					a = j -> parent;
+					d ++;
+					if (a==MAXFLOW_TERMINAL)
+					{
+						j -> TS = TIME;
+						j -> DIST = 1;
+						break;
+					}
+					if (a==MAXFLOW_ORPHAN)
+					{
+						d = MAXFLOW_INFINITE_D; 
+						break;
+					}
+					j = a -> head;
 				}
-				a = j -> parent;
-				d ++;
-				if (a==MAXFLOW_TERMINAL)
+				if (d<MAXFLOW_INFINITE_D) /* j originates from the sink - done */
 				{
-					j -> TS = TIME;
-					j -> DIST = 1;
-					break;
-				}
-				if (a==MAXFLOW_ORPHAN) { d = MAXFLOW_INFINITE_D; break; }
-				j = a -> head;
-			}
-			if (d<MAXFLOW_INFINITE_D) /* j originates from the sink - done */
-			{
-				if (d<d_min)
-				{
-					a0_min = a0;
-					d_min = d;
-				}
-				/* set marks along the path */
-				for (j=a0->head; j->TS!=TIME; j=j->parent->head)
-				{
-					j -> TS = TIME;
-					j -> DIST = d --;
+					if (d<d_min)
+					{
+						a0_min = a0;
+						d_min = d;
+					}
+					/* set marks along the path */
+					for (j=a0->head; j->TS!=TIME; j=j->parent->head)
+					{
+						j -> TS = TIME;
+						j -> DIST = d --;
+					}
 				}
 			}
 		}

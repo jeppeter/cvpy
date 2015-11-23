@@ -5,6 +5,7 @@ NULL_PTR=-1
 MAXFLOW_TERMINAL=-2
 MAXFLOW_ORPHAN=-3
 MAXFLOW_INFINITE_D=(0xffffffff >> 1)
+CPP_OUT=1
 
 class Arc:
 	def __init__(self):
@@ -470,6 +471,10 @@ class BKGraph:
 		logging.info('set_orphan_rear %d'%(nodei))
 		return
 
+def cpp_command_out(string):
+	if CPP_OUT == 1:
+		sys.stdout.write(string)
+	return
 
 def ParseInputFile(infile):
 	source=''
@@ -527,7 +532,7 @@ def ParseInputFile(infile):
 					# we have put the sink into the graph
 					sourc_sink_pair[curt][0]=curw
 					logging.info('add t-link[%d] source(%d) sink(%d)'%(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1]))
-					sys.stdout.write('g -> add_tweights(%d,%d,%d);\n'%(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1]))
+					cpp_command_out('g -> add_tweights(%d,%d,%d);\n'%(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1]))
 					bkgraph.add_tweights(curt,sourc_sink_pair[curt][0],sourc_sink_pair[curt][1])
 					del sourc_sink_pair[curt]
 				continue
@@ -538,20 +543,20 @@ def ParseInputFile(infile):
 				else:
 					sourc_sink_pair[curs][1]=curw
 					logging.info('add t-link[%d] source(%d) sink(%d)'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
-					sys.stdout.write('g -> add_tweights(%d,%d,%d);\n'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
+					cpp_command_out('g -> add_tweights(%d,%d,%d);\n'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
 					bkgraph.add_tweights(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1])
 					del sourc_sink_pair[curs]
 				continue
 
 			#logging.info('set n-link [%d]->[%d] %d'%(curs,curt,curw))
-			sys.stdout.write('g -> add_edge(%d,%d,%d,0);\n'%(curs,curt,curw))
+			cpp_command_out('g -> add_edge(%d,%d,%d,0);\n'%(curs,curt,curw))
 			bkgraph.add_edge(curs,curt,curw,0)
 	
 
 	for k in sourc_sink_pair.keys():
 		# now to add t-link weights
 		#logging.info('add t-link[%d] source(%d) sink(%d)'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
-		sys.stdout.write('g -> add_tweights(%d,%d,%d);\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
+		cpp_command_out('g -> add_tweights(%d,%d,%d);\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
 		bkgraph.add_tweights(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1])
 	return bkgraph
 
@@ -562,12 +567,12 @@ def main():
 		sys.exit(4)
 	bkgraph = ParseInputFile(sys.argv[1])
 	flow = bkgraph.max_flow()
-	sys.stdout.write('flow %d\n'%(flow))
+	sys.stdout.write('%d\n'%(flow))
 	return
 
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
-	#logging.basicConfig(level=logging.INFO,format='%(message)s')
-	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.INFO,format='%(message)s')
+	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
