@@ -96,8 +96,8 @@
 
 //#define DEBUG_OUT(...) do{fprintf(stdout,"%s:%d\t",__FILE__,__LINE__);fprintf(stdout,__VA_ARGS__);} while(0)
 #define GET_IDX_ARC(parc) (((int)parc) < 5 ? - ((int)parc) : parc->arcidx)
-#define DEBUG_OUT(...) do{fprintf(stdout,__VA_ARGS__);fflush(stdout);} while(0)
-//#define DEBUG_OUT(...) do{} while(0)
+//#define DEBUG_OUT(...) do{fprintf(stdout,__VA_ARGS__);fflush(stdout);} while(0)
+#define DEBUG_OUT(...) do{} while(0)
 
 /***********************************************************************/
 /***********************************************************************/

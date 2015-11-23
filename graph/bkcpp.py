@@ -414,8 +414,8 @@ class BKGraph:
 						logging.info('d %d'%(d))
 						if d < MAXFLOW_INFINITE_D:
 							if d < d_min:
-								logging.info('a0_min %d'%(arca))
-								arc0_min = arca
+								logging.info('a0_min %d'%(arc0))
+								arc0_min = arc0
 								d_min = d
 							nodej = self.arcs[arc0].node_head
 							while self.nodes[nodej].TS != self.TIME:
@@ -568,6 +568,6 @@ def main():
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
-	logging.basicConfig(level=logging.INFO,format='%(message)s')
-	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.INFO,format='%(message)s')
+	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
