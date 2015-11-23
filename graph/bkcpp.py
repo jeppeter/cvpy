@@ -442,6 +442,20 @@ class BKGraph:
 				arc0 = self.arcs[arc0].arc_next
 		return
 
+	def set_orphan_front(self,nodei):
+		blockptr = NodeBlockPtr()
+		blockptr.array_node = nodei
+		tmparr = [blockptr]
+		tmparr.extend(self.orphan_list)
+		self.orphan_list=tmparr
+		return
+
+	def set_orphan_rear(self,nodei):
+		blockptr = NodeBlockPtr()
+		blockptr.array_node = nodei
+		self.orphan_list.append(blockptr)
+		return
+
 
 
 
