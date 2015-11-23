@@ -103,10 +103,8 @@ class BKGraph:
 		curnodeid = -1
 		nodei = None
 		while True:
-			if curnodeid == -1:
-				nodei = -1
-			else:
-				nodei = curnodeid
+			nodei = curnodeid
+			if nodei != -1:
 				self.nodes[nodei].arc_next = -1
 				if self.nodes[nodei].arc_parent == -1:
 					nodei = -1
@@ -121,7 +119,7 @@ class BKGraph:
 					if self.arcs[aidx].r_cap:
 						nodej = self.arcs[aidx].node_head
 						if self.nodes[nodej].arc_parent == -1:
-							self.nodes[nodej].is_sink = 0
+							self.nodes[nodej].is_sink = False
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS = self.nodes[nodei].TS
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
@@ -133,7 +131,7 @@ class BKGraph:
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST :
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							self.nodes[nodej].TS =self.nodes[nodei].TS
-							self.nodes[nodej].DIST = self.nodes[nodei].DIST
+							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
 					aidx = self.arcs[aidx].arc_next
 			else:
 				aidx = self.nodes[nodei].arc_first
