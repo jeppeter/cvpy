@@ -9,7 +9,7 @@ class Arc:
 	def __init__(self):
 		self.node_head = -1
 		self.arc_next = -1
-		self.arc_sister = -1
+		self.arc_sister = -1		
 		self.r_cap = 0
 		return
 
@@ -38,7 +38,6 @@ class NodeBlockPtr:
 class BKGraph:
 	def __init__(self,nodemax,edgemax):
 		self.node_num = 0
-		self.node_block = []
 		if nodemax < 16:
 			nodemax = 16
 		if edgemax < 16:
