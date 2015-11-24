@@ -5,7 +5,7 @@ NULL_PTR=-1
 MAXFLOW_TERMINAL=-2
 MAXFLOW_ORPHAN=-3
 MAXFLOW_INFINITE_D=(0xffffffff >> 1)
-CPP_OUT=1
+CPP_OUT=0
 
 class Arc:
 	def __init__(self):
@@ -473,7 +473,7 @@ class BKGraph:
 
 def cpp_command_out(string):
 	if CPP_OUT == 1:
-		sys.stdout.write(string)
+		sys.stderr.write(string)
 	return
 
 def ParseInputFile(infile):
@@ -525,6 +525,10 @@ def ParseInputFile(infile):
 			curt = int(sarr[1])
 			curw = int(sarr[2])
 
+			if curs == source and curt == sink:
+				logging.error('s[%d] == source d[%d] == sink'%(curs,curt))
+				sys.exit(4)
+
 			if curs == source and curt != sink :
 				if curt not in sourc_sink_pair.keys():
 					sourc_sink_pair[curt] = [curw,0]
@@ -573,6 +577,6 @@ def main():
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
-	logging.basicConfig(level=logging.INFO,format='%(message)s')
-	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.INFO,format='%(message)s')
+	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()

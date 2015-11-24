@@ -17,7 +17,11 @@ if (@ARGV > 0){
 
 for ($i=0;$i < $times;$i++){
 	my ($ek,$gt);
-	RunCommand("./makemap.exe 300 3000 >test.map");
+	if (($i % 16) == 0 && $i != 0)
+	{
+		print STDOUT "\n";
+	}
+	RunCommand("./makemap.exe 300 10000 >test.map");
 	RunCommand("python bkcpp.py test.map >bk.txt");
 	RunCommand("./maxflow.exe ek test.map >/dev/null 2>ek.txt");
 	$ek=`cat ek.txt`;
@@ -33,4 +37,4 @@ for ($i=0;$i < $times;$i++){
 	autoflush STDOUT,1;
 }
 
-print STDOUT "run ($times) ok";
+print STDOUT "\nrun ($times) ok\n";

@@ -78,7 +78,7 @@ func SetGraphs(graph *IntGraph, k1 int, k2 int, cap32 int, source int, sink int)
 	source as to k2 == source
 	value zero cap32 == 0
 	*/
-	if k1 == k2 || k1 == sink || k2 == source || cap32 == 0 {
+	if k1 == k2 || k1 == sink || k2 == source || cap32 == 0 || (k1 == source && k2 == sink) {
 		return false
 	}
 
