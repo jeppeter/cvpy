@@ -47,6 +47,7 @@ class NodeBlockPtr:
 		return
 
 
+
 def GetOrphanList(orphlist):
 	i = 0
 	s = 'cnt(%d)['%(len(orphlist))
@@ -131,6 +132,7 @@ class BKGraph:
 		self.maxflow_init()
 		curnodeid = NULL_PTR
 		nodei = None
+		curstep = 0
 		while True:
 			nodei = curnodeid
 			if nodei != NULL_PTR:
@@ -216,6 +218,7 @@ class BKGraph:
 
 			self.TIME += 1
 			logging.info('TIME %d arc[%s]'%(self.TIME,GetIdx(aidx)))
+			self.debug_state('after arcs handle(%d)'%(curstep))
 
 			if aidx != NULL_PTR:
 				logging.info('node[%s].next (%s -> %s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next),GetIdx(nodei)))
@@ -224,6 +227,7 @@ class BKGraph:
 				curnodeid = nodei
 
 				self.augment(aidx)
+				self.debug_state('after augment(%d)'%(curstep))
 
 				while len(self.orphan_list) > 0:
 					curorphan = self.orphan_list[0]
@@ -240,8 +244,101 @@ class BKGraph:
 				logging.info('curnodeid %s'%(GetIdx(curnodeid)))
 			else:
 				curnodeid = NULL_PTR
+			curstep += 1
 		self.maxflow_iteration += 1
 		return self.flow
+
+	def get_first_link(self,nodei):
+		s = '['
+		i = 0
+		aidx = self.nodes[nodei].arc_first
+		while aidx != NULL_PTR:
+			if i != 0:
+				s += ','
+			s += '%s'%(GetIdx(aidx))
+			aidx = self.arcs[aidx].arc_next
+			i += 1
+		s += ']cnt(%d)'%(i)
+		return s
+
+	def get_arc_parent(self,nodei):
+		s = '['
+		i = 0
+		aidx = self.nodes[nodei].arc_parent
+		while aidx != NULL_PTR:
+			if i != 0:
+				s += ','
+			if aidx == MAXFLOW_TERMINAL:
+				s += 'MAXFLOW_TERMINAL'
+				break
+			if aidx == MAXFLOW_ORPHAN:
+				s += 'MAXFLOW_ORPHAN'
+				break
+			nodej = self.arcs[aidx].node_head
+			s += '%s'%(GetIdx(nodei))
+			i += 1
+			if nodej == NULL_PTR:
+				break
+			aidx = self.nodes[nodej].arc_parent
+		s += ']cnt(%d)'%(i)
+		return s
+
+	def get_node_next(self,nodei):
+		s = '['
+		i = 0
+		nodej = self.nodes[nodei].node_next
+		while nodej != NULL_PTR:
+			if i != 0:
+				s += ','
+			i += 1
+			s += '%s'%(GetIdx(nodej))
+			if nodej == self.nodes[nodej].node_next:
+				break
+			nodej = self.nodes[nodej].node_next
+		s += ']cnt(%d)'%(i)
+		return s
+
+	def get_arc_next(self,aidx):
+		s = '['
+		i = 0
+		anext = self.arcs[aidx].arc_next
+		while anext != NULL_PTR:
+			if i != 0:
+				s += ','
+			i += 1
+			s += '%s'%(GetIdx(anext))
+			anext = self.arcs[anext].arc_next
+		s += ']cnt(%d)'%(i)
+		return s
+
+	def debug_node(self,nodei):
+		logging.info('==============================')
+		logging.info('node[%s].is_sink (%s)'%(GetIdx(nodei),self.nodes[nodei].is_sink))
+		logging.info('node[%s].arc_first list(%s)'%(GetIdx(nodei),self.get_first_link(nodei)))
+		logging.info('node[%s].arc_parent list(%s)'%(GetIdx(nodei),self.get_arc_parent(nodei)))
+		logging.info('node[%s].node_next list(%s)'%(GetIdx(nodei),self.get_node_next(nodei)))
+		logging.info('node[%s].tr_cap (%d)'%(GetIdx(nodei),self.nodes[nodei].tr_cap))
+		logging.info('******************************')
+		return
+
+	def debug_arc(self,aidx):
+		logging.info('+++++++++++++++++++++++++++++++')
+		logging.info('arc[%s].node_head (%s)'%(GetIdx(aidx),GetIdx(self.arcs[aidx].node_head)))
+		logging.info('arc[%s].arc_next list(%s)'%(GetIdx(aidx),self.get_arc_next(aidx)))
+		logging.info('arc[%s].arc_sister (%s)'%(GetIdx(aidx),self.arcs[aidx].arc_sister))
+		logging.info('arc[%s].r_cap (%d)'%(GetIdx(aidx),self.arcs[aidx].r_cap))
+		logging.info('-------------------------------')
+		return
+
+	def debug_state(self,notice):
+		logging.info('debug state %s'%(notice))
+		logging.info('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+		for nodei in xrange(len(self.nodes)):
+			self.debug_node(nodei)
+
+		for aidx in xrange(len(self.arcs)):
+			self.debug_arc(aidx)
+		logging.info('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 	def maxflow_init(self):
 		self.queue_first = [NULL_PTR,NULL_PTR]
@@ -265,6 +362,9 @@ class BKGraph:
 				self.nodes[nodei].DIST = 1
 			else:
 				self.nodes[nodei].arc_parent = NULL_PTR
+
+		self.debug_state('after init')
+
 		return
 
 	def next_active(self):
