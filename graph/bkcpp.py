@@ -65,6 +65,7 @@ class BKGraph:
 		else:
 			self.flow += cap_sink
 		self.nodes[nodeid].tr_cap = cap_source - cap_sink
+		logging.info('node[%d].tr_cap = %d'%(nodeid,self.nodes[nodeid].tr_cap))
 		return
 
 	def add_edge(self,nodeidi,nodeidj,cap ,rev_cap):
@@ -86,12 +87,15 @@ class BKGraph:
 		arevarc.arc_sister = aidx
 		aarc.arc_next = nodei.arc_first
 		nodei.arc_first = aidx
+		logging.info('arc[%d].next = %d nodei[%d].first = %d'%(aidx,aarc.arc_next,nodeidi,nodei.arc_first))
 		arevarc.arc_next = nodej.arc_first
 		nodej.arc_first = arevidx
+		logging.info('arevarc[%d].next = %d nodej[%d].first = %d'%(arevidx,arevarc.arc_next,nodeidj,nodej.arc_first))
 		aarc.node_head = nodeidj
 		arevarc.node_head = nodeidi
 		aarc.r_cap = cap
 		arevarc.r_cap = rev_cap
+		logging.info('arc[%d].r_cap = %d arc[%d].r_cap = %d'%(aidx,cap,arevidx,rev_cap))
 
 		# now to set for the arc
 		self.arcs.append(aarc)
@@ -552,14 +556,14 @@ def ParseInputFile(infile):
 					del sourc_sink_pair[curs]
 				continue
 
-			#logging.info('set n-link [%d]->[%d] %d'%(curs,curt,curw))
+			logging.info('set n-link [%d]->[%d] %d'%(curs,curt,curw))
 			cpp_command_out('g -> add_edge(%d,%d,%d,0);\n'%(curs,curt,curw))
 			bkgraph.add_edge(curs,curt,curw,0)
 	
 
 	for k in sourc_sink_pair.keys():
 		# now to add t-link weights
-		#logging.info('add t-link[%d] source(%d) sink(%d)'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
+		logging.info('add t-link[%d] source(%d) sink(%d)'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
 		cpp_command_out('g -> add_tweights(%d,%d,%d);\n'%(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1]))
 		bkgraph.add_tweights(k,sourc_sink_pair[k][0],sourc_sink_pair[k][1])
 	return bkgraph
@@ -576,7 +580,7 @@ def main():
 
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
-	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.INFO,format='%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(message)s')
-	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
