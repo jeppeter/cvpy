@@ -115,6 +115,8 @@ class BKGraph:
 		logging.info('arevarc[%s].next (%s -> %s) nodej[%s].first (%s -> %s)'%(GetIdx(arevidx),GetIdx(arevarc.arc_next),GetIdx(nodej.arc_first),GetIdx(nodeidj),GetIdx(nodej.arc_first),GetIdx(arevidx)))
 		arevarc.arc_next = nodej.arc_first
 		nodej.arc_first = arevidx
+		logging.info('arc[%s].head (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.node_head),GetIdx(nodeidj)))
+		logging.info('arc[%s].head (%s -> %s)'%(GetIdx(arevidx),GetIdx(arevarc.node_head),GetIdx(nodeidi)))
 		aarc.node_head = nodeidj
 		arevarc.node_head = nodeidi
 		logging.info('arc[%s].r_cap (%d -> %d) arc[%s].r_cap (%d -> %d)'%(GetIdx(aidx),aarc.r_cap,cap,GetIdx(arevidx),arevarc.r_cap,rev_cap))
@@ -148,17 +150,20 @@ class BKGraph:
 
 			if not self.nodes[nodei].is_sink:
 				aidx = self.nodes[nodei].arc_first
-				logging.info('node[%s].first (%s)'%(GetIdx(nodei),GetIdx(aidx)))
+				logging.info('aidx node[%s].first (%s)'%(GetIdx(nodei),GetIdx(aidx)))
 				while aidx != NULL_PTR:
 					logging.info('arc[%s].r_cap (%d)'%(GetIdx(aidx),self.arcs[aidx].r_cap))
 					if self.arcs[aidx].r_cap:
 						nodej = self.arcs[aidx].node_head
 						logging.info('arc[%s].head -> node[%s].parent (%s)'%(GetIdx(aidx),GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent)))
 						if self.nodes[nodej].arc_parent == NULL_PTR:
-							logging.info('node[%s].parent (%s)'%(GetIdx(nodej),GetIdx(self.arcs[aidx].arc_sister)))
+							logging.info('node[%s].is_sink (%s -> False)'%(GetIdx(nodej),self.nodes[nodej].is_sink))
 							self.nodes[nodej].is_sink = False
+							logging.info('node[%s].parent (%s -> %s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent),GetIdx(self.arcs[aidx].arc_sister)))							
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
+							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
 							self.nodes[nodej].TS = self.nodes[nodei].TS
+							logging.info('node[%s].DIST (%d -> node[%s].DIST+1 %d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST + 1))
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
 							self.set_active(nodej)
 							self.add_to_change_list(nodej)
@@ -167,25 +172,30 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST :
-							logging.info('node[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
+							logging.info('node[%s].parent (%s -> %s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent),GetIdx(self.arcs[aidx].arc_sister)))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
+							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
 							self.nodes[nodej].TS =self.nodes[nodei].TS
+							logging.info('node[%s].DIST (%d -> node[%s].DIST+1 %d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST + 1))
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
-					logging.info('aidx(%s -> %s)'%(GetIdx(aidx),GetIdx(self.arcs[aidx].arc_next)))
+					logging.info('aidx(%s -> arc[%s].next %s)'%(GetIdx(aidx),GetIdx(aidx),GetIdx(self.arcs[aidx].arc_next)))
 					aidx = self.arcs[aidx].arc_next
 
 			else:
 				aidx = self.nodes[nodei].arc_first
 				while aidx != NULL_PTR:					
 					sisidx = self.arcs[aidx].arc_sister
-					logging.info('arc[%d].r_cap (%d)'%(sisidx,self.arcs[sisidx].r_cap))
+					logging.info('arc[%s].r_cap (%d)'%(GetIdx(sisidx),self.arcs[sisidx].r_cap))
 					if self.arcs[sisidx].r_cap:
 						nodej = self.arcs[aidx].node_head
 						if self.nodes[nodej].arc_parent == NULL_PTR:
-							logging.info('node[%d].parent (%d)'%(nodej,self.arcs[aidx].arc_sister))
+							logging.info('node[%s].is_sink (%s -> True)'%(GetIdx(nodej),self.nodes[nodej].is_sink))
 							self.nodes[nodej].is_sink = True
+							logging.info('node[%s].parent (%s -> arc[%s].sister %s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent),GetIdx(aidx),GetIdx(self.arcs[aidx].arc_sister)))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
+							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
 							self.nodes[nodej].TS = self.nodes[nodei].TS
+							logging.info('node[%s].DIST (%d -> node[%s].DIST+1 %d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST + 1))
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
 							self.set_active(nodej)
 							self.add_to_change_list(nodej)
@@ -194,11 +204,13 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST:
-							logging.info('node[%d].parent = %d'%(nodej,self.arcs[aidx].arc_sister))
+							logging.info('node[%d].parent (%d)'%(nodej,self.arcs[aidx].arc_sister))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
+							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
 							self.nodes[nodej].TS = self.nodes[nodei].TS
+							logging.info('node[%s].DIST (%d -> node[%s].DIST+1 %d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST + 1))
 							self.nodes[nodej].DIST = self.nodes[nodei].DIST + 1
-
+					logging.info('aidx (%s -> arc[%s].next %s)'%(GetIdx(aidx),GetIdx(aidx),GetIdx(self.arcs[aidx].arc_next)))
 					aidx = self.arcs[aidx].arc_next
 
 			self.TIME += 1
@@ -261,19 +273,28 @@ class BKGraph:
 			nodei = self.queue_first[0]
 			logging.info('queue_first[0] (%s)'%(GetIdx(self.queue_first[0])))
 			if nodei == NULL_PTR:
+				logging.info('nodei (%s -> %s)'%(GetIdx(nodei),GetIdx(self.queue_first[1])))
 				nodei = self.queue_first[1]
+				logging.info('queue_first[0] (%s -> %s)'%(GetIdx(self.queue_first[0]),GetIdx(nodei)))
 				self.queue_first[0] = nodei
+				logging.info('queue_last[0] (%s -> %s)'%(GetIdx(self.queue_last[0]),GetIdx(self.queue_last[1])))
 				self.queue_last[0] = self.queue_last[1]
+				logging.info('queue_first[1] (%s -> %s)'%(GetIdx(self.queue_first[1]),GetIdx(NULL_PTR)))
 				self.queue_first[1] = NULL_PTR
+				logging.info('queue_last[1] (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(NULL_PTR)))
 				self.queue_last[1] = NULL_PTR
 				if nodei == NULL_PTR:
 					return NULL_PTR
 			logging.info('node[%s].next (%s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
 			if self.nodes[nodei].node_next == nodei:
+				logging.info('queue_first[0] (%s -> %s)'%(GetIdx(self.queue_first[0]),GetIdx(NULL_PTR)))
 				self.queue_first[0] = NULL_PTR
+				logging.info('queue_last[0] (%s -> %s)'%(GetIdx(self.queue_last[0]),GetIdx(NULL_PTR)))
 				self.queue_last[0] = NULL_PTR
 			else:
+				logging.info('queue_first[0] (%s -> node[%s].next %s)'%(GetIdx(self.queue_first[0]),GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
 				self.queue_first[0]= self.nodes[nodei].node_next
+			logging.info('node[%s].next (%s -> NULL)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
 			self.nodes[nodei].node_next = NULL_PTR
 
 			logging.info('node[%s].parent (%s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].arc_parent)))
@@ -291,7 +312,7 @@ class BKGraph:
 			else:
 				logging.info('set queue_first[1] (%s -> %s)'%(GetIdx(self.queue_first[1]),GetIdx(nodei)))
 				self.queue_first[1] = nodei
-			logging.info('set self.queue_last[1] (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(nodei)))
+			logging.info('set queue_last[1] (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(nodei)))
 			self.queue_last[1] = nodei
 			logging.info('set node[%s].next (%s -> %s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next),GetIdx(nodei)))
 			self.nodes[nodei].node_next = nodei
