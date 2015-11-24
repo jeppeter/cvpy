@@ -107,14 +107,13 @@ class BKGraph:
 		logging.info('arc[%s].sister (%s -> %s) arc[%s].sister (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.arc_sister),GetIdx(arevidx),GetIdx(arevidx),GetIdx(arevarc.arc_sister),GetIdx(aidx)))
 		aarc.arc_sister = arevidx
 		arevarc.arc_sister = aidx
-		logging.info('arc[%s].next (%s -> %s) nodei[%s].first (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.arc_next),GetIdx(nodei.arc_first),GetIdx(nodeidi),GetIdx(nodei.arc_first),GetIdx(aidx)))
+		logging.info('arc[%s].next (%s -> %s) node[%s].first (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.arc_next),GetIdx(nodei.arc_first),GetIdx(nodeidi),GetIdx(nodei.arc_first),GetIdx(aidx)))
 		aarc.arc_next = nodei.arc_first
 		nodei.arc_first = aidx
-		logging.info('arevarc[%s].next (%s -> %s) nodej[%s].first (%s -> %s)'%(GetIdx(arevidx),GetIdx(arevarc.arc_next),GetIdx(nodej.arc_first),GetIdx(nodeidj),GetIdx(nodej.arc_first),GetIdx(arevidx)))
+		logging.info('arc[%s].next (%s -> %s) node[%s].first (%s -> %s)'%(GetIdx(arevidx),GetIdx(arevarc.arc_next),GetIdx(nodej.arc_first),GetIdx(nodeidj),GetIdx(nodej.arc_first),GetIdx(arevidx)))
 		arevarc.arc_next = nodej.arc_first
 		nodej.arc_first = arevidx
-		logging.info('arc[%s].head (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.node_head),GetIdx(nodeidj)))
-		logging.info('arc[%s].head (%s -> %s)'%(GetIdx(arevidx),GetIdx(arevarc.node_head),GetIdx(nodeidi)))
+		logging.info('arc[%s].head (%s -> %s) arc[%s].head (%s -> %s)'%(GetIdx(aidx),GetIdx(aarc.node_head),GetIdx(nodeidj),GetIdx(arevidx),GetIdx(arevarc.node_head),GetIdx(nodeidi)))
 		aarc.node_head = nodeidj
 		arevarc.node_head = nodeidi
 		logging.info('arc[%s].r_cap (%d -> %d) arc[%s].r_cap (%d -> %d)'%(GetIdx(aidx),aarc.r_cap,cap,GetIdx(arevidx),arevarc.r_cap,rev_cap))
@@ -271,13 +270,13 @@ class BKGraph:
 	def next_active(self):
 		while True:
 			nodei = self.queue_first[0]
-			logging.info('queue_first[0] (%s)'%(GetIdx(self.queue_first[0])))
+			logging.info('nodei (queue_first[0] (%s))'%(GetIdx(self.queue_first[0])))
 			if nodei == NULL_PTR:
-				logging.info('nodei (%s -> %s)'%(GetIdx(nodei),GetIdx(self.queue_first[1])))
+				logging.info('nodei (%s -> queue_first[1] (%s))'%(GetIdx(nodei),GetIdx(self.queue_first[1])))
 				nodei = self.queue_first[1]
-				logging.info('queue_first[0] (%s -> %s)'%(GetIdx(self.queue_first[0]),GetIdx(nodei)))
+				logging.info('queue_first[0] (%s ->  queue_first[1] (%s))'%(GetIdx(self.queue_first[0]),GetIdx(nodei)))
 				self.queue_first[0] = nodei
-				logging.info('queue_last[0] (%s -> %s)'%(GetIdx(self.queue_last[0]),GetIdx(self.queue_last[1])))
+				logging.info('queue_last[0] (%s -> queue_last[1] (%s))'%(GetIdx(self.queue_last[0]),GetIdx(self.queue_last[1])))
 				self.queue_last[0] = self.queue_last[1]
 				logging.info('queue_first[1] (%s -> %s)'%(GetIdx(self.queue_first[1]),GetIdx(NULL_PTR)))
 				self.queue_first[1] = NULL_PTR
@@ -652,6 +651,7 @@ def ParseInputFile(infile):
 			if curs == source and curt != sink :
 				if curt not in sourc_sink_pair.keys():
 					sourc_sink_pair[curt] = [curw,0]
+					#bkgraph.add_tweights(curt,curw,0)
 				else:
 					# we have put the sink into the graph
 					sourc_sink_pair[curt][0]=curw
@@ -664,6 +664,7 @@ def ParseInputFile(infile):
 			if curt == sink and curs != source:
 				if curs not in sourc_sink_pair.keys():
 					sourc_sink_pair[curs]=[0,curw]
+					#bkgraph.add_tweights(curs,0,curw)
 				else:
 					sourc_sink_pair[curs][1]=curw
 					logging.info('add t-link[%d] source(%d) sink(%d)'%(curs,sourc_sink_pair[curs][0],sourc_sink_pair[curs][1]))
