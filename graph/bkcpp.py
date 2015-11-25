@@ -245,6 +245,7 @@ class BKGraph:
 						logging.info('source orphan %d'%(curorphnodei))
 						self.process_source_orphan(curorphnodei)
 						logging.info('source orphan over %d'%(curorphnodei))
+				self.debug_state('after orphan handle (%d)'%(self.TIME))
 				logging.info('curnodeid %s'%(GetIdx(curnodeid)))
 			else:
 				curnodeid = NULL_PTR
