@@ -645,7 +645,7 @@ class BKGraph:
 					if arca != NULL_PTR:
 						d = 0 
 						while True:
-							logging.info('node[%s].TS (%d) TIME(%d)'%(GetIdx(nodej),self.nodes[nodej].TS,self.TIME))
+							logging.info('node[%s].TS (%d) ?== TIME(%d)'%(GetIdx(nodej),self.nodes[nodej].TS,self.TIME))
 							if self.nodes[nodej].TS == self.TIME:
 								d += self.nodes[nodej].DIST
 								break
@@ -674,6 +674,7 @@ class BKGraph:
 								d_min = d
 							logging.info('nodej (%s -> arc[%s].head %s)'%(GetIdx(nodej),GetIdx(arc0),GetIdx(self.arcs[arc0].node_head)))
 							nodej = self.arcs[arc0].node_head
+							logging.info('node[%s].TS (%d) ? != TIME (%d)'%(GetIdx(nodej),self.nodes[nodej].TS,self.TIME))
 							while self.nodes[nodej].TS != self.TIME:
 								logging.info('node[%s].TS (%d -> %d) node[%s].DIST (%d -> %d)'%(GetIdx(nodej),self.nodes[nodej].TS,self.TIME,GetIdx(nodej),self.nodes[nodej].DIST,d))
 								self.nodes[nodej].TS =self.TIME
@@ -688,6 +689,7 @@ class BKGraph:
 		logging.info('node[%s].parent (%s -> a0_min (%s))'%(GetIdx(nodei),GetIdx(self.nodes[nodei].arc_parent),GetIdx(arc0_min)))
 		self.nodes[nodei].arc_parent = arc0_min
 		if arc0_min != NULL_PTR:
+			logging.info('node[%s].TS (%d -> %d) node[%s].DIST (%d -> %d)'%(GetIdx(nodei),self.nodes[nodei].TS,self.TIME,GetIdx(nodei),self.nodes[nodei].DIST,d_min+1))
 			self.nodes[nodei].TS = self.TIME
 			self.nodes[nodei].DIST = d_min + 1
 		else:
