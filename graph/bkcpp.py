@@ -171,6 +171,8 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST :
+							logging.info('node[%s].TS (%d) <= node[%s].TS (%d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
+							logging.info('node[%s].DIST (%d) > node[%s].DIST (%d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST))
 							logging.info('node[%s].parent (%s -> %s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent),GetIdx(self.arcs[aidx].arc_sister)))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
@@ -190,6 +192,8 @@ class BKGraph:
 						nodej = self.arcs[aidx].node_head
 						logging.info('nodej (arc[%s].head (%s))'%(GetIdx(aidx),GetIdx(nodej)))
 						logging.info('node[%s].parent (%s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent)))
+						logging.info('node[%s].TS (%d) node[%s].TS (%d)'%(GetIdx(nodei),self.nodes[nodei].TS,GetIdx(nodej),self.nodes[nodej].TS))
+						logging.info('node[%s].DIST (%d) node[%s].DIST (%d)'%(GetIdx(nodei),self.nodes[nodei].DIST,GetIdx(nodej),self.nodes[nodej].DIST))
 						if self.nodes[nodej].arc_parent == NULL_PTR:
 							logging.info('node[%s].is_sink (%s -> True)'%(GetIdx(nodej),self.nodes[nodej].is_sink))
 							self.nodes[nodej].is_sink = True
@@ -463,7 +467,7 @@ class BKGraph:
 			if bottlecap > self.arcs[sisidx].r_cap:
 				logging.info('bottlecap (%d -> %d)'%(bottlecap,self.arcs[sisidx].r_cap))
 				bottlecap = self.arcs[sisidx].r_cap
-			logging.info('nodei (%s -> arc[%s].head = %s)'%(GetIdx(nodei),GetIdx(arca),GetIdx(nodei)))
+			logging.info('nodei (%s -> arc[%s].head (%s))'%(GetIdx(nodei),GetIdx(arca),GetIdx(nodei)))
 			nodei = self.arcs[arca].node_head
 		logging.info('node[%s].tr_cap (%d) bottlecap(%d)'%(GetIdx(nodei),self.nodes[nodei].tr_cap,bottlecap))
 		if bottlecap > self.nodes[nodei].tr_cap:
