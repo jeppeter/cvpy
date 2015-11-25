@@ -192,8 +192,8 @@ class BKGraph:
 						nodej = self.arcs[aidx].node_head
 						logging.info('nodej (arc[%s].head (%s))'%(GetIdx(aidx),GetIdx(nodej)))
 						logging.info('node[%s].parent (%s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent)))
-						logging.info('node[%s].TS (%d) node[%s].TS (%d)'%(GetIdx(nodei),self.nodes[nodei].TS,GetIdx(nodej),self.nodes[nodej].TS))
-						logging.info('node[%s].DIST (%d) node[%s].DIST (%d)'%(GetIdx(nodei),self.nodes[nodei].DIST,GetIdx(nodej),self.nodes[nodej].DIST))
+						logging.info('node[%s].TS (%d) node[%s].TS (%d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
+						logging.info('node[%s].DIST (%d) node[%s].DIST (%d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST))
 						if self.nodes[nodej].arc_parent == NULL_PTR:
 							logging.info('node[%s].is_sink (%s -> True)'%(GetIdx(nodej),self.nodes[nodej].is_sink))
 							self.nodes[nodej].is_sink = True
@@ -617,6 +617,16 @@ class BKGraph:
 			logging.info('[%d].parent = %d'%(nodei,self.nodes[nodei].arc_parent))
 		return
 
+	def get_arc_nodehead(self,aidx):
+		if aidx == MAXFLOW_ORPHAN :
+			return 'MAXFLOW_ORPHAN'
+		elif aidx == MAXFLOW_TERMINAL:
+			return 'MAXFLOW_TERMINAL'
+		elif aidx == NULL_PTR:
+			return 'NULL'
+		else:
+			return GetIdx(self.arcs[aidx].node_head)
+
 	def process_source_orphan(self,nodei):
 		arc0_min = NULL_PTR
 		d_min = MAXFLOW_INFINITE_D
@@ -692,7 +702,8 @@ class BKGraph:
 					arca = self.nodes[nodej].arc_parent
 					if arca != NULL_PTR:
 						sisidx = self.arcs[arc0].arc_sister
-						logging.info('node[%s].parent -> arc[%s]sister -> arc[%s].r_cap %d'%(GetIdx(nodej),GetIdx(arc0),GetIdx(sisidx),self.arcs[sisidx].r_cap))
+						logging.info('node[%s].first -> arc[%s]sister -> arc[%s].r_cap %d'%(GetIdx(nodei),GetIdx(arc0),GetIdx(sisidx),self.arcs[sisidx].r_cap))
+						logging.info('arc[%s].head -> node[%s].parent -> arc[%s].head (%s) ?= nodei (%s)'%(GetIdx(arc0),GetIdx(nodej),GetIdx(arca),self.get_arc_nodehead(arca),GetIdx(nodei)))
 						if self.arcs[sisidx].r_cap:
 							self.set_active(nodej)
 						if arca != MAXFLOW_TERMINAL and arca != MAXFLOW_ORPHAN and self.arcs[arca].node_head == nodei:
