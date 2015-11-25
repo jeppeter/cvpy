@@ -318,6 +318,7 @@ class BKGraph:
 		logging.info('node[%s].arc_parent list(%s)'%(GetIdx(nodei),self.get_arc_parent(nodei)))
 		logging.info('node[%s].node_next list(%s)'%(GetIdx(nodei),self.get_node_next(nodei)))
 		logging.info('node[%s].tr_cap (%d)'%(GetIdx(nodei),self.nodes[nodei].tr_cap))
+		logging.info('node[%s].TS (%d) node[%s].DIST (%d)'%(GetIdx(nodei),self.nodes[nodei].TS,GetIdx(nodei),self.nodes[nodei].DIST))
 		logging.info('******************************')
 		return
 
@@ -330,14 +331,38 @@ class BKGraph:
 		logging.info('-------------------------------')
 		return
 
+	def debug_queue_state(self,notice,q):
+		s =''
+		if q == NULL_PTR:
+			s += 'NULL'
+		else:
+			i = 0
+			s += '['
+			while q != NULL_PTR:
+				if i != 0 :
+					s += ','
+				i += 1
+				s += '%s'%(GetIdx(q))
+				if q == self.nodes[q].node_next:
+					break
+				q = self.nodes[q].node_next
+			s +=']cnt(%d)'%(i)
+		logging.info('%s list(%s)'%(notice,s))
+		return
+
 	def debug_state(self,notice):
-		logging.info('debug state %s'%(notice))
 		logging.info('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+		logging.info('debug state %s'%(notice))
 		for nodei in xrange(len(self.nodes)):
 			self.debug_node(nodei)
 
 		for aidx in xrange(len(self.arcs)):
 			self.debug_arc(aidx)
+		self.debug_queue_state('queue_first[0]',self.queue_first[0])
+		self.debug_queue_state('queue_first[1]',self.queue_first[1])
+		self.debug_queue_state('queue_last[0]',self.queue_last[0])
+		self.debug_queue_state('queue_last[1]',self.queue_last[1])
+		logging.info('orphan_list (%s)'%(GetOrphanList(self.orphan_list)))
 		logging.info('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 	def maxflow_init(self):

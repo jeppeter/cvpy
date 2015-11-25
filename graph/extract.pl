@@ -21,10 +21,8 @@ sub OpenFile($$)
 	return $fh;
 }
 
-my ($lastl);
 my ($curidx,$curname);
 my ($start,$fh);
-undef($lastl);
 undef($fh);
 $start = 0;
 $curidx=0;
@@ -38,7 +36,6 @@ while(<>)
 			$curname = "state".$curidx.".txt";
 			$curidx ++;
 			$fh = OpenFile($curname,$fh);
-			print $fh "$lastl";
 			print $fh "$l";
 			$start = 1;
 		}
@@ -55,7 +52,6 @@ while(<>)
 		print $fh "$l";
 		next;
 	}
-	$lastl = $l;
 }
 
 if (defined($fh))
