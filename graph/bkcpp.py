@@ -467,7 +467,7 @@ class BKGraph:
 			if bottlecap > self.arcs[sisidx].r_cap:
 				logging.info('bottlecap (%d -> %d)'%(bottlecap,self.arcs[sisidx].r_cap))
 				bottlecap = self.arcs[sisidx].r_cap
-			logging.info('nodei (%s -> arc[%s].head (%s))'%(GetIdx(nodei),GetIdx(arca),GetIdx(nodei)))
+			logging.info('nodei (%s -> arc[%s].head (%s))'%(GetIdx(nodei),GetIdx(arca),GetIdx(self.arcs[arca].node_head)))
 			nodei = self.arcs[arca].node_head
 		logging.info('node[%s].tr_cap (%d) bottlecap(%d)'%(GetIdx(nodei),self.nodes[nodei].tr_cap,bottlecap))
 		if bottlecap > self.nodes[nodei].tr_cap:
@@ -507,7 +507,7 @@ class BKGraph:
 			self.arcs[arca].r_cap += bottlecap
 			self.arcs[sisidx].r_cap -= bottlecap
 			if self.arcs[sisidx].r_cap == 0 :
-				logging.info('arc[%s] set_orphan_front'%(GetIdx(sisidx)))
+				logging.info('nodei[%s] -> arc[%s] set_orphan_front'%(GetIdx(nodei),GetIdx(sisidx)))
 				self.set_orphan_front(nodei)			
 			logging.info('nodei (%s -> arc[%s].head (%s))'%(GetIdx(nodei),GetIdx(arca),GetIdx(self.arcs[arca].node_head)))
 			nodei = self.arcs[arca].node_head
@@ -672,7 +672,7 @@ class BKGraph:
 								logging.info('nodej (%s -> arc[%s].head (%s)'%(GetIdx(nodej),GetIdx(arc_parent),self.arcs[arc_parent].node_head))
 								nodej = self.arcs[arc_parent].node_head
 			logging.info('arc0 (%s -> arc[%s].next (%s))'%(GetIdx(arc0),GetIdx(arc0),GetIdx(self.arcs[arc0].arc_next)))
-			arc0 = self.arcs[arc0].arc_next			
+			arc0 = self.arcs[arc0].arc_next
 
 		logging.info('node[%s].parent (%s -> a0_min (%s))'%(GetIdx(nodei),GetIdx(self.nodes[nodei].arc_parent),GetIdx(arc0_min)))
 		self.nodes[nodei].arc_parent = arc0_min
