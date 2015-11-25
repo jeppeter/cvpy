@@ -192,8 +192,8 @@ class BKGraph:
 						nodej = self.arcs[aidx].node_head
 						logging.info('nodej (arc[%s].head (%s))'%(GetIdx(aidx),GetIdx(nodej)))
 						logging.info('node[%s].parent (%s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent)))
-						logging.info('node[%s].TS (%d) node[%s].TS (%d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
-						logging.info('node[%s].DIST (%d) node[%s].DIST (%d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST))
+						logging.info('node[%s].TS (%d) ?<= node[%s].TS (%d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
+						logging.info('node[%s].DIST (%d) ?> node[%s].DIST (%d)'%(GetIdx(nodej),self.nodes[nodej].DIST,GetIdx(nodei),self.nodes[nodei].DIST))
 						if self.nodes[nodej].arc_parent == NULL_PTR:
 							logging.info('node[%s].is_sink (%s -> True)'%(GetIdx(nodej),self.nodes[nodej].is_sink))
 							self.nodes[nodej].is_sink = True
@@ -211,7 +211,7 @@ class BKGraph:
 							break
 						elif self.nodes[nodej].TS <= self.nodes[nodei].TS and \
 							self.nodes[nodej].DIST > self.nodes[nodei].DIST:
-							logging.info('node[%d].parent (%d)'%(nodej,self.arcs[aidx].arc_sister))
+							logging.info('node[%s].parent (%s -> %s)'%(GetIdx(nodej),GetIdx(self.nodes[nodej].arc_parent),GetIdx(self.arcs[aidx].arc_sister)))
 							self.nodes[nodej].arc_parent = self.arcs[aidx].arc_sister
 							logging.info('node[%s].TS (%d -> node[%s].TS %d)'%(GetIdx(nodej),self.nodes[nodej].TS,GetIdx(nodei),self.nodes[nodei].TS))
 							self.nodes[nodej].TS = self.nodes[nodei].TS
