@@ -13,6 +13,15 @@ type Node struct {
 	is_sink bool   /*it means it is in the sink or source map*/
 }
 
+var MAXFLOW_TERMINAL *Node
+var MAXFLOW_ORPHAN *Node
+
+func init() {
+	MAXFLOW_ORPHAN = &Node{}
+	MAXFLOW_TERMINAL = &Node{}
+	return
+}
+
 type NodeMap struct {
 	inner map[string]*Node
 }
@@ -29,11 +38,11 @@ type BKGraph struct {
 func NewNode(name string) *Node {
 	p := &Node{}
 	p.name = name
-	p.parent = NULL
-	p.next = NULL
+	p.parent = nil
+	p.next = nil
 	p.TS = 0
 	p.DIST = 0
-	p.is_sink = False
+	p.is_sink = false
 	return p
 }
 
@@ -71,11 +80,11 @@ func (pnode *Node) SetNext(next *Node) {
 	return
 }
 
-func (pnode *Node)SetSink( val bool) {
+func (pnode *Node) SetSink(val bool) {
 	pnode.is_sink = val
 	return
 }
-func (pnode *Node)GetSink() bool {
+func (pnode *Node) GetSink() bool {
 	return pnode.is_sink
 }
 
@@ -107,13 +116,13 @@ func (pmap *NodeMap) AddNode(name string) error {
 	return nil
 }
 
-func (pmap *NodeMap)AddNode_NoError(name string) {
+func (pmap *NodeMap) AddNode_NoError(name string) {
 	pnode := pmap.GetNode(name)
-	if pnode == nil{
+	if pnode == nil {
 		pmap.AddNode(name)
 	}
 	return
-	
+
 }
 
 func NewBkGraph() *BKGraph {
@@ -127,12 +136,52 @@ func NewBkGraph() *BKGraph {
 	return p
 }
 
-
-func (graph *BKGraph)InitSource(pnode *Node) error {
+func (graph *BKGraph) InitSource(pnode *Node) error {
 	pnode.SetSink(false)
 	pnode.SetDist(1)
-	pnode.SetParent(((Node*)))
-	
+	pnode.SetParent(MAXFLOW_TERMINAL)
+	graph.SetActive(pnode)
+	return nil
+}
+
+func (graph *BKGraph) InitSink(pnode *Node) error {
+	pnode.SetSink(true)
+	pnode.SetDist(1)
+	pnode.SetParent(MAXFLOW_TERMINAL)
+	graph.SetActive(pnode)
+	return nil
+}
+
+func (graph *BKGraph) SetActive(pnode *Node) error {
+	if pnode.GetNext() != nil {
+		return nil
+	}
+	if graph.queue_first == nil {
+		pnode.SetNext(nil)
+		graph.queue_first = pnode
+		graph.queue_last = pnode
+		return nil
+	}
+
+	/*queue_last should be has*/
+	graph.queue_last.SetNext(pnode)
+	pnode.SetNext(nil)
+	graph.queue_last = pnode
+	return nil
+}
+
+func (graph *BKGraph) GetActive() *Node {
+	if graph.queue_first == nil {
+		return nil
+	}
+	pnode := graph.queue_first
+	graph.queue_first = pnode.GetNext()
+	pnode.SetNext(nil)
+	/*if we have remove all the nodes ,just remove the last*/
+	if graph.queue_first == nil {
+		graph.queue_last = nil
+	}
+	return pnode
 }
 
 /**********************************************
@@ -142,17 +191,25 @@ func (graph *BKGraph)InitSource(pnode *Node) error {
 **********************************************/
 func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source string, sink string) error {
 	/*because the two dimensions are not all the same*/
-	for _,k1 := caps.Iter(){
+	for _, k1 := range caps.Iter() {
 		graph.nodemap.AddNode_NoError(k1)
-		for _,k2 := caps.IterIdx(k1){
+		for _, k2 := range caps.IterIdx(k1) {
 			graph.nodemap.AddNode_NoError(k2)
 		}
 	}
 
 	/*now search for the source and sink*/
 	pnode := graph.nodemap.GetNode(source)
-	if pnode == nil{
-		return fmt.Errorf("can not find (%s) source in graph",source)
+	if pnode == nil {
+		return fmt.Errorf("can not find (%s) source in graph", source)
 	}
+	graph.InitSource(pnode)
+
+	pnode = graph.nodemap.GetNode(sink)
+	if pnode == nil {
+		return fmt.Errorf("can not find (%s) sink in graph", sink)
+	}
+	graph.InitSink(pnode)
+	return nil
 
 }
