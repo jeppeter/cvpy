@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"log"
 )
@@ -32,7 +33,7 @@ type BKGraph struct {
 	queue_first *Node
 	queue_last  *Node
 	flows       *StringGraph
-	orphans     []*Node
+	orphans     *list.List
 	TIME        int
 	flow        int
 }
@@ -133,6 +134,7 @@ func NewBkGraph() *BKGraph {
 	p.queue_first = nil
 	p.queue_last = nil
 	p.flows = NewStringGraph()
+	p.orphans = list.New()
 	p.TIME = 0
 	p.flow = 0
 	return p
@@ -215,10 +217,28 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	return nil
 }
 
+func (graph *BKGraph) GetOrphan() *Node {
+	if graph.orphans.Len() == 0 {
+		return nil
+	}
+	lv := graph.orphans.Front()
+	graph.orphans.Remove(lv)
+	return lv.Value.(*Node)
+}
+
+func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
+	return
+}
+
+func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
+	return
+}
+
 func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	var orphans int
 	orphans = 0
 
+	return orphans
 }
 
 func (graph *BKGraph) MaxFlow(caps *StringGraph, neigh *Neigbour) (flow int, err error) {
@@ -330,6 +350,17 @@ func (graph *BKGraph) MaxFlow(caps *StringGraph, neigh *Neigbour) (flow int, err
 
 			orph := graph.Augment(srcnode, sinknode)
 			if orph > 0 {
+				for {
+					orphan := graph.GetOrphan()
+					if orphan == nil {
+						break
+					}
+					if orphan.GetSink() {
+						graph.ProcessSinkOrphan(orphan)
+					} else {
+						graph.ProcessSourceOrphan(orphan)
+					}
+				}
 
 			}
 		} else {
