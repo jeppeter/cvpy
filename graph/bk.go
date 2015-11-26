@@ -226,25 +226,44 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 }
 
 func (graph *BKGraph) GetOrphan() *Node {
-	if graph.orphans.Len() == 0 {
-		return nil
+	for {
+		if graph.orphans.Len() == 0 {
+			return nil
+		}
+		lv := graph.orphans.Front()
+		graph.orphans.Remove(lv)
+		if lv.Value.(*Node).GetParent() == MAXFLOW_ORPHAN {
+			/*it is the orphan we have pushed*/
+			break
+		}
 	}
-	lv := graph.orphans.Front()
-	graph.orphans.Remove(lv)
 	return lv.Value.(*Node)
 }
 
 func (graph *BKGraph) PushOrphanFront(pnode *Node) int {
+	if pnode.GetParent() == MAXFLOW_ORPHAN {
+		/*it is already pushed in*/
+		return graph.orphans.Len()
+	}
+	pnode.SetParent(MAXFLOW_ORPHAN)
 	graph.orphans.PushFront(pnode)
 	return graph.orphans.Len()
 }
 
 func (graph *BKGraph) PushOrphanBack(pnode *Node) int {
+	if pnode.GetParent() == MAXFLOW_ORPHAN {
+		/*it is already pushed in*/
+		return graph.orphans.Len()
+	}
+	pnode.SetParent(MAXFLOW_ORPHAN)
 	graph.orphans.PushBack(pnode)
 	return graph.orphans.Len()
 }
 
 func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
+	var newparent *Node
+	newparent = nil
+
 	return
 }
 
@@ -303,10 +322,6 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	/*now we get the bottle cap ,and add it to the flow*/
 	curval = graph.flows.GetValue(srcnode.GetName(), sinknode.GetName())
 	graph.flows.SetValue(srcnode.GetName(), sinknode.GetName(), curval+bottlecap)
-	if graph.flows.GetValue(srcnode.GetName(), sinknode.GetName()) == graph.caps.GetValue(srcnode.GetName(), sinknode.GetName()) {
-		graph.PushOrphanFront(srcnode)
-		graph.PushOrphanFront(sinknode)
-	}
 
 	/*for source side add flow*/
 	curchld = srcnode
@@ -325,7 +340,6 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 		if graph.flows.GetValue(curparent.GetName(), curchld.GetName()) == graph.caps.GetValue(curparent.GetName(), curchld.GetName()) {
 			graph.PushOrphanFront(curchld)
 		}
-
 		curchld = curparent
 		curparent = curchld.GetParent()
 	}
@@ -355,7 +369,6 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 
 	/*now flows to add*/
 	graph.flow += bottlecap
-
 	return orphans
 }
 
