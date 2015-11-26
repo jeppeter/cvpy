@@ -234,6 +234,16 @@ func (graph *BKGraph) GetOrphan() *Node {
 	return lv.Value.(*Node)
 }
 
+func (graph *BKGraph) PushOrphanFront(pnode *Node) int {
+	graph.orphans.PushFront(pnode)
+	return graph.orphans.Len()
+}
+
+func (graph *BKGraph) PushOrphanBack(pnode *Node) int {
+	graph.orphans.PushBack(pnode)
+	return graph.orphans.Len()
+}
+
 func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 	return
 }
@@ -293,6 +303,10 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	/*now we get the bottle cap ,and add it to the flow*/
 	curval = graph.flows.GetValue(srcnode.GetName(), sinknode.GetName())
 	graph.flows.SetValue(srcnode.GetName(), sinknode.GetName(), curval+bottlecap)
+	if graph.flows.GetValue(srcnode.GetName(), sinknode.GetName()) == graph.caps.GetValue(srcnode.GetName(), sinknode.GetName()) {
+		graph.PushOrphanFront(srcnode)
+		graph.PushOrphanFront(sinknode)
+	}
 
 	/*for source side add flow*/
 	curchld = srcnode
@@ -308,6 +322,10 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 
 		curval = graph.flows.GetValue(curparent.GetName(), curchld.GetName())
 		graph.flows.SetValue(curparent.GetName(), curchld.GetName(), curval+bottlecap)
+		if graph.flows.GetValue(curparent.GetName(), curchld.GetName()) == graph.caps.GetValue(curparent.GetName(), curchld.GetName()) {
+			graph.PushOrphanFront(curchld)
+		}
+
 		curchld = curparent
 		curparent = curchld.GetParent()
 	}
@@ -326,6 +344,11 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 
 		curval = graph.flows.GetValue(curchld.GetName(), curparent.GetName())
 		graph.flows.SetValue(curchld.GetName(), curparent.GetName(), curval+bottlecap)
+
+		if graph.flows.GetValue(curchld.GetName(), curparent.GetName()) == graph.caps.GetValue(curchld.GetName(), curparent.GetName()) {
+			graph.PushOrphanFront(curchld)
+		}
+
 		curchld = curparent
 		curparent = curchld.GetParent()
 	}

@@ -508,7 +508,7 @@ class BKGraph:
 			self.arcs[sisidx].r_cap -= bottlecap
 			if self.arcs[sisidx].r_cap == 0 :
 				logging.info('nodei[%s] -> arc[%s] set_orphan_front'%(GetIdx(nodei),GetIdx(sisidx)))
-				self.set_orphan_front(nodei)			
+				self.set_orphan_front(nodei)
 			logging.info('nodei (%s -> arc[%s].head (%s))'%(GetIdx(nodei),GetIdx(arca),GetIdx(self.arcs[arca].node_head)))
 			nodei = self.arcs[arca].node_head
 
