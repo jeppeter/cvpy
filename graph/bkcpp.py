@@ -132,7 +132,6 @@ class BKGraph:
 		self.maxflow_init()
 		curnodeid = NULL_PTR
 		nodei = None
-		curstep = 0
 		while True:
 			nodei = curnodeid
 			if nodei != NULL_PTR:

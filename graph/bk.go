@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 )
 
 type Node struct {
@@ -31,6 +32,7 @@ type BKGraph struct {
 	queue_first *Node
 	queue_last  *Node
 	flows       *StringGraph
+	orphans     []*Node
 	TIME        int
 	flow        int
 }
@@ -211,5 +213,130 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	}
 	graph.InitSink(pnode)
 	return nil
+}
 
+func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
+	var orphans int
+	orphans = 0
+
+}
+
+func (graph *BKGraph) MaxFlow(caps *StringGraph, neigh *Neigbour) (flow int, err error) {
+	var curnode *Node
+	var curgetnode *Node
+	var srcnode *Node
+	var sinknode *Node
+	var lnode *Node /*link node*/
+
+	curnode = nil
+	curgetnode = nil
+	for {
+		srcnode = nil
+		sinknode = nil
+		curnode = curgetnode
+		if curnode != nil {
+			curnode.SetNext(nil)
+			if curnode.GetParent() == nil {
+				/*if we do not has any upstream to regress ,so it make nothing to do*/
+				curnode = nil
+			}
+		}
+
+		if curnode == nil {
+			curnode = graph.GetActive()
+			if curnode == nil {
+				/*no node is active ,so it is over*/
+				break
+			}
+		}
+		if !curnode.GetSink() {
+			/*it is source code*/
+			for _, lname := range neigh.GetValue(curnode.GetName()) {
+				/*to search for the neighbour node to satisfy connection from source to sink*/
+				lnode = graph.nodemap.GetNode(lname)
+				if lnode == nil {
+					log.Printf("can not find lnode (%s) for (%s)", lname, curnode.GetName())
+					continue
+				}
+				curname := curnode.GetName()
+				/*it is some flow for the over*/
+				if (caps.GetValue(curname, lname)-graph.flows.GetValue(curname, lname)) > 0 ||
+					(caps.GetValue(lname, curname)-graph.flows.GetValue(lname, curname)) > 0 {
+					if lnode.GetParent() == nil {
+						/*it means it is new node in handling ,or it is the last orphan node ,so make it as source node*/
+						lnode.SetSink(false)
+						lnode.SetParent(curnode)
+						lnode.SetTS(curnode.GetTS())
+						lnode.SetDist(curnode.GetDist() + 1)
+						graph.SetActive(lnode)
+					} else if lnode.GetSink() {
+						/*we find a route from source to sink ,so break to handle this*/
+						srcnode = curnode
+						sinknode = lnode
+						break
+					} else if lnode.GetTS() <= curnode.GetTS() && lnode.GetDist() > curnode.GetDist() {
+						/*********************************************
+						  it means it handles early before curnode and
+						  distance to source is more than cur node
+						  so we make it parent to curnode
+						  we do not put it in active ,because for it may be not used
+						**********************************************/
+						lnode.SetParent(curnode)
+						lnode.SetTS(curnode.GetTS())
+						lnode.SetDist(curnode.GetDist())
+					}
+				}
+			}
+
+		} else {
+			/*it is sink code*/
+			for _, lname := range neigh.GetValue(curnode.GetName()) {
+				lnode = graph.nodemap.GetNode(lname)
+				if lnode == nil {
+					log.Printf("can not get lnode(%s) for %s", lname, curnode.GetName())
+					continue
+				}
+				curname := curnode.GetName()
+				if (caps.GetValue(curname, lname)-graph.flows.GetValue(curname, lname)) > 0 ||
+					(caps.GetValue(lname, curname)-graph.flows.GetValue(lname, curname)) > 0 {
+					if lnode.GetParent() == nil {
+						/*new node just to add for the active sink side*/
+						lnode.SetSink(true)
+						lnode.SetParent(curnode)
+						lnode.SetDist(curnode.GetDist() + 1)
+						lnode.SetTS(curnode.GetTS())
+						graph.SetActive(lnode)
+					} else if !lnode.GetSink() {
+						/*it is source side node*/
+						srcnode = lnode
+						sinknode = curnode
+						break
+					} else if lnode.GetTS() <= curnode.GetTS() &&
+						lnode.GetDist() > curnode.GetDist() {
+						lnode.SetParent(curnode)
+						lnode.SetTS(curnode.GetTS())
+						lnode.SetDist(curnode.GetDist() + 1)
+					}
+				}
+			}
+
+		}
+
+		graph.TIME += 1
+
+		if srcnode != nil && sinknode != nil {
+			curnode.SetNext(curnode)
+			curgetnode = curnode
+
+			orph := graph.Augment(srcnode, sinknode)
+			if orph > 0 {
+
+			}
+		} else {
+			curgetnode = nil
+		}
+
+	}
+
+	return graph.flow, nil
 }
