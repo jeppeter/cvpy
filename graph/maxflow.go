@@ -239,9 +239,10 @@ func main() {
 	//var flows map[string]map[string]int
 	var stime, etime time.Time
 	if len(os.Args) < 3 {
-		fmt.Fprintf(os.Stdout, "%s [ed|gt] infile\n", os.Args[0])
-		fmt.Fprintf(os.Stdout, "\ted for Edmonds-Karp algorithm\n")
-		fmt.Fprintf(os.Stdout, "\tgt for Goldberg-Tarjan algorithm\n")
+		fmt.Fprintf(os.Stderr, "%s [ed|gt|bk] infile\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "\ted for Edmonds-Karp algorithm\n")
+		fmt.Fprintf(os.Stderr, "\tgt for Goldberg-Tarjan algorithm\n")
+		fmt.Fprintf(os.Stderr, "\tbk for Boykov-Kolmogorov algorithm\n")
 		os.Exit(4)
 	}
 
@@ -259,6 +260,17 @@ func main() {
 		stime = time.Now()
 		flow, _ = GoldbergTarjan(caps, neighs, s, t)
 		etime = time.Now()
+	} else if os.Args[1] == "bk" {
+		bkgraph := NewBkGraph()
+		bkgraph.InitGraph(caps, neighs, s, t)
+		stime = time.Now()
+		flow, e = bkgraph.MaxFlow()
+		etime = time.Now()
+		if e != nil {
+			fmt.Fprintf(os.Stderr, "can not parse (%s) file\n", os.Args[2])
+			os.Exit(4)
+		}
+
 	} else {
 		fmt.Fprintf(os.Stderr, "can not find algorithm for %s\n", os.Args[1])
 		os.Exit(4)
