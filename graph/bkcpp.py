@@ -221,7 +221,7 @@ class BKGraph:
 
 			self.TIME += 1
 			logging.info('TIME %d arc[%s]'%(self.TIME,GetIdx(aidx)))
-			self.debug_state('after arcs handle(%d)'%(curstep))
+			self.debug_state('after arcs handle(%d)'%(self.TIME))
 
 			if aidx != NULL_PTR:
 				logging.info('node[%s].next (%s -> %s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next),GetIdx(nodei)))
@@ -230,7 +230,7 @@ class BKGraph:
 				curnodeid = nodei
 
 				self.augment(aidx)
-				self.debug_state('after augment(%d)'%(curstep))
+				self.debug_state('after augment(%d)'%(self.TIME))
 
 				while len(self.orphan_list) > 0:
 					curorphan = self.orphan_list[0]
@@ -248,7 +248,6 @@ class BKGraph:
 				logging.info('curnodeid %s'%(GetIdx(curnodeid)))
 			else:
 				curnodeid = NULL_PTR
-			curstep += 1
 		self.maxflow_iteration += 1
 		return self.flow
 
