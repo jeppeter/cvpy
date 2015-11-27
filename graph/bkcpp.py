@@ -838,8 +838,8 @@ def main():
 
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
-	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
-	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(message)s')
 	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
