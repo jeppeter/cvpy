@@ -462,6 +462,9 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 						curd--
 						curnode = curparent
 						curparent = curnode.GetParent()
+						if curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN || curparent == nil {
+							break
+						}
 					}
 				}
 			}
