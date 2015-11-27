@@ -21,8 +21,8 @@ var MAXFLOW_ORPHAN *Node
 const MAXFLOW_INFINITE_D = (1 << 31)
 
 func init() {
-	MAXFLOW_ORPHAN = &Node{}
-	MAXFLOW_TERMINAL = &Node{}
+	MAXFLOW_ORPHAN = NewNode("MAXFLOW_ORPHAN")
+	MAXFLOW_TERMINAL = NewNode("MAXFLOW_TERMINAL")
 	return
 }
 
@@ -252,6 +252,7 @@ func (graph *BKGraph) PushOrphanFront(pnode *Node) int {
 		/*it is already pushed in*/
 		return graph.orphans.Len()
 	}
+	log.Printf("push (%s) front", pnode.GetName())
 	pnode.SetParent(MAXFLOW_ORPHAN)
 	graph.orphans.PushFront(pnode)
 	return graph.orphans.Len()
@@ -272,6 +273,13 @@ func (graph *BKGraph) CanFlow(from string, to string) bool {
 		return true
 	}
 	return false
+}
+
+func GetNodeName(pnode *Node) string {
+	if pnode == nil {
+		return "NULL"
+	}
+	return pnode.GetName()
 }
 
 func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
@@ -329,6 +337,8 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 			}
 		}
 	}
+
+	log.Printf("set (%s) Parent (%s) ", orphan.GetName(), GetNodeName(newparent))
 	orphan.SetParent(newparent)
 	if newparent != nil {
 		/*we find the new parent for the orphan ,so we should give the TS and DIST*/
@@ -527,6 +537,7 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 
 		if !graph.AddFlow(curparent.GetName(), curchld.GetName(), bottlecap) {
 			graph.PushOrphanFront(curchld)
+			orphans++
 		}
 		curchld = curparent
 		curparent = curchld.GetParent()
@@ -546,6 +557,7 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 
 		if !graph.AddFlow(curchld.GetName(), curparent.GetName(), bottlecap) {
 			graph.PushOrphanFront(curchld)
+			orphans++
 		}
 		curchld = curparent
 		curparent = curchld.GetParent()

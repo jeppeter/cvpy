@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"strconv"
@@ -261,6 +262,7 @@ func main() {
 		flow, _ = GoldbergTarjan(caps, neighs, s, t)
 		etime = time.Now()
 	} else if os.Args[1] == "bk" {
+		log.SetFlags(log.Lshortfile)
 		bkgraph := NewBkGraph()
 		bkgraph.InitGraph(caps, neighs, s, t)
 		stime = time.Now()
