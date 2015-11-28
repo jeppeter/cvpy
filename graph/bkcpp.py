@@ -780,6 +780,7 @@ def ParseInputFile(infile):
 				sys.exit(4)
 			if bkgraph is None:
 				bkgraph = BKGraph(sink+1,sink * (sink-1)/2)
+				logging.info('bkgraph %s'%(bkgraph))
 				bkgraph.add_node(sink+1)
 			curs = int(sarr[0])
 			curt = int(sarr[1])
@@ -817,7 +818,6 @@ def ParseInputFile(infile):
 			logging.info('set n-link [%d]->[%d] %d'%(curs,curt,curw))
 			cpp_command_out('g -> add_edge(%d,%d,%d,0);\n'%(curs,curt,curw))
 			bkgraph.add_edge(curs,curt,curw,0)
-	
 
 	for k in sourc_sink_pair.keys():
 		# now to add t-link weights
@@ -838,8 +838,8 @@ def main():
 
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
-	logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
-	#logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(message)s')
 	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()

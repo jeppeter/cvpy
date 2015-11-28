@@ -576,29 +576,40 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	}
 	log.Printf("node[%s].next (%s)", pnode.GetName(), GetNodeName(pnode.GetNext()))
 	log.Printf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParents(pnode))
-	log.Printf("++++++++++++++++++++++++++++++")
+	log.Printf("------------------------------")
 
 	pnode.SetDebug()
 }
 
 func (graph *BKGraph) DebugState(desc string) {
 
+	var i, j int
+	var k1s, k2s []string
 	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	log.Printf("%s", desc)
-	for _, curname := range graph.neigh.Iter() {
-		for _, lname := range graph.neigh.GetValue(curname) {
-			if graph.CanFlow(curname, lname) {
-				log.Printf("(%s -> %s ) flow (%d)", curname, lname, graph.GetFlow(curname, lname))
-			}
+	k1s = graph.neigh.Iter()
+
+	for i = 0; i < len(k1s); i++ {
+		curname := k1s[i]
+		curnode := graph.nodemap.GetNode(curname)
+		graph.DebugNode(curnode)
+		k2s = graph.neigh.GetValue(curname)
+		for j = 0; j < len(k2s); j++ {
+			lname := k2s[j]
+			lnode := graph.nodemap.GetNode(lname)
+			graph.DebugNode(lnode)
 		}
 	}
 
-	for _, curname := range graph.neigh.Iter() {
-		curnode := graph.nodemap.GetNode(curname)
-		graph.DebugNode(curnode)
-		for _, lname := range graph.neigh.GetValue(curname) {
-			lnode := graph.nodemap.GetNode(lname)
-			graph.DebugNode(lnode)
+	k1s = graph.neigh.Iter()
+	for i = 0; i < len(k1s); i++ {
+		curname := k1s[i]
+		k2s = graph.neigh.GetValue(curname)
+		for j = 0; j < len(k2s); j++ {
+			lname := k2s[j]
+			//if graph.CanFlow(curname, lname) {
+			log.Printf("(%s -> %s ) flow (%d)", curname, lname, graph.GetFlow(curname, lname))
+			//}
 		}
 	}
 

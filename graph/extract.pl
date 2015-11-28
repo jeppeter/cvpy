@@ -23,6 +23,13 @@ sub OpenFile($$)
 
 my ($curidx,$curname);
 my ($start,$fh);
+my ($basename);
+
+$basename ="state";
+if (scalar(@ARGV) >= 0)
+{
+	$basename = shift;
+}
 undef($fh);
 $start = 0;
 $curidx=0;
@@ -33,7 +40,7 @@ while(<>)
 	{
 		if ($start == 0)
 		{
-			$curname = "state".$curidx.".txt";
+			$curname = $basename.$curidx.".txt";
 			$curidx ++;
 			$fh = OpenFile($curname,$fh);
 			print $fh "$l";

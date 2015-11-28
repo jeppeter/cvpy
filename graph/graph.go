@@ -60,12 +60,26 @@ func NewNeighbour() *Neigbour {
 	return p
 }
 
+func SortArrayString(narr []string) []string {
+	var i, j int
+	for i = 0; i < len(narr); i++ {
+		for j = (i + 1); j < len(narr); j++ {
+			if narr[i] > narr[j] {
+				tmp := narr[i]
+				narr[i] = narr[j]
+				narr[j] = tmp
+			}
+		}
+	}
+	return narr
+}
+
 func (p *Neigbour) GetValue(k1 string) []string {
 	val, ok := p.inner[k1]
 	if !ok {
 		return []string{}
 	}
-	return val
+	return SortArrayString(val)
 }
 
 func (p *Neigbour) Iter() []string {
@@ -73,7 +87,7 @@ func (p *Neigbour) Iter() []string {
 	for k, _ := range p.inner {
 		q = append(q, k)
 	}
-	return q
+	return SortArrayString(q)
 }
 
 func (p *Neigbour) PushValue(k string, val string) {
