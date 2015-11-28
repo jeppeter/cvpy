@@ -780,7 +780,6 @@ def ParseInputFile(infile):
 				sys.exit(4)
 			if bkgraph is None:
 				bkgraph = BKGraph(sink+1,sink * (sink-1)/2)
-				logging.info('bkgraph %s'%(bkgraph))
 				bkgraph.add_node(sink+1)
 			curs = int(sarr[0])
 			curt = int(sarr[1])

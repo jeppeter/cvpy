@@ -279,7 +279,7 @@ func main() {
 	}
 	etime.Sub(stime)
 	//fmt.Fprintf(os.Stderr, "time(%s) flow %d\n", etime.Sub(stime), flow)
-	fmt.Fprintf(os.Stderr, "%d\n", flow)
+	fmt.Fprintf(os.Stdout, "%d\n", flow)
 	//DebugMapString(caps, "caps ")
 	//DebugMapString(flows, "flows ")
 	return

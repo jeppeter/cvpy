@@ -567,19 +567,24 @@ func (graph *BKGraph) GetParents(pnode *Node) string {
 func (graph *BKGraph) GetNext(pnode *Node) string {
 	s := "["
 	i := 0
-	curnext := pnode.GetNext()
-	for curnext != nil && curnext != pnode {
-		if i != 0 {
-			s += ","
-		}
+	if pnode != nil {
+		curnext := pnode.GetNext()
+		for curnext != nil {
+			if i != 0 {
+				s += ","
+			}
 
-		s += fmt.Sprintf("%s", curnext.GetName())
-		curnext = curnext.GetNext()
-		i++
+			s += fmt.Sprintf("%s", curnext.GetName())
+			if curnext == pnode {
+				break
+			}
+			curnext = curnext.GetNext()
+			i++
+
+		}
 	}
 	s += fmt.Sprintf("]cnt(%d)", i)
 	return s
-
 }
 
 func (graph *BKGraph) DebugNode(pnode *Node) {
@@ -605,6 +610,7 @@ func (graph *BKGraph) DebugState(desc string) {
 	var k1s, k2s []string
 	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	log.Printf("%s", desc)
+	log.Printf("queue_first list(%s)", graph.GetNext(graph.queue_first))
 	k1s = graph.neigh.Iter()
 
 	for i = 0; i < len(k1s); i++ {
