@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"container/list"
+	"fmt"
+	//"log"
 )
 
 type Arc struct {
@@ -156,12 +156,14 @@ func (pnode *Node) SetCap(caps int) {
 }
 
 var MAXFLOW_ORPHAN, MAXFLOW_TERMINAL *Arc
+var MAXFLOW_INFINITE_D int
 
 func init() {
 	MAXFLOW_TERMINAL = NewArc()
 	MAXFLOW_TERMINAL.SetName("MAXFLOW_TERMINAL")
 	MAXFLOW_ORPHAN = NewArc()
 	MAXFLOW_ORPHAN.SetName("MAXFLOW_ORPHAN")
+	MAXFLOW_INFINITE_D = (1 << 31)
 }
 
 type BKGraph struct {
@@ -169,12 +171,12 @@ type BKGraph struct {
 	arcs        map[string]*Arc
 	flow        int
 	TIME        int
-	orphanlist  *list.LIST
+	orphanlist  *list.List
 	queue_first *Node
 	queue_last  *Node
 }
 
-func NewBKGraph() *BKGraph {
+func NewBkGraph() *BKGraph {
 	p := &BKGraph{}
 	p.nodes = make(map[string]*Node)
 	p.arcs = make(map[string]*Arc)
@@ -236,7 +238,6 @@ func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) 
 	pi.SetFirst(aarc)
 	aarc.SetHead(pj)
 	aarc.SetName(fmt.Sprintf("%s -> %s", nodejname, nodeiname))
-	arevarc.SetName(pj.GetFirst())
 	pj.SetFirst(arevarc)
 	arevarc.SetHead(pi)
 	arevarc.SetName(fmt.Sprintf("%s -> %s", nodeiname, nodejname))
@@ -298,7 +299,8 @@ func (graph *BKGraph) SetActive(pnode *Node) {
 }
 
 func (graph *BKGraph) GetActive() *Node {
-	pnode := nil
+	var pnode *Node
+	pnode = nil
 	if graph.queue_first != nil {
 		pnode = graph.queue_first
 		graph.queue_first = pnode.GetNext()
@@ -313,10 +315,114 @@ func (graph *BKGraph) GetActive() *Node {
 }
 
 func (graph *BKGraph) Augment(parc *Arc) {
+	var pi *Node
+	bottlecap := parc.GetCap()
 
+	/*for source side*/
+	pi = parc.GetSister().GetHead()
+	for {
+		pcurarc := pi.GetParent()
+		if pcurarc == MAXFLOW_TERMINAL {
+			break
+		}
+		pcursis := pcurarc.GetSister()
+		if bottlecap > pcursis.GetCap() {
+			bottlecap = pcursis.GetCap()
+		}
+		pi = pcurarc.GetHead()
+	}
+
+	/*for sink side*/
+	pi = parc.GetHead()
+	for {
+		pcurarc := pi.GetParent()
+		if pcurarc == MAXFLOW_TERMINAL {
+			break
+		}
+
+		if bottlecap > pcurarc.GetCap() {
+			bottlecap = pcurarc.GetCap()
+		}
+		pi = pcurarc.GetHead()
+	}
+
+	if bottlecap > -pi.GetCap() {
+		bottlecap = -pi.GetCap()
+	}
+
+	psister := parc.GetSister()
+	psister.SetCap(psister.GetCap() + bottlecap)
+	parc.SetCap(parc.GetCap() - bottlecap)
+
+	pi = psister.GetHead()
+	for {
+		pcurarc := pi.GetParent()
+		if pcurarc == MAXFLOW_TERMINAL {
+			break
+		}
+
+		pcursister := pcurarc.GetSister()
+		pcurarc.SetCap(pcurarc.GetCap() + bottlecap)
+		pcursister.SetCap(pcursister.GetCap() - bottlecap)
+
+		if pcursister.GetCap() == 0 {
+			graph.PushOrphanFront(pi)
+		}
+		pi = pcurarc.GetHead()
+	}
+
+	pi.SetCap(pi.GetCap() - bottlecap)
+	if pi.GetCap() == 0 {
+		graph.PushOrphanFront(pi)
+	}
+
+	pi = parc.GetHead()
+
+	for {
+		pcurarc := pi.GetParent()
+		if pcurarc == MAXFLOW_TERMINAL {
+			break
+		}
+		pcursister := pcurarc.GetSister()
+		pcursister.SetCap(pcursister.GetCap() + bottlecap)
+		pcurarc.SetCap(pcurarc.GetCap() - bottlecap)
+
+		if pcurarc.GetCap() == 0 {
+			graph.PushOrphanFront(pi)
+		}
+
+		pi = pcurarc.GetHead()
+	}
+
+	pi.SetCap(pi.GetCap() + bottlecap)
+	if pi.GetCap() == 0 {
+		graph.PushOrphanFront(pi)
+	}
+	graph.flow += bottlecap
+	return
 }
 
-func (graph *BKGraph)GetOrphan() *Node{
+func (graph *BKGraph) PushOrphanBack(pnode *Node) {
+	if pnode.GetParent() == MAXFLOW_ORPHAN {
+		return
+	}
+
+	pnode.SetParent(MAXFLOW_ORPHAN)
+	graph.orphanlist.PushBack(pnode)
+	return
+}
+
+func (graph *BKGraph) PushOrphanFront(pnode *Node) {
+	if pnode.GetParent() == MAXFLOW_ORPHAN {
+		return
+	}
+
+	pnode.SetParent(MAXFLOW_ORPHAN)
+	graph.orphanlist.PushFront(pnode)
+	return
+}
+
+func (graph *BKGraph) GetOrphan() *Node {
 	var pnode *Node
 	pnode = nil
 	for {
@@ -324,11 +430,165 @@ func (graph *BKGraph)GetOrphan() *Node{
 			return nil
 		}
 
+		front := graph.orphanlist.Front()
+		graph.orphanlist.Remove(front)
+		pnode = front.Value.(*Node)
+		if pnode.GetParent() == MAXFLOW_ORPHAN {
+			return pnode
+		}
+	}
 
+	return nil
+}
 
+func (graph *BKGraph) ProcessSinkOrphan(pnode *Node) {
+	var arc0_min *Arc
+	dmin := MAXFLOW_INFINITE_D
+	arc0_min = nil
+
+	for arc0 := pnode.GetFirst(); arc0 != nil; arc0 = arc0.GetNext() {
+		if arc0.GetCap() != 0 {
+			pj := arc0.GetHead()
+			if pj.IsSink() {
+				arca := pj.GetParent()
+				if arca != nil {
+					d := 0
+					for {
+						if pj.GetTS() == graph.TIME {
+							d += pj.GetDIST()
+							break
+						}
+						arca = pj.GetParent()
+						d++
+						if arca == MAXFLOW_TERMINAL {
+							pj.SetTS(graph.TIME)
+							pj.SetDIST(1)
+							break
+						}
+						if arca == MAXFLOW_ORPHAN {
+							d = MAXFLOW_INFINITE_D
+							break
+						}
+						pj = arca.GetHead()
+					}
+
+					if d < MAXFLOW_INFINITE_D {
+						if d < dmin {
+							dmin = d
+							arc0_min = arc0
+						}
+
+						pj = arc0.GetHead()
+						for pj.GetTS() != graph.TIME {
+							pj.SetTS(graph.TIME)
+							pj.SetDIST(d)
+							d--
+							pj = pj.GetParent().GetHead()
+						}
+					}
+				}
+			}
+		}
+	}
+
+	pnode.SetParent(arc0_min)
+
+	if arc0_min != nil {
+		pnode.SetTS(graph.TIME)
+		pnode.SetDIST(dmin + 1)
+	} else {
+		for arc0 := pnode.GetFirst(); arc0 != nil; arc0 = arc0.GetNext() {
+			pj := arc0.GetHead()
+			if pj.IsSink() {
+				arca := pj.GetParent()
+				if arca != nil {
+					if arc0.GetCap() != 0 {
+						graph.SetActive(pj)
+					}
+
+					if arca != MAXFLOW_ORPHAN && arca != MAXFLOW_TERMINAL && arca.GetHead() == pnode {
+						graph.PushOrphanBack(pj)
+					}
+				}
+			}
+		}
 	}
 }
 
+func (graph *BKGraph) ProcessSourceOrphan(pnode *Node) {
+	var arc0_min *Arc
+	dmin := MAXFLOW_INFINITE_D
+	arc0_min = nil
+
+	for arc0 := pnode.GetFirst(); arc0 != nil; arc0 = arc0.GetNext() {
+		arc0sis := arc0.GetSister()
+		if arc0sis.GetCap() != 0 {
+			pj := arc0.GetHead()
+			if !pj.IsSink() {
+				arca := pj.GetParent()
+				if arca != nil {
+					d := 0
+					for {
+						if pj.GetTS() == graph.TIME {
+							d += pj.GetDIST()
+							break
+						}
+						arca = pj.GetParent()
+						d++
+						if arca == MAXFLOW_TERMINAL {
+							pj.SetTS(graph.TIME)
+							pj.SetDIST(1)
+							break
+						}
+						if arca == MAXFLOW_ORPHAN {
+							d = MAXFLOW_INFINITE_D
+							break
+						}
+
+						pj = arca.GetHead()
+					}
+					if d < MAXFLOW_INFINITE_D {
+						if d < dmin {
+							dmin = d
+							arc0_min = arc0
+						}
+						pj = arc0.GetHead()
+						for pj.GetTS() != graph.TIME {
+							pj.SetTS(graph.TIME)
+							pj.SetDIST(d)
+							d--
+							pj = pj.GetParent().GetHead()
+						}
+					}
+				}
+			}
+		}
+	}
+
+	pnode.SetParent(arc0_min)
+	if arc0_min != nil {
+		pnode.SetTS(graph.TIME)
+		pnode.SetDIST(dmin + 1)
+	} else {
+		for arc0 := pnode.GetFirst(); arc0 != nil; arc0 = arc0.GetNext() {
+			pj := arc0.GetHead()
+			if !pj.IsSink() {
+				arca := pj.GetParent()
+				if arca != nil {
+					psister := arc0.GetSister()
+					if psister.GetCap() != 0 {
+						graph.SetActive(pj)
+					}
+
+					if arca != MAXFLOW_ORPHAN && arca != MAXFLOW_TERMINAL && arca.GetHead() == pnode {
+						graph.PushOrphanBack(pj)
+					}
+				}
+			}
+		}
+	}
+	return
+}
 
 func (graph *BKGraph) MaxFlow() (flow int, err error) {
 	var curnode, curgetnode *Node
@@ -408,7 +668,16 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 			graph.Augment(gotarc)
 
 			for {
-				orphan := 
+				orphan := graph.GetOrphan()
+				if orphan == nil {
+					break
+				}
+
+				if orphan.IsSink() {
+					graph.ProcessSinkOrphan(orphan)
+				} else {
+					graph.ProcessSourceOrphan(orphan)
+				}
 			}
 
 		} else {
@@ -416,4 +685,6 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		}
 
 	}
+
+	return graph.flow, nil
 }

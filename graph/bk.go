@@ -352,6 +352,7 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 					log.Printf("node[%s].TS (%d) TIME (%d)", curnode.GetName(), curnode.GetTS(), graph.TIME)
 					if curnode.GetTS() == graph.TIME {
 						curd += curnode.GetDist()
+						break
 					}
 					curd++
 					if curparent == MAXFLOW_TERMINAL {
@@ -449,6 +450,7 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 				for curparent != nil {
 					if curnode.GetTS() == graph.TIME {
 						curd += curnode.GetDist()
+						break
 					}
 
 					curd++
