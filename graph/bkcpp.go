@@ -25,6 +25,14 @@ func NewArc() *Arc {
 	return p
 }
 
+func DebugLogPrintf(format string, a ...interface{}) {
+	if false {
+		return
+	}
+	log.Printf(format, a...)
+	return
+}
+
 func (parc *Arc) SetName(name string) {
 	parc.name = name
 	return
@@ -275,7 +283,7 @@ func (graph *BKGraph) SortNodeArcs(pnode *Node) {
 		curarc = curarc.GetNext()
 	}
 
-	log.Printf("node[%s].first (%v)", pnode.GetName(), arcnames)
+	DebugLogPrintf("node[%s].first (%v)", pnode.GetName(), arcnames)
 
 	if len(arcarray) <= 1 {
 		return
@@ -309,7 +317,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 			capto := caps.GetValue(iname, jname)
 			caprev := caps.GetValue(jname, iname)
 			if iname == source {
-				log.Printf("add_tweights (%s,%d,0)", jname, capto)
+				DebugLogPrintf("add_tweights (%s,%d,0)", jname, capto)
 				graph.add_tweights(jname, capto, 0)
 
 			} else if iname == sink {
@@ -317,7 +325,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 			} else if jname == source {
 				/*nothing to do*/
 			} else if jname == sink {
-				log.Printf("add_tweights (%s,0,%d)", iname, capto)
+				DebugLogPrintf("add_tweights (%s,0,%d)", iname, capto)
 				graph.add_tweights(iname, 0, capto)
 			} else {
 				//fromarcname := fmt.Sprintf("%s -> %s", iname, jname)
@@ -327,7 +335,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 				_, ok1 := graph.arcs[fromarcname]
 				_, ok2 := graph.arcs[toarcname]
 				if !ok1 && !ok2 {
-					log.Printf("add_edge (%s,%s,%d,%d)", iname, jname, capto, caprev)
+					DebugLogPrintf("add_edge (%s,%s,%d,%d)", iname, jname, capto, caprev)
 					graph.add_edge(iname, jname, capto, caprev)
 				}
 			}
@@ -447,18 +455,18 @@ func (graph *BKGraph) GetParentList(pnode *Node) string {
 }
 
 func (graph *BKGraph) DebugNode(pnode *Node) {
-	log.Printf("==============================")
+	DebugLogPrintf("==============================")
 	if pnode.IsSink() {
-		log.Printf("node[%s].is_sink (True)", pnode.GetName())
+		DebugLogPrintf("node[%s].is_sink (True)", pnode.GetName())
 	} else {
-		log.Printf("node[%s].is_sink (False)", pnode.GetName())
+		DebugLogPrintf("node[%s].is_sink (False)", pnode.GetName())
 	}
-	log.Printf("node[%s].arc_first list(%s)", pnode.GetName(), graph.GetFirstList(pnode))
-	log.Printf("node[%s].arc_parent list(%s)", pnode.GetName(), graph.GetParentList(pnode))
-	log.Printf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
-	log.Printf("node[%s].tr_cap (%d)", pnode.GetName(), pnode.GetCap())
-	log.Printf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDIST())
-	log.Printf("******************************")
+	DebugLogPrintf("node[%s].arc_first list(%s)", pnode.GetName(), graph.GetFirstList(pnode))
+	DebugLogPrintf("node[%s].arc_parent list(%s)", pnode.GetName(), graph.GetParentList(pnode))
+	DebugLogPrintf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
+	DebugLogPrintf("node[%s].tr_cap (%d)", pnode.GetName(), pnode.GetCap())
+	DebugLogPrintf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDIST())
+	DebugLogPrintf("******************************")
 	return
 }
 
@@ -486,12 +494,12 @@ func (graph *BKGraph) GetArcNextList(parc *Arc) string {
 }
 
 func (graph *BKGraph) DebugArc(parc *Arc) {
-	log.Printf("+++++++++++++++++++++++++++++++")
-	log.Printf("arc[%s].node_head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
-	log.Printf("arc[%s].arc_next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
-	log.Printf("arc[%s].arc_sister (%s)", parc.GetName(), parc.GetSister().GetName())
-	log.Printf("arc[%s].r_cap (%d)", parc.GetName(), parc.GetCap())
-	log.Printf("-------------------------------")
+	DebugLogPrintf("+++++++++++++++++++++++++++++++")
+	DebugLogPrintf("arc[%s].node_head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
+	DebugLogPrintf("arc[%s].arc_next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
+	DebugLogPrintf("arc[%s].arc_sister (%s)", parc.GetName(), parc.GetSister().GetName())
+	DebugLogPrintf("arc[%s].r_cap (%d)", parc.GetName(), parc.GetCap())
+	DebugLogPrintf("-------------------------------")
 	return
 }
 
@@ -530,8 +538,8 @@ func (graph *BKGraph) GetOrphanString() string {
 }
 
 func (graph *BKGraph) DebugState(notice string) {
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-	log.Printf("%s", notice)
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("%s", notice)
 
 	for _, curn := range SortArrayString(graph.GetNodeNames()) {
 		pnode, _ := graph.nodes[curn]
@@ -543,10 +551,10 @@ func (graph *BKGraph) DebugState(notice string) {
 		graph.DebugArc(parc)
 	}
 
-	log.Printf("queue_first list(%s)", graph.GetQueueFirst())
-	log.Printf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
-	log.Printf("orphan_list (%s)", graph.GetOrphanString())
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("queue_first list(%s)", graph.GetQueueFirst())
+	DebugLogPrintf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
+	DebugLogPrintf("orphan_list (%s)", graph.GetOrphanString())
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
 
@@ -568,22 +576,29 @@ func (graph *BKGraph) SetActive(pnode *Node) {
 func (graph *BKGraph) GetActive() *Node {
 	var pnode *Node
 	pnode = nil
-	if graph.queue_first != nil {
+	for {
 		pnode = graph.queue_first
-		graph.queue_first = pnode.GetNext()
-		/*set next for will insert queue again*/
-		pnode.SetNext(nil)
-		if graph.queue_first == nil {
-			/*nothing in the queue ,so we should set nil*/
+		if pnode == nil {
+			return nil
+		}
+		if pnode.GetNext() == pnode {
+			graph.queue_first = nil
 			graph.queue_last = nil
+		} else {
+			graph.queue_first = pnode.GetNext()
+		}
+		pnode.SetNext(nil)
+		if pnode.GetParent() != nil {
+			return pnode
 		}
 	}
-	return pnode
+	return nil
 }
 
 func (graph *BKGraph) Augment(parc *Arc) {
 	var pi *Node
 	bottlecap := parc.GetCap()
+	DebugLogPrintf("Get arc (%s)", parc.GetName())
 
 	/*for source side*/
 	pi = parc.GetSister().GetHead()
@@ -592,7 +607,7 @@ func (graph *BKGraph) Augment(parc *Arc) {
 		if pcurarc == MAXFLOW_TERMINAL {
 			break
 		}
-		log.Printf("curarc (%s)", graph.GetArcName(pcurarc))
+		DebugLogPrintf("curarc (%s)", graph.GetArcName(pcurarc))
 		pcursis := pcurarc.GetSister()
 		if bottlecap > pcursis.GetCap() {
 			bottlecap = pcursis.GetCap()
