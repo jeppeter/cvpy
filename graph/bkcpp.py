@@ -405,16 +405,51 @@ class BKGraph:
 			s +=']cnt(%d)'%(i)
 		logging.debug('%s list(%s)'%(notice,s))
 		return
+	def sort_nodes_names(self):
+		nodeids = []
+		nodenames = []
+		for i in xrange(len(self.nodes)):
+			nodeids.append(i)
+			nodenames.append(self.nodes[i].name)
+
+		for i in xrange(len(nodenames)):
+			for j in range((i+1),len(nodenames)):
+				if nodenames[i] > nodenames[j]:
+					tmp = nodenames[i]
+					nodenames[i] = nodenames[j]
+					nodenames[j] = tmp
+					tmp = nodeids[i]
+					nodeids[i] = nodeids[j]
+					nodeids[j] = tmp
+		return nodeids
+
+	def sort_arc_names(self):
+		arcids = []
+		arcnames = []
+		for i in xrange(len(self.arcs)):
+			arcids.append(i)
+			arcnames.append(self.arcs[i].name)
+
+		for i in xrange(len(arcids)):
+			for j in range((i+1),len(arcids)):
+				if arcnames[i] > arcnames[j]:
+					tmp = arcnames[i]
+					arcnames[i] = arcnames[j]
+					arcnames[j] = tmp
+					tmp = arcids[i]
+					arcids[i] = arcids[j]
+					arcids[j] = tmp
+		return arcids
 
 	def debug_state(self,notice):
 		logging.debug('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 		logging.debug('debug state %s'%(notice))
-		for nodei in xrange(len(self.nodes)):
+		for nodei in self.sort_nodes_names():
 			if self.nodes[nodei].name == '':
 				continue
 			self.debug_node(nodei)
 
-		for aidx in xrange(len(self.arcs)):
+		for aidx in self.sort_arc_names():
 			self.debug_arc(aidx)
 		self.debug_queue_state('queue_first',self.queue_first)
 		logging.debug('orphan_list (%s)'%(self.GetOrphanList(self.orphan_list)))

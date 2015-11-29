@@ -247,13 +247,13 @@ func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) 
 	pi.SetFirst(aarc)
 	aarc.SetHead(pj)
 	aarc.SetName(graph.FormArcName(nodeiname, nodejname))
-	//aarc.SetName(fmt.Sprintf("%s -> %s", nodejname, nodeiname))
+	arevarc.SetNext(pj.GetFirst())
 	pj.SetFirst(arevarc)
 	arevarc.SetHead(pi)
 	arevarc.SetName(graph.FormArcName(nodejname, nodeiname))
-	//arevarc.SetName(fmt.Sprintf("%s -> %s", nodeiname, nodejname))
 	aarc.SetCap(caps)
 	arevarc.SetCap(rev_caps)
+
 	graph.arcs[aarc.GetName()] = aarc
 	graph.arcs[arevarc.GetName()] = arevarc
 	return
@@ -272,9 +272,10 @@ func (graph *BKGraph) SortNodeArcs(pnode *Node) {
 	for curarc != nil {
 		arcarray = append(arcarray, curarc)
 		arcnames = append(arcnames, curarc.GetName())
-
 		curarc = curarc.GetNext()
 	}
+
+	log.Printf("node[%s].first (%v)", pnode.GetName(), arcnames)
 
 	if len(arcarray) <= 1 {
 		return
@@ -486,10 +487,10 @@ func (graph *BKGraph) GetArcNextList(parc *Arc) string {
 
 func (graph *BKGraph) DebugArc(parc *Arc) {
 	log.Printf("+++++++++++++++++++++++++++++++")
+	log.Printf("arc[%s].node_head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
+	log.Printf("arc[%s].arc_next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
+	log.Printf("arc[%s].arc_sister (%s)", parc.GetName(), parc.GetSister().GetName())
 	log.Printf("arc[%s].r_cap (%d)", parc.GetName(), parc.GetCap())
-	log.Printf("arc[%s].head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
-	log.Printf("arc[%s].next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
-	log.Printf("arc[%s].sister (%s)", parc.GetName(), parc.GetSister().GetName())
 	log.Printf("-------------------------------")
 	return
 }
