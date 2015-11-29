@@ -452,6 +452,7 @@ class BKGraph:
 		for aidx in self.sort_arc_names():
 			self.debug_arc(aidx)
 		self.debug_queue_state('queue_first',self.queue_first)
+		logging.debug('TIME (%d) flow (%d)'%(self.TIME,self.flow))
 		logging.debug('orphan_list (%s)'%(self.GetOrphanList(self.orphan_list)))
 		logging.debug('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 

@@ -515,7 +515,7 @@ func (graph *BKGraph) GetQueueFirst() string {
 }
 
 func (graph *BKGraph) GetOrphanString() string {
-	s := "["
+	s := fmt.Sprintf("cnt(%d)[", graph.orphanlist.Len())
 	i := 0
 	for curlist := graph.orphanlist.Front(); curlist != nil; curlist = curlist.Next() {
 		pnode := curlist.Value.(*Node)
@@ -525,7 +525,7 @@ func (graph *BKGraph) GetOrphanString() string {
 		i++
 		s += pnode.GetName()
 	}
-	s += fmt.Sprintf("]cnt(%d)", i)
+	s += fmt.Sprintf("]")
 	return s
 }
 
@@ -543,9 +543,9 @@ func (graph *BKGraph) DebugState(notice string) {
 		graph.DebugArc(parc)
 	}
 
-	log.Printf("queue_first list (%s)", graph.GetQueueFirst())
+	log.Printf("queue_first list(%s)", graph.GetQueueFirst())
 	log.Printf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
-	log.Printf("orphan list(%s)", graph.GetOrphanString())
+	log.Printf("orphan_list (%s)", graph.GetOrphanString())
 	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
@@ -592,6 +592,7 @@ func (graph *BKGraph) Augment(parc *Arc) {
 		if pcurarc == MAXFLOW_TERMINAL {
 			break
 		}
+		log.Printf("curarc (%s)", graph.GetArcName(pcurarc))
 		pcursis := pcurarc.GetSister()
 		if bottlecap > pcursis.GetCap() {
 			bottlecap = pcursis.GetCap()
@@ -928,14 +929,14 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		}
 
 		graph.TIME++
-		graph.DebugState(fmt.Sprintf("After Handler (%d)", graph.TIME))
+		graph.DebugState(fmt.Sprintf("debug state after arcs handle(%d)", graph.TIME))
 
 		if gotarc != nil {
 			curnode.SetNext(curnode)
 			curgetnode = curnode
 
 			graph.Augment(gotarc)
-			graph.DebugState(fmt.Sprintf("After Augment (%d)", graph.TIME))
+			graph.DebugState(fmt.Sprintf("debug state after augment(%d)", graph.TIME))
 
 			for {
 				orphan := graph.GetOrphan()
@@ -950,7 +951,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 				}
 			}
 
-			graph.DebugState(fmt.Sprintf("After Process Orphan (%d)", graph.TIME))
+			graph.DebugState(fmt.Sprintf("debug state after orphan handle (%d)", graph.TIME))
 
 		} else {
 			curgetnode = nil
