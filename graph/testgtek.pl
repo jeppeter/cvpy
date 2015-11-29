@@ -21,16 +21,16 @@ for ($i=0;$i < $times;$i++){
 	{
 		print STDOUT "\n";
 	}
-	RunCommand("./makemap.exe 300 10000 >test.map");
+	RunCommand("./makemap.exe 100 1000 >test.map");
 	RunCommand("python bkcpp.py test.map >bk.txt");
-	RunCommand("./maxflow.exe ek test.map >/dev/null 2>ek.txt");
+	RunCommand("./maxflow.exe ek test.map  >ek.txt 2>/dev/null");
 	$ek=`cat ek.txt`;
 	chomp($ek);
 	$gt=`cat bk.txt`;
 	chomp($gt);
 
 	if ("$ek" ne "$gt") {
-		print STDERR "can not run ok on gt ek";
+		print STDERR "can not run ok on gt ($gt) ek ($ek)";
 		exit(3)
 	}
 	print STDOUT ".";

@@ -403,15 +403,16 @@ func (graph *BKGraph) GetParentList(pnode *Node) string {
 
 func (graph *BKGraph) DebugNode(pnode *Node) {
 	log.Printf("++++++++++++++++++++++++++++++++++++")
-	log.Printf("node[%s].TS (%d) DIST (%d) tr_cap (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetDIST(), pnode.GetCap())
-	log.Printf("node[%s].first list(%s)", pnode.GetName(), graph.GetFirstList(pnode))
-	log.Printf("node[%s].next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
-	log.Printf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParentList(pnode))
 	if pnode.IsSink() {
-		log.Printf("node[%s] sink", pnode.GetName())
+		log.Printf("node[%s].is_sink (True)", pnode.GetName())
 	} else {
-		log.Printf("node[%s] source", pnode.GetName())
+		log.Printf("node[%s].is_sink (False)", pnode.GetName())
 	}
+	log.Printf("node[%s].arc_first list(%s)", pnode.GetName(), graph.GetFirstList(pnode))
+	log.Printf("node[%s].arc_parent list(%s)", pnode.GetName(), graph.GetParentList(pnode))
+	log.Printf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
+	log.Printf("node[%s].tr_cap (%d)", pnode.GetName(), pnode.GetCap())
+	log.Printf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDIST())
 	log.Printf("------------------------------------")
 	return
 }
@@ -484,7 +485,7 @@ func (graph *BKGraph) GetOrphanString() string {
 }
 
 func (graph *BKGraph) DebugState(notice string) {
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	log.Printf("%s", notice)
 
 	for _, curn := range SortArrayString(graph.GetNodeNames()) {
@@ -500,7 +501,7 @@ func (graph *BKGraph) DebugState(notice string) {
 	log.Printf("queue_first list (%s)", graph.GetQueueFirst())
 	log.Printf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
 	log.Printf("orphan list(%s)", graph.GetOrphanString())
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
 

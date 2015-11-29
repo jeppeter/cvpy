@@ -58,8 +58,8 @@ class BKGraph:
 		self.flow = 0
 		self.maxflow_iteration = 0
 		self.orphan_list = []
-		self.queue_first = [NULL_PTR,NULL_PTR]
-		self.queue_last = [NULL_PTR,NULL_PTR]
+		self.queue_first = NULL_PTR
+		self.queue_last = NULL_PTR
 		return
 
 	def get_arc_name(self,aidx):
@@ -383,16 +383,13 @@ class BKGraph:
 
 		for aidx in xrange(len(self.arcs)):
 			self.debug_arc(aidx)
-		self.debug_queue_state('queue_first[0]',self.queue_first[0])
-		self.debug_queue_state('queue_first[1]',self.queue_first[1])
-		self.debug_queue_state('queue_last[0]',self.queue_last[0])
-		self.debug_queue_state('queue_last[1]',self.queue_last[1])
+		self.debug_queue_state('queue_first',self.queue_first)
 		logging.debug('orphan_list (%s)'%(self.GetOrphanList(self.orphan_list)))
 		logging.debug('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
 	def maxflow_init(self):
-		self.queue_first = [NULL_PTR,NULL_PTR]
-		self.queue_last = [NULL_PTR,NULL_PTR]
+		self.queue_first = NULL_PTR
+		self.queue_last = NULL_PTR
 		self.orphan_list = []
 		self.TIME = 0
 
@@ -419,51 +416,40 @@ class BKGraph:
 
 	def next_active(self):
 		while True:
-			nodei = self.queue_first[0]
-			logging.info('nodei (queue_first[0] (%s))'%(GetIdx(self.queue_first[0])))
+			nodei = self.queue_first
+			logging.info('nodei (queue_first (%s))'%(self.get_node_name(self.queue_first)))
 			if nodei == NULL_PTR:
-				logging.info('nodei (%s -> queue_first[1] (%s))'%(GetIdx(nodei),GetIdx(self.queue_first[1])))
-				nodei = self.queue_first[1]
-				logging.info('queue_first[0] (%s ->  queue_first[1] (%s))'%(GetIdx(self.queue_first[0]),GetIdx(nodei)))
-				self.queue_first[0] = nodei
-				logging.info('queue_last[0] (%s -> queue_last[1] (%s))'%(GetIdx(self.queue_last[0]),GetIdx(self.queue_last[1])))
-				self.queue_last[0] = self.queue_last[1]
-				logging.info('queue_first[1] (%s -> %s)'%(GetIdx(self.queue_first[1]),GetIdx(NULL_PTR)))
-				self.queue_first[1] = NULL_PTR
-				logging.info('queue_last[1] (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(NULL_PTR)))
-				self.queue_last[1] = NULL_PTR
-				if nodei == NULL_PTR:
-					return NULL_PTR
+				return NULL_PTR
 			logging.info('node[%s].next (%s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
 			if self.nodes[nodei].node_next == nodei:
-				logging.info('queue_first[0] (%s -> %s)'%(GetIdx(self.queue_first[0]),GetIdx(NULL_PTR)))
-				self.queue_first[0] = NULL_PTR
-				logging.info('queue_last[0] (%s -> %s)'%(GetIdx(self.queue_last[0]),GetIdx(NULL_PTR)))
-				self.queue_last[0] = NULL_PTR
+				logging.info('queue_first (%s -> %s)'%(self.get_node_name(self.queue_first),self.get_node_name(NULL_PTR)))
+				self.queue_first = NULL_PTR
+				logging.info('queue_last (%s -> %s)'%(self.get_node_name(self.queue_last),self.get_node_name(NULL_PTR)))
+				self.queue_last = NULL_PTR
 			else:
-				logging.info('queue_first[0] (%s -> node[%s].next %s)'%(GetIdx(self.queue_first[0]),GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
-				self.queue_first[0]= self.nodes[nodei].node_next
-			logging.info('node[%s].next (%s -> NULL)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
+				logging.info('queue_first (%s -> node[%s].next %s)'%(self.get_node_name(self.queue_first),self.get_node_name(nodei),self.get_node_name(self.nodes[nodei].node_next)))
+				self.queue_first= self.nodes[nodei].node_next
+			logging.info('node[%s].next (%s -> NULL)'%(self.get_node_name(nodei),self.get_node_name(self.nodes[nodei].node_next)))
 			self.nodes[nodei].node_next = NULL_PTR
 
-			logging.info('node[%s].parent (%s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].arc_parent)))
+			logging.info('node[%s].parent (%s)'%(self.get_node_name(nodei),self.get_arc_name(self.nodes[nodei].arc_parent)))
 			if self.nodes[nodei].arc_parent != NULL_PTR:
 				return nodei
 		return NULL_PTR
 
 	def set_active(self,nodei):
-		logging.info('set node[%s].next (%s) active'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next)))
-		logging.info('queue_last[1] (%s) queue_first[1] (%s)'%(GetIdx(self.queue_last[1]),GetIdx(self.queue_first[1])))
+		logging.info('set node[%s].next (%s) active'%(self.get_node_name(nodei),self.get_node_name(self.nodes[nodei].node_next)))
+		logging.info('queue_last (%s) queue_first (%s)'%(self.get_node_name(self.queue_last),self.get_node_name(self.queue_first)))
 		if self.nodes[nodei].node_next == NULL_PTR:
-			if self.queue_last[1] != NULL_PTR:
-				logging.info('set node[%s].next (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(self.nodes[self.queue_last[1]].node_next),GetIdx(nodei)))
-				self.nodes[self.queue_last[1]].node_next = nodei
+			if self.queue_last != NULL_PTR:
+				logging.info('set node[%s].next (%s -> %s)'%(self.get_node_name(self.queue_last),self.get_node_name(self.nodes[self.queue_last].node_next),self.get_node_name(nodei)))
+				self.nodes[self.queue_last].node_next = nodei
 			else:
-				logging.info('set queue_first[1] (%s -> %s)'%(GetIdx(self.queue_first[1]),GetIdx(nodei)))
-				self.queue_first[1] = nodei
-			logging.info('set queue_last[1] (%s -> %s)'%(GetIdx(self.queue_last[1]),GetIdx(nodei)))
-			self.queue_last[1] = nodei
-			logging.info('set node[%s].next (%s -> %s)'%(GetIdx(nodei),GetIdx(self.nodes[nodei].node_next),GetIdx(nodei)))
+				logging.info('set queue_first (%s -> %s)'%(self.get_node_name(self.queue_first),GetIdx(nodei)))
+				self.queue_first = nodei
+			logging.info('set queue_last (%s -> %s)'%(self.get_node_name(self.queue_last),self.get_node_name(nodei)))
+			self.queue_last = nodei
+			logging.info('set node[%s].next (%s -> %s)'%(self.get_node_name(nodei),self.get_node_name(self.nodes[nodei].node_next),GetIdx(nodei)))
 			self.nodes[nodei].node_next = nodei
 		return
 
@@ -860,7 +846,7 @@ def main():
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
-	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(message)s')
-	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
