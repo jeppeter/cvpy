@@ -336,7 +336,7 @@ func (graph *BKGraph) GetNextList(pnode *Node) string {
 			s += ","
 		}
 		i++
-		s += fmt.Sprintf("%s", pnode.GetName())
+		s += fmt.Sprintf("%s", pj.GetName())
 		if pj == pj.GetNext() {
 			break
 		}
@@ -380,7 +380,6 @@ func (graph *BKGraph) GetParentList(pnode *Node) string {
 		if i != 0 {
 			s += ","
 		}
-		i++
 		if parc == MAXFLOW_ORPHAN {
 			s += "MAXFLOW_ORPHAN"
 			break
@@ -389,7 +388,7 @@ func (graph *BKGraph) GetParentList(pnode *Node) string {
 			s += "MAXFLOW_TERMINAL"
 			break
 		}
-
+		i++
 		pj := parc.GetHead()
 		s += fmt.Sprintf("%s(%s)", graph.GetNodeName(pj), parc.GetName())
 		if pj == nil {
@@ -402,7 +401,7 @@ func (graph *BKGraph) GetParentList(pnode *Node) string {
 }
 
 func (graph *BKGraph) DebugNode(pnode *Node) {
-	log.Printf("++++++++++++++++++++++++++++++++++++")
+	log.Printf("==============================")
 	if pnode.IsSink() {
 		log.Printf("node[%s].is_sink (True)", pnode.GetName())
 	} else {
@@ -413,7 +412,7 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	log.Printf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
 	log.Printf("node[%s].tr_cap (%d)", pnode.GetName(), pnode.GetCap())
 	log.Printf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDIST())
-	log.Printf("------------------------------------")
+	log.Printf("******************************")
 	return
 }
 
@@ -441,12 +440,12 @@ func (graph *BKGraph) GetArcNextList(parc *Arc) string {
 }
 
 func (graph *BKGraph) DebugArc(parc *Arc) {
-	log.Printf("++++++++++++++++++++++++++++++++++++")
+	log.Printf("+++++++++++++++++++++++++++++++")
 	log.Printf("arc[%s].r_cap (%d)", parc.GetName(), parc.GetCap())
 	log.Printf("arc[%s].head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
 	log.Printf("arc[%s].next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
 	log.Printf("arc[%s].sister (%s)", parc.GetName(), parc.GetSister().GetName())
-	log.Printf("------------------------------------")
+	log.Printf("-------------------------------")
 	return
 }
 
@@ -816,7 +815,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 	var gotarc *Arc
 	curnode = nil
 	curgetnode = nil
-	graph.DebugState(fmt.Sprintf("After Init (%d)", graph.TIME))
+	graph.DebugState(fmt.Sprintf("debug state after init"))
 
 	for {
 		gotarc = nil

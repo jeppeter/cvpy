@@ -36,6 +36,7 @@ $curidx=0;
 while(<>)
 {
 	my ($l)= $_;
+	$l =~ s/\r//;
 	if ($l =~ m/~~~~~~~~~~~~~/o)
 	{
 		if ($start == 0)

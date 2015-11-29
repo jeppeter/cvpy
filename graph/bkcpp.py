@@ -91,6 +91,35 @@ class BKGraph:
 			self.nodes.append(Node())
 		return
 
+	def set_node_next_sequence(self,nodei):
+		arcidxs = []
+		arcnames = []
+		aidx = self.nodes[nodei].arc_first
+		logging.info('aidx %s'%(self.get_arc_name(aidx)))
+		while aidx != NULL_PTR:
+			arcidxs.append(aidx)
+			arcnames.append(self.arcs[aidx].name)
+			aidx = self.arcs[aidx].arc_next
+		logging.debug('arcidxs %s'%(arcidxs))
+		if len(arcidxs) <= 1 :
+			return
+		for i in xrange(len(arcidxs)):
+			for j in range((i+1),len(arcidxs)):
+				if arcnames[i] > arcnames[j]:
+					tmp = arcnames[i]
+					arcnames[i] = arcnames[j]
+					arcnames[j] = tmp
+					tmp = arcidxs[i]
+					arcidxs[i] = arcidxs[j]
+					arcidxs[j] = tmp
+		self.nodes[nodei].arc_first = arcidxs[0]
+		for i in range(0,len(arcidxs)-1):
+			self.arcs[arcidxs[i]].arc_next = arcidxs[(i+1)]
+		self.arcs[arcidxs[-1]].arc_next = NULL_PTR
+		return
+
+
+
 	def add_tweights(self,nodeid,cap_source,cap_sink):
 		assert(len(self.nodes) > nodeid)
 		delta = self.nodes[nodeid].tr_cap
@@ -148,6 +177,8 @@ class BKGraph:
 		self.arcs.append(arevarc)
 		self.nodes[nodeidi] = nodei
 		self.nodes[nodeidj] = nodej
+		logging.info('node[%s].first (%s)'%(self.get_node_name(nodeidi),self.get_arc_next(aidx)))
+		logging.info('node[%s].first (%s)'%(self.get_node_name(nodeidj),self.get_arc_next(arevidx)))
 		return
 
 	def max_flow(self):
@@ -379,6 +410,8 @@ class BKGraph:
 		logging.debug('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
 		logging.debug('debug state %s'%(notice))
 		for nodei in xrange(len(self.nodes)):
+			if self.nodes[nodei].name == '':
+				continue
 			self.debug_node(nodei)
 
 		for aidx in xrange(len(self.arcs)):
@@ -396,6 +429,7 @@ class BKGraph:
 		for nodei in xrange(len(self.nodes)):
 			self.nodes[nodei].node_next = NULL_PTR
 			self.nodes[nodei].TS = self.TIME
+			self.set_node_next_sequence(nodei)
 
 			if self.nodes[nodei].tr_cap > 0:
 				self.nodes[nodei].is_sink = False
@@ -846,7 +880,8 @@ def main():
 if __name__ == '__main__':
 	#logging.basicConfig(level=logging.INFO,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
-	#logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(funcName)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.DEBUG,format='%(message)s')
 	#logging.basicConfig(level=logging.INFO,format='%(message)s')
-	logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
+	#logging.basicConfig(level=logging.ERROR,format='%(asctime)-15s:%(filename)s:%(lineno)d\t%(message)s')
 	main()
