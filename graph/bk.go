@@ -228,6 +228,7 @@ func (graph *BKGraph) GetActive() *Node {
 	if graph.queue_first == nil {
 		graph.queue_last = nil
 	}
+	log.Printf("GetActive (%s)", pnode.GetName())
 	return pnode
 }
 
@@ -604,13 +605,34 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	pnode.SetDebug()
 }
 
+func (graph *BKGraph) GetQueue(pnode *Node) string {
+	curnode := pnode
+	i := 0
+	s := "["
+	for curnode != nil {
+		if curnode == curnode.GetNext() {
+			break
+		}
+
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += fmt.Sprintf("%s", GetNodeName(curnode))
+		curnode = curnode.GetNext()
+	}
+
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
 func (graph *BKGraph) DebugState(desc string) {
 
 	var i, j int
 	var k1s, k2s []string
 	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	log.Printf("%s", desc)
-	log.Printf("queue_first list(%s)", graph.GetNext(graph.queue_first))
+	log.Printf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
 	k1s = graph.neigh.Iter()
 
 	for i = 0; i < len(k1s); i++ {
