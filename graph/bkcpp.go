@@ -219,7 +219,7 @@ func (graph *BKGraph) add_tweights(nodename string, cap_source, cap_sink int) {
 }
 
 func (graph *BKGraph) FormArcName(from string, to string) string {
-	return fmt.Sprintf("%s -> %s", from, to)
+	return fmt.Sprintf("%s->%s", from, to)
 }
 
 func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) {
@@ -365,6 +365,7 @@ func (graph *BKGraph) GetFirstList(pnode *Node) string {
 		}
 		i++
 		s += parc.GetName()
+		parc = parc.GetNext()
 	}
 	s += fmt.Sprintf("]cnt(%d)", i)
 
@@ -458,6 +459,9 @@ func (graph *BKGraph) GetQueueFirst() string {
 		}
 		i++
 		s += pnode.GetName()
+		if pnode == pnode.GetNext() {
+			break
+		}
 		pnode = pnode.GetNext()
 	}
 	s += fmt.Sprintf("]cnt(%d)", i)
