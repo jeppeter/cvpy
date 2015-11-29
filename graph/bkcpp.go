@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"container/list"
 )
 
 type Arc struct {
@@ -153,11 +155,21 @@ func (pnode *Node) SetCap(caps int) {
 	return
 }
 
+var MAXFLOW_ORPHAN, MAXFLOW_TERMINAL *Arc
+
+func init() {
+	MAXFLOW_TERMINAL = NewArc()
+	MAXFLOW_TERMINAL.SetName("MAXFLOW_TERMINAL")
+	MAXFLOW_ORPHAN = NewArc()
+	MAXFLOW_ORPHAN.SetName("MAXFLOW_ORPHAN")
+}
+
 type BKGraph struct {
 	nodes       map[string]*Node
 	arcs        map[string]*Arc
 	flow        int
-	orphanlist  []*Node
+	TIME        int
+	orphanlist  *list.LIST
 	queue_first *Node
 	queue_last  *Node
 }
@@ -167,7 +179,8 @@ func NewBKGraph() *BKGraph {
 	p.nodes = make(map[string]*Node)
 	p.arcs = make(map[string]*Arc)
 	p.flow = 0
-	p.orphanlist = []*Node{}
+	p.TIME = 0
+	p.orphanlist = list.New()
 	p.queue_first = nil
 	p.queue_last = nil
 	return p
@@ -182,4 +195,225 @@ func (graph *BKGraph) add_tweights(nodename string, cap_source, cap_sink int) {
 		graph.nodes[nodename] = pnode
 	}
 
+	delta := pnode.GetCap()
+	if delta > 0 {
+		cap_source += delta
+	} else {
+		cap_sink -= delta
+	}
+
+	if cap_source < cap_sink {
+		graph.flow += cap_source
+	} else {
+		graph.flow += cap_sink
+	}
+
+	pnode.SetCap(cap_source - cap_sink)
+	return
+}
+
+func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) {
+	var aarc, arevarc *Arc
+	var pi, pj *Node
+	var ok bool
+	aarc = NewArc()
+	arevarc = NewArc()
+	pi, ok = graph.nodes[nodeiname]
+	if !ok {
+		pi = NewNode(nodeiname)
+		graph.nodes[nodeiname] = pi
+	}
+
+	pj, ok = graph.nodes[nodejname]
+	if !ok {
+		pj = NewNode(nodejname)
+		graph.nodes[nodejname] = pj
+	}
+
+	aarc.SetSister(arevarc)
+	arevarc.SetSister(aarc)
+	aarc.SetNext(pi.GetFirst())
+	pi.SetFirst(aarc)
+	aarc.SetHead(pj)
+	aarc.SetName(fmt.Sprintf("%s -> %s", nodejname, nodeiname))
+	arevarc.SetName(pj.GetFirst())
+	pj.SetFirst(arevarc)
+	arevarc.SetHead(pi)
+	arevarc.SetName(fmt.Sprintf("%s -> %s", nodeiname, nodejname))
+	aarc.SetCap(caps)
+	arevarc.SetCap(rev_caps)
+	graph.arcs[aarc.GetName()] = aarc
+	graph.arcs[arevarc.GetName()] = arevarc
+	return
+}
+
+func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source string, sink string) error {
+	for _, iname := range neighbour.Iter() {
+		for _, jname := range neighbour.GetValue(iname) {
+			capto := caps.GetValue(iname, jname)
+			caprev := caps.GetValue(jname, iname)
+			if iname == source {
+				graph.add_tweights(jname, capto, 0)
+
+			} else if jname == sink {
+				graph.add_tweights(iname, 0, capto)
+			} else {
+				graph.add_edge(iname, jname, capto, caprev)
+			}
+		}
+	}
+
+	for _, pnode := range graph.nodes {
+		pnode.SetNext(nil)
+		pnode.SetTS(graph.TIME)
+		if pnode.GetCap() > 0 {
+			pnode.SetSink(false)
+			pnode.SetParent(MAXFLOW_TERMINAL)
+			graph.SetActive(pnode)
+		} else if pnode.GetCap() < 0 {
+			pnode.SetSink(true)
+			pnode.SetParent(MAXFLOW_TERMINAL)
+			graph.SetActive(pnode)
+		} else {
+			pnode.SetParent(nil)
+		}
+
+	}
+
+	return nil
+}
+
+func (graph *BKGraph) SetActive(pnode *Node) {
+	if pnode.GetNext() == nil {
+		/*not in the queue or ,just used for in queue,just insert into it*/
+		if graph.queue_first == nil {
+			graph.queue_first = pnode
+			graph.queue_last = pnode
+		} else {
+			graph.queue_last.SetNext(pnode)
+			graph.queue_last = pnode
+		}
+	}
+	return
+}
+
+func (graph *BKGraph) GetActive() *Node {
+	pnode := nil
+	if graph.queue_first != nil {
+		pnode = graph.queue_first
+		graph.queue_first = pnode.GetNext()
+		/*set next for will insert queue again*/
+		pnode.SetNext(nil)
+		if graph.queue_first == nil {
+			/*nothing in the queue ,so we should set nil*/
+			graph.queue_last = nil
+		}
+	}
+	return pnode
+}
+
+func (graph *BKGraph) Augment(parc *Arc) {
+
+}
+
+func (graph *BKGraph)GetOrphan() *Node{
+	var pnode *Node
+	pnode = nil
+	for {
+		if graph.orphanlist.Len() == 0 {
+			return nil
+		}
+
+
+
+	}
+}
+
+
+func (graph *BKGraph) MaxFlow() (flow int, err error) {
+	var curnode, curgetnode *Node
+	var gotarc *Arc
+	curnode = nil
+	curgetnode = nil
+
+	for {
+		gotarc = nil
+		curnode = curgetnode
+		if curnode != nil {
+			curnode.SetNext(nil)
+			if curnode.GetParent() == nil {
+				curnode = nil
+			}
+		}
+
+		if curnode == nil {
+			curnode = graph.GetActive()
+			if curnode == nil {
+				break
+			}
+		}
+
+		if !curnode.IsSink() {
+			/*if not */
+			for arc := curnode.GetFirst(); arc != nil; arc = arc.GetNext() {
+				if arc.GetCap() != 0 {
+					pj := arc.GetHead()
+					if pj.GetParent() == nil {
+						/*to make for the node as the source side */
+						pj.SetSink(false)
+						pj.SetParent(arc.GetSister())
+						pj.SetTS(curnode.GetTS())
+						pj.SetDIST(curnode.GetDIST() + 1)
+						graph.SetActive(pj)
+					} else if pj.IsSink() {
+						gotarc = arc
+						break
+					} else if pj.GetTS() <= curnode.GetTS() && pj.GetDIST() > curnode.GetDIST() {
+						pj.SetParent(arc.GetSister())
+						pj.SetTS(curnode.GetTS())
+						pj.SetDIST(curnode.GetDIST() + 1)
+					}
+				}
+			}
+
+		} else {
+			for arc := curnode.GetFirst(); arc != nil; arc = arc.GetNext() {
+				if arc.GetCap() != 0 {
+					pj := arc.GetHead()
+					if pj.GetParent() == nil {
+						/*set for the sink side*/
+						pj.SetSink(true)
+						pj.SetParent(arc.GetSister())
+						pj.SetTS(curnode.GetTS())
+						pj.SetDIST(curnode.GetDIST() + 1)
+						graph.SetActive(pj)
+					} else if !pj.IsSink() {
+						gotarc = arc
+						break
+					} else if pj.GetTS() <= curnode.GetTS() && pj.GetDIST() > curnode.GetDIST() {
+						pj.SetParent(arc.GetSister())
+						pj.SetTS(curnode.GetTS())
+						pj.SetDIST(curnode.GetDIST() + 1)
+					}
+				}
+			}
+		}
+
+		graph.TIME++
+
+		if gotarc != nil {
+			curnode.SetNext(curnode)
+			curgetnode = curnode
+
+			graph.Augment(gotarc)
+
+			for {
+				orphan := 
+			}
+
+		} else {
+			curgetnode = nil
+		}
+
+	}
 }
