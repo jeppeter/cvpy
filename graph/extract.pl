@@ -24,6 +24,7 @@ sub OpenFile($$)
 my ($curidx,$curname);
 my ($start,$fh);
 my ($basename);
+my (@arr);
 
 $basename ="state";
 if (scalar(@ARGV) >= 0)
@@ -45,11 +46,17 @@ while(<>)
 			$curname = $basename.$curidx.".txt";
 			$curidx ++;
 			$fh = OpenFile($curname,$fh);
+			@arr = split(/ /,$l);
+			shift(@arr);
+			$l = join(" ",@arr);
 			print $fh "$l\n";
 			$start = 1;
 		}
 		else
 		{
+			@arr = split(/ /,$l);
+			shift(@arr);
+			$l = join(" ",@arr);
 			print $fh "$l\n";
 			$start = 0;
 		}
@@ -58,6 +65,9 @@ while(<>)
 
 	if ($start> 0)
 	{
+		@arr = split(/ /,$l);
+		shift(@arr);
+		$l = join(" ",@arr);
 		print $fh "$l\n";
 		next;
 	}

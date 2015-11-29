@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"container/list"
 	"fmt"
 	"log"
+	"os"
+	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -29,7 +33,10 @@ func DebugLogPrintf(format string, a ...interface{}) {
 	if false {
 		return
 	}
-	log.Printf(format, a...)
+	_, f, l, _ := runtime.Caller(1)
+	s := fmt.Sprintf("%s:%d ", f, l)
+	s += fmt.Sprintf(format, a...)
+	log.Print(s)
 	return
 }
 
@@ -283,8 +290,6 @@ func (graph *BKGraph) SortNodeArcs(pnode *Node) {
 		curarc = curarc.GetNext()
 	}
 
-	DebugLogPrintf("node[%s].first (%v)", pnode.GetName(), arcnames)
-
 	if len(arcarray) <= 1 {
 		return
 	}
@@ -308,6 +313,58 @@ func (graph *BKGraph) SortNodeArcs(pnode *Node) {
 	}
 	i = len(arcarray)
 	arcarray[(i - 1)].SetNext(nil)
+	return
+}
+
+func (graph *BKGraph) SortNodes() []*Node {
+	var retnodes []*Node
+	var retnodeidx []int
+
+	retnodeidx = []int{}
+	retnodes = []*Node{}
+
+	for _, pnode := range graph.nodes {
+		val, _ := strconv.Atoi(pnode.GetName())
+		retnodeidx = append(retnodeidx, val)
+		retnodes = append(retnodes, pnode)
+	}
+
+	for i := 0; i < len(retnodeidx); i++ {
+		for j := (i + 1); j < len(retnodeidx); j++ {
+			if retnodeidx[i] > retnodeidx[j] {
+				tmpidx := retnodeidx[i]
+				retnodeidx[i] = retnodeidx[j]
+				retnodeidx[j] = tmpidx
+				tmpnode := retnodes[i]
+				retnodes[i] = retnodes[j]
+				retnodes[j] = tmpnode
+			}
+		}
+	}
+
+	return retnodes
+}
+
+func (graph *BKGraph) maxflow_init() {
+	for _, pnode := range graph.SortNodes() {
+		pnode.SetNext(nil)
+		pnode.SetTS(graph.TIME)
+		graph.SortNodeArcs(pnode)
+		if pnode.GetCap() > 0 {
+			pnode.SetSink(false)
+			pnode.SetParent(MAXFLOW_TERMINAL)
+			graph.SetActive(pnode)
+			pnode.SetDIST(1)
+		} else if pnode.GetCap() < 0 {
+			pnode.SetSink(true)
+			pnode.SetParent(MAXFLOW_TERMINAL)
+			graph.SetActive(pnode)
+			pnode.SetDIST(1)
+		} else {
+			pnode.SetParent(nil)
+		}
+
+	}
 	return
 }
 
@@ -342,26 +399,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 		}
 	}
 
-	for _, pnode := range graph.nodes {
-		pnode.SetNext(nil)
-		pnode.SetTS(graph.TIME)
-		graph.SortNodeArcs(pnode)
-		if pnode.GetCap() > 0 {
-			pnode.SetSink(false)
-			pnode.SetParent(MAXFLOW_TERMINAL)
-			graph.SetActive(pnode)
-			pnode.SetDIST(1)
-		} else if pnode.GetCap() < 0 {
-			pnode.SetSink(true)
-			pnode.SetParent(MAXFLOW_TERMINAL)
-			graph.SetActive(pnode)
-			pnode.SetDIST(1)
-		} else {
-			pnode.SetParent(nil)
-		}
-
-	}
-
+	graph.maxflow_init()
 	return nil
 }
 
@@ -975,4 +1013,114 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 	}
 
 	return graph.flow, nil
+}
+
+type CapPair struct {
+	cap_source int
+	cap_sink   int
+}
+
+func BKParseFile(infile string) *BKGraph {
+	var source, sink string
+	var tweights_pair map[string]*CapPair
+	var sarr []string
+	var caps int
+	var keys []string
+
+	tweights_pair = make(map[string]*CapPair)
+	graph := NewBkGraph()
+	file, e := os.Open(infile)
+	if e != nil {
+		return nil
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		l := scanner.Text()
+		l = strings.Trim(l, "\r\n")
+		if strings.HasPrefix(l, "#") {
+			continue
+		}
+
+		if strings.HasPrefix(l, "source=") {
+			sarr = strings.Split(l, "=")
+			if len(sarr) < 2 {
+				continue
+			}
+			source = sarr[1]
+			continue
+		}
+
+		if strings.HasPrefix(l, "sink=") {
+			sarr = strings.Split(l, "=")
+			if len(sarr) < 2 {
+				continue
+			}
+			sink = sarr[1]
+			continue
+		}
+
+		sarr = strings.Split(l, ",")
+		if len(sarr) < 3 {
+			continue
+		}
+
+		caps, _ = strconv.Atoi(sarr[2])
+		curs := sarr[0]
+		curt := sarr[1]
+		if curs == source && curt != sink {
+			_, ok := tweights_pair[curt]
+			if !ok {
+				tweights_pair[curt] = &CapPair{}
+				tweights_pair[curt].cap_source = caps
+				tweights_pair[curt].cap_sink = 0
+			} else {
+				tweights_pair[curt].cap_source = caps
+				graph.add_tweights(curt, tweights_pair[curt].cap_source, tweights_pair[curt].cap_sink)
+				DebugLogPrintf("g -> add_tweights(%s,%d,%d);", curt, tweights_pair[curt].cap_source, tweights_pair[curt].cap_sink)
+				delete(tweights_pair, curt)
+			}
+		} else if curt == sink && curs != source {
+			_, ok := tweights_pair[curs]
+			if !ok {
+				tweights_pair[curs] = &CapPair{}
+				tweights_pair[curs].cap_source = 0
+				tweights_pair[curs].cap_sink = caps
+
+			} else {
+				tweights_pair[curs].cap_sink = caps
+				graph.add_tweights(curs, tweights_pair[curs].cap_source, tweights_pair[curs].cap_sink)
+				DebugLogPrintf("g -> add_tweights(%s,%d,%d);", curs, tweights_pair[curs].cap_source, tweights_pair[curs].cap_sink)
+				delete(tweights_pair, curs)
+			}
+		} else {
+			graph.add_edge(curs, curt, caps, 0)
+			DebugLogPrintf("g -> add_edge(%s,%s,%d,0);", curs, curt, caps)
+		}
+	}
+
+	keys = []string{}
+	for kk := range tweights_pair {
+		keys = append(keys, kk)
+	}
+
+	for i := 0; i < len(keys); i++ {
+		for j := (i + 1); j < len(keys); j++ {
+			if strings.Compare(keys[i], keys[j]) > 0 {
+				tmp := keys[i]
+				keys[i] = keys[j]
+				keys[j] = tmp
+			}
+		}
+	}
+
+	for _, kk := range keys {
+		graph.add_tweights(kk, tweights_pair[kk].cap_source, tweights_pair[kk].cap_sink)
+		DebugLogPrintf("g -> add_tweights(%s,%d,%d);", kk, tweights_pair[kk].cap_source, tweights_pair[kk].cap_sink)
+	}
+
+	graph.maxflow_init()
+	return graph
 }
