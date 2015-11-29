@@ -3,7 +3,7 @@ package main
 import (
 	"container/list"
 	"fmt"
-	//"log"
+	"log"
 )
 
 type Arc struct {
@@ -214,6 +214,10 @@ func (graph *BKGraph) add_tweights(nodename string, cap_source, cap_sink int) {
 	return
 }
 
+func (graph *BKGraph) FormArcName(from string, to string) string {
+	return fmt.Sprintf("%s -> %s", from, to)
+}
+
 func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) {
 	var aarc, arevarc *Arc
 	var pi, pj *Node
@@ -237,10 +241,12 @@ func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) 
 	aarc.SetNext(pi.GetFirst())
 	pi.SetFirst(aarc)
 	aarc.SetHead(pj)
-	aarc.SetName(fmt.Sprintf("%s -> %s", nodejname, nodeiname))
+	aarc.SetName(graph.FormArcName(nodejname, nodeiname))
+	//aarc.SetName(fmt.Sprintf("%s -> %s", nodejname, nodeiname))
 	pj.SetFirst(arevarc)
 	arevarc.SetHead(pi)
-	arevarc.SetName(fmt.Sprintf("%s -> %s", nodeiname, nodejname))
+	arevarc.SetName(graph.FormArcName(nodeiname, nodejname))
+	//arevarc.SetName(fmt.Sprintf("%s -> %s", nodeiname, nodejname))
 	aarc.SetCap(caps)
 	arevarc.SetCap(rev_caps)
 	graph.arcs[aarc.GetName()] = aarc
@@ -254,12 +260,27 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 			capto := caps.GetValue(iname, jname)
 			caprev := caps.GetValue(jname, iname)
 			if iname == source {
+				log.Printf("add_tweights (%s,%d,0)", jname, capto)
 				graph.add_tweights(jname, capto, 0)
 
+			} else if iname == sink {
+				/*nothing to do*/
+			} else if jname == source {
+				/*nothing to do*/
 			} else if jname == sink {
+				log.Printf("add_tweights (%s,0,%d)", iname, capto)
 				graph.add_tweights(iname, 0, capto)
 			} else {
-				graph.add_edge(iname, jname, capto, caprev)
+				//fromarcname := fmt.Sprintf("%s -> %s", iname, jname)
+				fromarcname := graph.FormArcName(iname, jname)
+				//toarcname := fmt.Sprintf("%s -> %s", jname, iname)
+				toarcname := graph.FormArcName(jname, iname)
+				_, ok1 := graph.arcs[fromarcname]
+				_, ok2 := graph.arcs[toarcname]
+				if !ok1 && !ok2 {
+					log.Printf("add_edge (%s,%s,%d,%d)", iname, jname, capto, caprev)
+					graph.add_edge(iname, jname, capto, caprev)
+				}
 			}
 		}
 	}
