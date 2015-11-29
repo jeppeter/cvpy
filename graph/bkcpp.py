@@ -278,7 +278,7 @@ class BKGraph:
 				s += 'MAXFLOW_ORPHAN'
 				break
 			nodej = self.arcs[aidx].node_head
-			s += '%s'%(GetIdx(nodej))
+			s += '%s(%s)'%(GetIdx(nodej),GetIdx(aidx))
 			i += 1
 			if nodej == NULL_PTR:
 				break

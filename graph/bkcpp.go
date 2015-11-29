@@ -155,6 +155,10 @@ func (pnode *Node) SetCap(caps int) {
 	return
 }
 
+func (pnode *Node) GetName() string {
+	return pnode.name
+}
+
 var MAXFLOW_ORPHAN, MAXFLOW_TERMINAL *Arc
 var MAXFLOW_INFINITE_D int
 
@@ -292,10 +296,12 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 			pnode.SetSink(false)
 			pnode.SetParent(MAXFLOW_TERMINAL)
 			graph.SetActive(pnode)
+			pnode.SetDIST(1)
 		} else if pnode.GetCap() < 0 {
 			pnode.SetSink(true)
 			pnode.SetParent(MAXFLOW_TERMINAL)
 			graph.SetActive(pnode)
+			pnode.SetDIST(1)
 		} else {
 			pnode.SetParent(nil)
 		}
@@ -303,6 +309,195 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	}
 
 	return nil
+}
+
+func (graph *BKGraph) GetNodeNames() []string {
+	narr := []string{}
+	for n, _ := range graph.nodes {
+		narr = append(narr, n)
+	}
+	return narr
+}
+
+func (graph *BKGraph) GetArcNames() []string {
+	narr := []string{}
+	for n, _ := range graph.arcs {
+		narr = append(narr, n)
+	}
+	return narr
+}
+
+func (graph *BKGraph) GetNextList(pnode *Node) string {
+	s := "["
+	pj := pnode.GetNext()
+	i := 0
+	for pj != nil {
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += fmt.Sprintf("%s", pnode.GetName())
+		if pj == pj.GetNext() {
+			break
+		}
+		pj = pj.GetNext()
+	}
+
+	s += fmt.Sprintf("]cnt(%d)", i)
+
+	return s
+}
+
+func (graph *BKGraph) GetNodeName(pnode *Node) string {
+	if pnode == nil {
+		return "NULL"
+	}
+	return pnode.GetName()
+}
+
+func (graph *BKGraph) GetFirstList(pnode *Node) string {
+	s := "["
+	i := 0
+	parc := pnode.GetFirst()
+	for parc != nil {
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += parc.GetName()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+
+	return s
+}
+
+func (graph *BKGraph) GetParentList(pnode *Node) string {
+	s := "["
+	i := 0
+	parc := pnode.GetParent()
+	for parc != nil {
+		if i != 0 {
+			s += ","
+		}
+		i++
+		if parc == MAXFLOW_ORPHAN {
+			s += "MAXFLOW_ORPHAN"
+			break
+		}
+		if parc == MAXFLOW_TERMINAL {
+			s += "MAXFLOW_TERMINAL"
+			break
+		}
+
+		pj := parc.GetHead()
+		s += fmt.Sprintf("%s(%s)", graph.GetNodeName(pj), parc.GetName())
+		if pj == nil {
+			break
+		}
+		parc = pj.GetParent()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
+func (graph *BKGraph) DebugNode(pnode *Node) {
+	log.Printf("++++++++++++++++++++++++++++++++++++")
+	log.Printf("node[%s].TS (%d) DIST (%d) tr_cap (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetDIST(), pnode.GetCap())
+	log.Printf("node[%s].first list(%s)", pnode.GetName(), graph.GetFirstList(pnode))
+	log.Printf("node[%s].next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
+	log.Printf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParentList(pnode))
+	if pnode.IsSink() {
+		log.Printf("node[%s] sink", pnode.GetName())
+	} else {
+		log.Printf("node[%s] source", pnode.GetName())
+	}
+	log.Printf("------------------------------------")
+	return
+}
+
+func (graph *BKGraph) GetArcName(parc *Arc) string {
+	if parc == nil {
+		return "NULL"
+	}
+	return parc.GetName()
+}
+
+func (graph *BKGraph) GetArcNextList(parc *Arc) string {
+	s := "["
+	i := 0
+	pnext := parc.GetNext()
+	for pnext != nil {
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += pnext.GetName()
+		pnext = pnext.GetNext()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
+func (graph *BKGraph) DebugArc(parc *Arc) {
+	log.Printf("++++++++++++++++++++++++++++++++++++")
+	log.Printf("arc[%s].r_cap (%d)", parc.GetName(), parc.GetCap())
+	log.Printf("arc[%s].head (%s)", parc.GetName(), graph.GetNodeName(parc.GetHead()))
+	log.Printf("arc[%s].next list(%s)", parc.GetName(), graph.GetArcNextList(parc))
+	log.Printf("arc[%s].sister (%s)", parc.GetName(), parc.GetSister().GetName())
+	log.Printf("------------------------------------")
+	return
+}
+
+func (graph *BKGraph) GetQueueFirst() string {
+	s := "["
+	i := 0
+	pnode := graph.queue_first
+	for pnode != nil {
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += pnode.GetName()
+		pnode = pnode.GetNext()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
+func (graph *BKGraph) GetOrphanString() string {
+	s := "["
+	i := 0
+	for curlist := graph.orphanlist.Front(); curlist != nil; curlist = curlist.Next() {
+		pnode := curlist.Value.(*Node)
+		if i != 0 {
+			s += ","
+		}
+		i++
+		s += pnode.GetName()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
+func (graph *BKGraph) DebugState(notice string) {
+	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	log.Printf("%s", notice)
+
+	for _, curn := range SortArrayString(graph.GetNodeNames()) {
+		pnode, _ := graph.nodes[curn]
+		graph.DebugNode(pnode)
+	}
+
+	for _, curn := range SortArrayString(graph.GetArcNames()) {
+		parc, _ := graph.arcs[curn]
+		graph.DebugArc(parc)
+	}
+
+	log.Printf("queue_first list (%s)", graph.GetQueueFirst())
+	log.Printf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
+	log.Printf("orphan list(%s)", graph.GetOrphanString())
+	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	return
 }
 
 func (graph *BKGraph) SetActive(pnode *Node) {
@@ -616,6 +811,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 	var gotarc *Arc
 	curnode = nil
 	curgetnode = nil
+	graph.DebugState(fmt.Sprintf("After Init (%d)", graph.TIME))
 
 	for {
 		gotarc = nil
@@ -681,12 +877,14 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		}
 
 		graph.TIME++
+		graph.DebugState(fmt.Sprintf("After Handler (%d)", graph.TIME))
 
 		if gotarc != nil {
 			curnode.SetNext(curnode)
 			curgetnode = curnode
 
 			graph.Augment(gotarc)
+			graph.DebugState(fmt.Sprintf("After Augment (%d)", graph.TIME))
 
 			for {
 				orphan := graph.GetOrphan()
@@ -700,6 +898,8 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 					graph.ProcessSourceOrphan(orphan)
 				}
 			}
+
+			graph.DebugState(fmt.Sprintf("After Process Orphan (%d)", graph.TIME))
 
 		} else {
 			curgetnode = nil
