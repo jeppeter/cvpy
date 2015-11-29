@@ -36,7 +36,8 @@ $curidx=0;
 while(<>)
 {
 	my ($l)= $_;
-	$l =~ s/\r//;
+	$l =~ s/\r//g;
+	$l =~ s/\n//g;
 	if ($l =~ m/~~~~~~~~~~~~~/o)
 	{
 		if ($start == 0)
@@ -44,12 +45,12 @@ while(<>)
 			$curname = $basename.$curidx.".txt";
 			$curidx ++;
 			$fh = OpenFile($curname,$fh);
-			print $fh "$l";
+			print $fh "$l\n";
 			$start = 1;
 		}
 		else
 		{
-			print $fh "$l";
+			print $fh "$l\n";
 			$start = 0;
 		}
 		next;
@@ -57,7 +58,7 @@ while(<>)
 
 	if ($start> 0)
 	{
-		print $fh "$l";
+		print $fh "$l\n";
 		next;
 	}
 }

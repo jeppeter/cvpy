@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type Arc struct {
@@ -258,6 +259,49 @@ func (graph *BKGraph) add_edge(nodeiname, nodejname string, caps, rev_caps int) 
 	return
 }
 
+func (graph *BKGraph) SortNodeArcs(pnode *Node) {
+	var arcarray []*Arc
+	var arcnames []string
+	var curarc *Arc
+	var i, j int
+
+	arcarray = []*Arc{}
+	arcnames = []string{}
+
+	curarc = pnode.GetFirst()
+	for curarc != nil {
+		arcarray = append(arcarray, curarc)
+		arcnames = append(arcnames, curarc.GetName())
+
+		curarc = curarc.GetNext()
+	}
+
+	if len(arcarray) <= 1 {
+		return
+	}
+
+	for i = 0; i < len(arcarray); i++ {
+		for j = (i + 1); j < len(arcarray); j++ {
+			if strings.Compare(arcnames[i], arcnames[j]) > 0 {
+				tmpnames := arcnames[i]
+				arcnames[i] = arcnames[j]
+				arcnames[j] = tmpnames
+				tmparc := arcarray[i]
+				arcarray[i] = arcarray[j]
+				arcarray[j] = tmparc
+			}
+		}
+	}
+
+	pnode.SetFirst(arcarray[0])
+	for i = 0; i < (len(arcarray) - 1); i++ {
+		arcarray[i].SetNext(arcarray[i+1])
+	}
+	i = len(arcarray)
+	arcarray[(i - 1)].SetNext(nil)
+	return
+}
+
 func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source string, sink string) error {
 	for _, iname := range neighbour.Iter() {
 		for _, jname := range neighbour.GetValue(iname) {
@@ -292,6 +336,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	for _, pnode := range graph.nodes {
 		pnode.SetNext(nil)
 		pnode.SetTS(graph.TIME)
+		graph.SortNodeArcs(pnode)
 		if pnode.GetCap() > 0 {
 			pnode.SetSink(false)
 			pnode.SetParent(MAXFLOW_TERMINAL)
@@ -514,6 +559,7 @@ func (graph *BKGraph) SetActive(pnode *Node) {
 			graph.queue_last.SetNext(pnode)
 			graph.queue_last = pnode
 		}
+		pnode.SetNext(pnode)
 	}
 	return
 }
