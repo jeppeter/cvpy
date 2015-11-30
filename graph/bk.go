@@ -340,6 +340,48 @@ func (graph *BKGraph) SortQueueFirst() {
 	return
 }
 
+func (graph *BKGraph) ConnectedToSink(name string) bool {
+	for _, cl := range graph.neigh.GetValue(name) {
+		if cl == graph.sink {
+			return true
+		}
+	}
+	return false
+}
+
+func (graph *BKGraph) ConnectedToSource(name string) bool {
+	for _, cl := range graph.neigh.GetValue(name) {
+		if cl == graph.source {
+			return true
+		}
+	}
+	return false
+}
+
+func (graph *BKGraph) SetSourceSinkConnectedNode(name string) {
+	var srcflow, sinkflow, addval int
+
+	srcflow = graph.caps.GetValue(graph.source, name)
+	sinkflow = graph.caps.GetValue(name, graph.sink)
+	pnode := graph.nodemap.GetNode(name)
+	if srcflow > sinkflow {
+		addval = sinkflow
+		/*the node has something in the source flow so add to source side*/
+		graph.InitSource(pnode)
+	} else if srcflow < sinkflow {
+		addval = srcflow
+		/*th node has something in the sink flow ,so add to sink side*/
+		graph.InitSink(pnode)
+	} else {
+		/*if it is overflow all over ,so not set the node into the active one*/
+		addval = srcflow
+	}
+	graph.flow += addval
+	graph.flows.SetValue(graph.source, name, addval)
+	graph.flows.SetValue(name, graph.sink, addval)
+	return
+}
+
 /**********************************************
 *function :
 *         to init the BKGraph inner structure
@@ -347,6 +389,12 @@ func (graph *BKGraph) SortQueueFirst() {
 **********************************************/
 func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source string, sink string) error {
 	var pnode *Node
+	var biconnected []string
+	graph.caps = caps
+	graph.neigh = neighbour
+	graph.source = source
+	graph.sink = sink
+
 	/*because the two dimensions are not all the same*/
 	for _, k1 := range neighbour.Iter() {
 		graph.nodemap.AddNode_NoError(k1)
@@ -355,6 +403,7 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 		}
 	}
 
+	biconnected = []string{}
 	/*now search for the source and sink*/
 	psrcnode := graph.nodemap.GetNode(source)
 	if psrcnode == nil {
@@ -362,9 +411,11 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	}
 	graph.InitSource(psrcnode)
 	for _, nname := range neighbour.GetValue(source) {
-		if nname != sink {
+		if nname != sink && !graph.ConnectedToSink(nname) {
 			pnode = graph.nodemap.GetNode(nname)
 			graph.AddSourceNode(pnode, psrcnode)
+		} else if graph.ConnectedToSink(nname) {
+			biconnected = append(biconnected, nname)
 		}
 	}
 
@@ -374,16 +425,19 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 	}
 	graph.InitSink(psinknode)
 	for _, nname := range neighbour.GetValue(sink) {
-		if nname != source {
+		if nname != source && !graph.ConnectedToSource(nname) {
 			pnode = graph.nodemap.GetNode(nname)
 			graph.AddSinkNode(pnode, psinknode)
 		}
 	}
 
-	graph.caps = caps
-	graph.neigh = neighbour
-	graph.source = source
-	graph.sink = sink
+	if len(biconnected) > 0 {
+		/*now we determine whether this node is add to source or sink side*/
+		for _, nname := range biconnected {
+			graph.SetSourceSinkConnectedNode(nname)
+		}
+	}
+
 	graph.SortQueueFirst()
 	return nil
 }
