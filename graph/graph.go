@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type StringGraph struct {
 	inner map[string]map[string]int
@@ -62,12 +66,36 @@ func NewNeighbour() *Neigbour {
 
 func SortArrayString(narr []string) []string {
 	var i, j int
+	var idxs []int
+	var notnumber bool
+	idxs = []int{}
+	notnumber = false
+	for i = 0; i < len(narr); i++ {
+		val, err := strconv.Atoi(narr[i])
+		if err != nil {
+			notnumber = true
+		}
+		idxs = append(idxs, val)
+	}
+
 	for i = 0; i < len(narr); i++ {
 		for j = (i + 1); j < len(narr); j++ {
-			if narr[i] > narr[j] {
+			if !notnumber && (idxs[i] > idxs[j]) {
 				tmp := narr[i]
 				narr[i] = narr[j]
 				narr[j] = tmp
+
+				tmpi := idxs[i]
+				idxs[i] = idxs[j]
+				idxs[j] = tmpi
+			} else if notnumber && strings.Compare(narr[i], narr[j]) > 0 {
+				tmp := narr[i]
+				narr[i] = narr[j]
+				narr[j] = tmp
+
+				tmpi := idxs[i]
+				idxs[i] = idxs[j]
+				idxs[j] = tmpi
 			}
 		}
 	}

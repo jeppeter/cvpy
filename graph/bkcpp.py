@@ -364,7 +364,7 @@ class BKGraph:
 		logging.debug('node[%s].arc_first list(%s)'%(self.get_node_name(nodei),self.get_first_link(nodei)))
 		logging.debug('node[%s].arc_parent list(%s)'%(self.get_node_name(nodei),self.get_arc_parent(nodei)))
 		logging.debug('node[%s].node_next list(%s)'%(self.get_node_name(nodei),self.get_node_next(nodei)))
-		logging.debug('node[%s].tr_cap (%d)'%(self.get_node_name(nodei),self.nodes[nodei].tr_cap))
+		#logging.debug('node[%s].tr_cap (%d)'%(self.get_node_name(nodei),self.nodes[nodei].tr_cap))
 		logging.debug('node[%s].TS (%d) node[%s].DIST (%d)'%(self.get_node_name(nodei),self.nodes[nodei].TS,self.get_node_name(nodei),self.nodes[nodei].DIST))
 		logging.debug('******************************')
 		return

@@ -300,7 +300,34 @@ func (graph *BKGraph) SortQueueFirst() {
 		}
 	}
 
-	DebugLogPrintf("nodeidx (%v)", nodesidxs)
+	/*now delete the source and sink node*/
+	nidxs := []int{}
+	narrs := []*Node{}
+	for i = 0; i < len(nodesidxs); i++ {
+		/*we filter out the source and sink queue*/
+		if nodesarr[i].GetName() != graph.source &&
+			nodesarr[i].GetName() != graph.sink {
+			nidxs = append(nidxs, nodesidxs[i])
+			narrs = append(narrs, nodesarr[i])
+		} else {
+			nodesarr[i].SetNext(nil)
+		}
+	}
+
+	nodesarr = narrs
+	nodesidxs = nidxs
+	if len(narrs) < 2 {
+		if len(narrs) < 1 {
+			graph.queue_first = nil
+			graph.queue_last = nil
+			return
+		}
+		graph.queue_first = nodesarr[0]
+		nodesarr[0].SetNext(nodesarr[0])
+		graph.queue_last = nodesarr[0]
+		return
+	}
+
 	graph.queue_first = nodesarr[0]
 	for i = 0; i < (len(nodesarr) - 1); i++ {
 		nodesarr[i].SetNext(nodesarr[(i + 1)])
@@ -309,7 +336,6 @@ func (graph *BKGraph) SortQueueFirst() {
 
 	val = len(nodesarr) - 1
 	nodesarr[val].SetNext(nodesarr[val])
-	DebugLogPrintf("node[%s].next (%s)", nodesarr[val].GetName(), nodesarr[val].GetNext().GetName())
 	graph.queue_last = nodesarr[val]
 	return
 }
@@ -354,12 +380,11 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 		}
 	}
 
-	graph.SortQueueFirst()
-
 	graph.caps = caps
 	graph.neigh = neighbour
 	graph.source = source
 	graph.sink = sink
+	graph.SortQueueFirst()
 	return nil
 }
 
@@ -673,19 +698,66 @@ func (graph *BKGraph) GetNextList(pnode *Node) string {
 	return s
 }
 
+func (graph *BKGraph) FormArcName(from string, to string) string {
+	return fmt.Sprintf("%s->%s", from, to)
+}
+
+func (graph *BKGraph) GetLinkArcs(pnode *Node) string {
+
+	s := "["
+	i := 0
+	nname := pnode.GetName()
+	for _, cl := range graph.neigh.GetValue(nname) {
+		if cl == graph.source || cl == graph.sink {
+			continue
+		}
+		if i != 0 {
+			s += ","
+		}
+		s += graph.FormArcName(nname, cl)
+		i++
+	}
+
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
+func (graph *BKGraph) GetParentLists(pnode *Node) string {
+	s := "["
+	i := 0
+	curparent := pnode.GetParent()
+	for curparent != nil {
+		if i != 0 {
+			s += ","
+		}
+		if curparent.GetName() == graph.source ||
+			curparent.GetName() == graph.sink {
+			s += "MAXFLOW_TERMINAL"
+			break
+		}
+		i++
+		s += fmt.Sprintf("%s", curparent.GetName())
+		curparent = curparent.GetParent()
+	}
+	s += fmt.Sprintf("]cnt(%d)", i)
+	return s
+}
+
 func (graph *BKGraph) DebugNode(pnode *Node) {
 	if pnode.GetDebug() {
 		return
 	}
-	DebugLogPrintf("++++++++++++++++++++++++++++++")
+	DebugLogPrintf("==============================")
 	if pnode.IsSink() {
-		DebugLogPrintf("sink node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
+		DebugLogPrintf("node[%s].is_sink (True)", pnode.GetName())
 	} else {
-		DebugLogPrintf("source node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
+		DebugLogPrintf("node[%s].is_sink (False)", pnode.GetName())
 	}
-	DebugLogPrintf("node[%s].next (%s)", pnode.GetName(), graph.GetNextList(pnode))
-	DebugLogPrintf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParents(pnode))
-	DebugLogPrintf("------------------------------")
+	DebugLogPrintf("node[%s].arc_first list(%s)", pnode.GetName(), graph.GetLinkArcs(pnode))
+	DebugLogPrintf("node[%s].arc_parent list(%s)", pnode.GetName(), graph.GetParentLists(pnode))
+	DebugLogPrintf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
+	DebugLogPrintf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
+	DebugLogPrintf("******************************")
 
 	pnode.SetDebug()
 }
@@ -710,25 +782,66 @@ func (graph *BKGraph) GetQueue(pnode *Node) string {
 	return s
 }
 
+func (graph *BKGraph) SortNodesName() []string {
+	var nodesnames []string
+	var nodesidx []int
+	var nodesnamemap map[string]int
+	var i, j, val int
+
+	nodesnamemap = make(map[string]int)
+	for _, curname := range graph.neigh.Iter() {
+		_, ok := nodesnamemap[curname]
+		if !ok && curname != graph.source && curname != graph.sink {
+			nodesnamemap[curname] = 1
+		}
+
+		for _, lname := range graph.neigh.GetValue(curname) {
+			_, ok := nodesnamemap[lname]
+			if !ok && lname != graph.source && lname != graph.sink {
+				nodesnamemap[lname] = 1
+			}
+		}
+	}
+
+	nodesnames = []string{}
+	nodesidx = []int{}
+	for cname, _ := range nodesnamemap {
+		val, _ = strconv.Atoi(cname)
+		nodesidx = append(nodesidx, val)
+		nodesnames = append(nodesnames, cname)
+	}
+
+	if len(nodesnames) < 2 {
+		return nodesnames
+	}
+
+	for i = 0; i < len(nodesnames); i++ {
+		for j = (i + 1); j < len(nodesnames); j++ {
+			if nodesidx[i] > nodesidx[j] {
+				tmpidx := nodesidx[i]
+				nodesidx[i] = nodesidx[j]
+				nodesidx[j] = tmpidx
+				tmpname := nodesnames[i]
+				nodesnames[i] = nodesnames[j]
+				nodesnames[j] = tmpname
+			}
+		}
+	}
+
+	return nodesnames
+
+}
+
 func (graph *BKGraph) DebugState(desc string) {
 
 	var i, j int
 	var k1s, k2s []string
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	DebugLogPrintf("%s", desc)
-	DebugLogPrintf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
-	k1s = graph.neigh.Iter()
 
-	for i = 0; i < len(k1s); i++ {
-		curname := k1s[i]
+	for _, curname := range graph.SortNodesName() {
 		curnode := graph.nodemap.GetNode(curname)
 		graph.DebugNode(curnode)
-		k2s = graph.neigh.GetValue(curname)
-		for j = 0; j < len(k2s); j++ {
-			lname := k2s[j]
-			lnode := graph.nodemap.GetNode(lname)
-			graph.DebugNode(lnode)
-		}
 	}
 
 	k1s = graph.neigh.Iter()
@@ -751,6 +864,7 @@ func (graph *BKGraph) DebugState(desc string) {
 			lnode.DisableDebug()
 		}
 	}
+	DebugLogPrintf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
