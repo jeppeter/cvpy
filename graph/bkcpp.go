@@ -636,7 +636,7 @@ func (graph *BKGraph) GetActive() *Node {
 func (graph *BKGraph) Augment(parc *Arc) {
 	var pi *Node
 	bottlecap := parc.GetCap()
-	DebugLogPrintf("Get arc (%s)", parc.GetName())
+	DebugLogPrintf("Get arc (%s) bottlecap (%d)", parc.GetName(), bottlecap)
 
 	/*for source side*/
 	pi = parc.GetSister().GetHead()
@@ -719,6 +719,7 @@ func (graph *BKGraph) Augment(parc *Arc) {
 	if pi.GetCap() == 0 {
 		graph.PushOrphanFront(pi)
 	}
+	DebugLogPrintf("add bottlecap (%d)", bottlecap)
 	graph.flow += bottlecap
 	return
 }
@@ -960,7 +961,8 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 
 		} else {
 			for arc := curnode.GetFirst(); arc != nil; arc = arc.GetNext() {
-				if arc.GetCap() != 0 {
+				psister := arc.GetSister()
+				if psister.GetCap() != 0 {
 					pj := arc.GetHead()
 					if pj.GetParent() == nil {
 						/*set for the sink side*/
@@ -970,7 +972,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 						pj.SetDIST(curnode.GetDIST() + 1)
 						graph.SetActive(pj)
 					} else if !pj.IsSink() {
-						gotarc = arc
+						gotarc = arc.GetSister()
 						break
 					} else if pj.GetTS() <= curnode.GetTS() && pj.GetDIST() > curnode.GetDIST() {
 						pj.SetParent(arc.GetSister())
