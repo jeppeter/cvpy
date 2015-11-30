@@ -258,7 +258,7 @@ func (graph *BKGraph) GetActive() *Node {
 		}
 		pnode.SetNext(nil)
 
-		if !graph.IsParentNull(pnode) {
+		if pnode.GetParent() != nil {
 			return pnode
 		}
 	}
@@ -1080,7 +1080,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		curnode = curgetnode
 		if curnode != nil {
 			curnode.SetNext(nil)
-			if graph.IsParentNull(curnode) {
+			if curnode.GetParent() == nil {
 				/*if we do not has any upstream to regress ,so it make nothing to do*/
 				curnode = nil
 			}
@@ -1115,11 +1115,9 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 						graph.SetActive(lnode)
 					} else if lnode.IsSink() {
 						/*we find a route from source to sink ,so break to handle this*/
-						if !graph.IsParentNull(lnode) {
-							srcnode = curnode
-							sinknode = lnode
-							break
-						}
+						srcnode = curnode
+						sinknode = lnode
+						break
 					} else if lnode.GetTS() <= curnode.GetTS() && lnode.GetDist() > curnode.GetDist() {
 						/*********************************************
 						  it means it handles early before curnode and
@@ -1152,11 +1150,9 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 						graph.SetActive(lnode)
 					} else if !lnode.IsSink() {
 						/*it is source side node*/
-						if !graph.IsParentNull(lnode) {
-							srcnode = lnode
-							sinknode = curnode
-							break
-						}
+						srcnode = lnode
+						sinknode = curnode
+						break
 					} else if lnode.GetTS() <= curnode.GetTS() &&
 						lnode.GetDist() > curnode.GetDist() {
 						lnode.SetParent(curnode)
