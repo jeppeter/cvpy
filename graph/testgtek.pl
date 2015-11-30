@@ -21,7 +21,7 @@ for ($i=0;$i < $times;$i++){
 	{
 		print STDOUT "\n";
 	}
-	RunCommand("./makemap.exe 50 300 >test.map");
+	RunCommand("./makemap.exe 1000 10000 >test.map");
 	RunCommand("./maxflow.exe bk test.map >bk.txt 2>/dev/null");
 	RunCommand("./maxflow.exe ek test.map  >ek.txt 2>/dev/null");
 	$ek=`cat ek.txt`;

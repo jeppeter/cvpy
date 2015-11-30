@@ -30,7 +30,7 @@ func NewArc() *Arc {
 }
 
 func DebugLogPrintf(format string, a ...interface{}) {
-	if false {
+	if true {
 		return
 	}
 	_, f, l, _ := runtime.Caller(1)
@@ -576,6 +576,9 @@ func (graph *BKGraph) GetOrphanString() string {
 }
 
 func (graph *BKGraph) DebugState(notice string) {
+	if true {
+		return
+	}
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	DebugLogPrintf("%s", notice)
 
@@ -645,12 +648,17 @@ func (graph *BKGraph) Augment(parc *Arc) {
 		if pcurarc == MAXFLOW_TERMINAL {
 			break
 		}
-		DebugLogPrintf("curarc (%s)", graph.GetArcName(pcurarc))
 		pcursis := pcurarc.GetSister()
+		DebugLogPrintf("arc[%s].sister arc[%s].r_cap (%d) bottlecap(%d)", pcurarc.GetName(), pcursis.GetName(), pcursis.GetCap(), bottlecap)
 		if bottlecap > pcursis.GetCap() {
 			bottlecap = pcursis.GetCap()
 		}
 		pi = pcurarc.GetHead()
+	}
+
+	DebugLogPrintf("node[%s].tr_cap (%d) bottlecap(%d)", pi.GetName(), pi.GetCap(), bottlecap)
+	if bottlecap > pi.GetCap() {
+		bottlecap = pi.GetCap()
 	}
 
 	/*for sink side*/
@@ -661,17 +669,20 @@ func (graph *BKGraph) Augment(parc *Arc) {
 			break
 		}
 
+		DebugLogPrintf("arc[%s].r_cap (%d) bottlecap(%d)", pcurarc.GetName(), pcurarc.GetCap(), bottlecap)
 		if bottlecap > pcurarc.GetCap() {
 			bottlecap = pcurarc.GetCap()
 		}
 		pi = pcurarc.GetHead()
 	}
 
+	DebugLogPrintf("node[%s].tr_cap (%d) bottlecap(%d)", pi.GetName(), pi.GetCap(), bottlecap)
 	if bottlecap > -pi.GetCap() {
 		bottlecap = -pi.GetCap()
 	}
 
 	psister := parc.GetSister()
+	DebugLogPrintf("arc[%s].sister -> arc[%s].r_cap(%d+%d) arc[%s].r_cap(%d-%d)", parc.GetName(), psister.GetName(), psister.GetCap(), bottlecap, parc.GetName(), parc.GetCap(), bottlecap)
 	psister.SetCap(psister.GetCap() + bottlecap)
 	parc.SetCap(parc.GetCap() - bottlecap)
 
@@ -683,17 +694,21 @@ func (graph *BKGraph) Augment(parc *Arc) {
 		}
 
 		pcursister := pcurarc.GetSister()
+		DebugLogPrintf("arc[%s].r_cap (%d+%d) arc[%s].sister -> arc[%s].r_cap(%d-%d)", pcurarc.GetName(), pcurarc.GetCap(), bottlecap, pcurarc.GetName(), pcursister.GetName(), pcursister.GetCap(), bottlecap)
 		pcurarc.SetCap(pcurarc.GetCap() + bottlecap)
 		pcursister.SetCap(pcursister.GetCap() - bottlecap)
 
 		if pcursister.GetCap() == 0 {
+			DebugLogPrintf("push (%s)", pi.GetName())
 			graph.PushOrphanFront(pi)
 		}
 		pi = pcurarc.GetHead()
 	}
 
+	DebugLogPrintf("node[%s].tr_cap (%d-%d)", pi.GetName(), pi.GetCap(), bottlecap)
 	pi.SetCap(pi.GetCap() - bottlecap)
 	if pi.GetCap() == 0 {
+		DebugLogPrintf("push (%s)", pi.GetName())
 		graph.PushOrphanFront(pi)
 	}
 
@@ -705,18 +720,22 @@ func (graph *BKGraph) Augment(parc *Arc) {
 			break
 		}
 		pcursister := pcurarc.GetSister()
+		DebugLogPrintf("arc[%s].r_cap (%d+%d) arc[%s].sister -> arc[%s].r_cap(%d-%d)", pcurarc.GetName(), pcurarc.GetCap(), bottlecap, pcurarc.GetName(), pcursister.GetName(), pcursister.GetCap(), bottlecap)
 		pcursister.SetCap(pcursister.GetCap() + bottlecap)
 		pcurarc.SetCap(pcurarc.GetCap() - bottlecap)
 
 		if pcurarc.GetCap() == 0 {
+			DebugLogPrintf("push (%s)", pi.GetName())
 			graph.PushOrphanFront(pi)
 		}
 
 		pi = pcurarc.GetHead()
 	}
 
+	DebugLogPrintf("node[%s].tr_cap (%d+%d)", pi.GetName(), pi.GetCap(), bottlecap)
 	pi.SetCap(pi.GetCap() + bottlecap)
 	if pi.GetCap() == 0 {
+		DebugLogPrintf("push (%s)", pi.GetName())
 		graph.PushOrphanFront(pi)
 	}
 	DebugLogPrintf("add bottlecap (%d)", bottlecap)
