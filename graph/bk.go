@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"log"
+	"runtime"
 )
 
 type Node struct {
@@ -24,6 +25,17 @@ const MAXFLOW_INFINITE_D = (1 << 31)
 func init() {
 	MAXFLOW_ORPHAN = NewNode("MAXFLOW_ORPHAN")
 	MAXFLOW_TERMINAL = NewNode("MAXFLOW_TERMINAL")
+	return
+}
+
+func DebugLogPrintf(format string, a ...interface{}) {
+	if false {
+		return
+	}
+	_, f, l, _ := runtime.Caller(1)
+	s := fmt.Sprintf("%s:%d ", f, l)
+	s += fmt.Sprintf(format, a...)
+	log.Print(s)
 	return
 }
 
@@ -70,7 +82,7 @@ func (pnode *Node) GetParent() *Node {
 }
 
 func (pnode *Node) SetParent(parent *Node) {
-	log.Printf("Set (%s) Parent (%s)", pnode.GetName(), GetNodeName(parent))
+	DebugLogPrintf("Set (%s) Parent (%s)", pnode.GetName(), GetNodeName(parent))
 	pnode.parent = parent
 	return
 }
@@ -96,7 +108,7 @@ func (pnode *Node) SetSink(val bool) {
 	pnode.is_sink = val
 	return
 }
-func (pnode *Node) GetSink() bool {
+func (pnode *Node) IsSink() bool {
 	return pnode.is_sink
 }
 
@@ -202,7 +214,7 @@ func (graph *BKGraph) SetActive(pnode *Node) {
 	if pnode.GetNext() != nil {
 		return
 	}
-	log.Printf("Set (%s) active", pnode.GetName())
+	DebugLogPrintf("Set (%s) active", pnode.GetName())
 	if graph.queue_first == nil {
 		pnode.SetNext(nil)
 		graph.queue_first = pnode
@@ -217,19 +229,39 @@ func (graph *BKGraph) SetActive(pnode *Node) {
 	return
 }
 
+func (graph *BKGraph) IsParentNull(pnode *Node) bool {
+	curnode := pnode
+	for curnode != nil {
+		if curnode.GetParent() == MAXFLOW_TERMINAL {
+			return false
+		} else if curnode.GetParent() == MAXFLOW_ORPHAN {
+			return true
+		}
+		curnode = curnode.GetParent()
+	}
+	return true
+}
+
 func (graph *BKGraph) GetActive() *Node {
-	if graph.queue_first == nil {
-		return nil
+	for {
+		if graph.queue_first == nil {
+			return nil
+		}
+		pnode := graph.queue_first
+		/*if we have remove all the nodes ,just remove the last*/
+		if pnode.GetNext() == pnode {
+			graph.queue_first = nil
+			graph.queue_last = nil
+		} else {
+			graph.queue_first = pnode.GetNext()
+		}
+		pnode.SetNext(nil)
+
+		if !graph.IsParentNull(pnode) {
+			return pnode
+		}
 	}
-	pnode := graph.queue_first
-	graph.queue_first = pnode.GetNext()
-	pnode.SetNext(nil)
-	/*if we have remove all the nodes ,just remove the last*/
-	if graph.queue_first == nil {
-		graph.queue_last = nil
-	}
-	log.Printf("GetActive (%s)", pnode.GetName())
-	return pnode
+	return nil
 }
 
 /**********************************************
@@ -300,7 +332,7 @@ func (graph *BKGraph) PushOrphanFront(pnode *Node) int {
 		/*it is already pushed in*/
 		return graph.orphans.Len()
 	}
-	log.Printf("push (%s) front", pnode.GetName())
+	DebugLogPrintf("push (%s) front", pnode.GetName())
 	pnode.SetParent(MAXFLOW_ORPHAN)
 	graph.orphans.PushFront(pnode)
 	return graph.orphans.Len()
@@ -339,17 +371,17 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 	for _, curname := range graph.neigh.GetValue(orphan.GetName()) {
 		curnode = graph.nodemap.GetNode(curname)
 		if curnode == nil {
-			log.Fatalf("%s not find node", curname)
+			graph.FatalLogf("%s not find node", curname)
 		}
-		log.Printf("orphan (%s) curnode (%s)", orphan.GetName(), curname)
+		DebugLogPrintf("orphan (%s) curnode (%s)", orphan.GetName(), curname)
 		/*we search for all the flow to this orphan node*/
 		if graph.CanFlow(curname, orphan.GetName()) {
-			if !curnode.GetSink() {
+			if !curnode.IsSink() {
 				curparent = curnode.GetParent()
 				nearparent = curnode
 				curd = 0
 				for curparent != nil {
-					log.Printf("node[%s].TS (%d) TIME (%d)", curnode.GetName(), curnode.GetTS(), graph.TIME)
+					DebugLogPrintf("node[%s].TS (%d) TIME (%d)", curnode.GetName(), curnode.GetTS(), graph.TIME)
 					if curnode.GetTS() == graph.TIME {
 						curd += curnode.GetDist()
 						break
@@ -376,7 +408,7 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 						dmin = curd
 					}
 					curparent = nearparent
-					log.Printf("curparent %s curd %d", GetNodeName(curparent), curd)
+					DebugLogPrintf("curparent %s curd %d", GetNodeName(curparent), curd)
 					for curparent.GetTS() != graph.TIME {
 						/*it is not the current cycle do this*/
 						curparent.SetTS(graph.TIME)
@@ -384,7 +416,7 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 						curd--
 						curnode = curparent
 						curparent = curnode.GetParent()
-						log.Printf("curnode (%s)curparent %s", curnode.GetName(), GetNodeName(curparent))
+						DebugLogPrintf("curnode (%s)curparent %s", curnode.GetName(), GetNodeName(curparent))
 
 						if curparent == nil || curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN {
 							break
@@ -395,7 +427,7 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 		}
 	}
 
-	log.Printf("set (%s) Parent (%s) ", orphan.GetName(), GetNodeName(newparent))
+	DebugLogPrintf("set (%s) Parent (%s) ", orphan.GetName(), GetNodeName(newparent))
 	orphan.SetParent(newparent)
 	if newparent != nil {
 		/*we find the new parent for the orphan ,so we should give the TS and DIST*/
@@ -406,9 +438,9 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 			/*get neighbour node */
 			curnode = graph.nodemap.GetNode(curname)
 			if curnode == nil {
-				log.Fatalf("can not find (%s) node", curname)
+				graph.FatalLogf("can not find (%s) node", curname)
 			}
-			if !curnode.GetSink() {
+			if !curnode.IsSink() {
 				/*it is source node*/
 				curparent = curnode.GetParent()
 				if curparent != nil && curparent != MAXFLOW_TERMINAL && curparent != MAXFLOW_ORPHAN {
@@ -438,15 +470,15 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 	for _, curname := range graph.neigh.GetValue(orphan.GetName()) {
 		curnode = graph.nodemap.GetNode(curname)
 		if curnode == nil {
-			log.Fatalf("can not find %s neighbour %s node", orphan.GetName(), curname)
+			graph.FatalLogf("can not find %s neighbour %s node", orphan.GetName(), curname)
 		}
 		if graph.CanFlow(orphan.GetName(), curnode.GetName()) {
 			nearparent = curnode
-			if curnode.GetSink() {
+			if curnode.IsSink() {
 				/*it is sink node ,so we can do this*/
 				curparent = curnode.GetParent()
 				curd = 0
-				log.Printf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
+				DebugLogPrintf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
 				for curparent != nil {
 					if curnode.GetTS() == graph.TIME {
 						curd += curnode.GetDist()
@@ -469,7 +501,7 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 					}
 					curnode = curparent
 					curparent = curnode.GetParent()
-					log.Printf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
+					DebugLogPrintf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
 				}
 
 				if curd < MAXFLOW_INFINITE_D {
@@ -478,7 +510,7 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 						dmin = curd
 					}
 					curparent = curnode.GetParent()
-					log.Printf("curnode (%s) parent (%s)", curnode.GetName(), GetNodeName(curparent))
+					DebugLogPrintf("curnode (%s) parent (%s)", curnode.GetName(), GetNodeName(curparent))
 					for curparent.GetTS() != graph.TIME {
 						curparent.SetTS(graph.TIME)
 						curparent.SetDist(curd)
@@ -502,10 +534,10 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 		for _, curname := range graph.neigh.GetValue(orphan.GetName()) {
 			curnode = graph.nodemap.GetNode(curname)
 			if curnode == nil {
-				log.Fatalf("can not find (%s) neighbour (%s) node", orphan.GetName(), curname)
+				graph.FatalLogf("can not find (%s) neighbour (%s) node", orphan.GetName(), curname)
 			}
 
-			if curnode.GetSink() {
+			if curnode.IsSink() {
 				/*on the sink side to scan*/
 				curparent = curnode.GetParent()
 				if curparent != nil && curparent != MAXFLOW_ORPHAN && curparent != MAXFLOW_TERMINAL {
@@ -534,7 +566,7 @@ func (graph *BKGraph) AddFlow(from string, to string, addval int) bool {
 	curval := graph.flows.GetValue(from, to)
 	graph.flows.SetValue(from, to, curval+addval)
 	if graph.flows.GetValue(from, to) > graph.caps.GetValue(from, to) {
-		log.Fatalf("%s -> %s flow add %d error", from, to)
+		graph.FatalLogf("%s -> %s flow add %d error", from, to)
 	}
 	return graph.CanFlow(from, to)
 }
@@ -594,15 +626,15 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	if pnode.GetDebug() {
 		return
 	}
-	log.Printf("++++++++++++++++++++++++++++++")
-	if pnode.GetSink() {
-		log.Printf("sink node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
+	DebugLogPrintf("++++++++++++++++++++++++++++++")
+	if pnode.IsSink() {
+		DebugLogPrintf("sink node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
 	} else {
-		log.Printf("source node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
+		DebugLogPrintf("source node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
 	}
-	log.Printf("node[%s].next (%s)", pnode.GetName(), graph.GetNext(pnode))
-	log.Printf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParents(pnode))
-	log.Printf("------------------------------")
+	DebugLogPrintf("node[%s].next (%s)", pnode.GetName(), graph.GetNext(pnode))
+	DebugLogPrintf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParents(pnode))
+	DebugLogPrintf("------------------------------")
 
 	pnode.SetDebug()
 }
@@ -632,9 +664,9 @@ func (graph *BKGraph) DebugState(desc string) {
 
 	var i, j int
 	var k1s, k2s []string
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-	log.Printf("%s", desc)
-	log.Printf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("%s", desc)
+	DebugLogPrintf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
 	k1s = graph.neigh.Iter()
 
 	for i = 0; i < len(k1s); i++ {
@@ -656,7 +688,7 @@ func (graph *BKGraph) DebugState(desc string) {
 		for j = 0; j < len(k2s); j++ {
 			lname := k2s[j]
 			//if graph.CanFlow(curname, lname) {
-			log.Printf("(%s -> %s ) flow (%d)", curname, lname, graph.GetFlow(curname, lname))
+			DebugLogPrintf("(%s -> %s ) flow (%d)", curname, lname, graph.GetFlow(curname, lname))
 			//}
 		}
 	}
@@ -669,7 +701,7 @@ func (graph *BKGraph) DebugState(desc string) {
 			lnode.DisableDebug()
 		}
 	}
-	log.Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
 
@@ -678,7 +710,7 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	var bottlecap, curval int
 	var curparent, curchld *Node
 	orphans = 0
-	log.Printf("srcnode (%s) sinknode (%s)", srcnode.GetName(), sinknode.GetName())
+	DebugLogPrintf("srcnode (%s) sinknode (%s)", srcnode.GetName(), sinknode.GetName())
 
 	bottlecap = graph.GetFlow(srcnode.GetName(), sinknode.GetName())
 
@@ -686,13 +718,13 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	curparent = srcnode.GetParent()
 	curchld = srcnode
 	for {
-		log.Printf("curchld (%s) curparent (%s)", curchld.GetName(), GetNodeName(curparent))
+		DebugLogPrintf("curchld (%s) curparent (%s)", curchld.GetName(), GetNodeName(curparent))
 		if curparent == MAXFLOW_TERMINAL {
 			break
 		} else if curparent == nil {
-			log.Fatalf("%s node parent is nil", curchld.GetName())
+			graph.FatalLogf("%s node parent is nil", curchld.GetName())
 		} else if curparent == MAXFLOW_ORPHAN {
-			log.Fatalf("%s node parent is orphan", curchld.GetName())
+			graph.FatalLogf("%s node parent is orphan", curchld.GetName())
 		}
 
 		curval = graph.GetFlow(curparent.GetName(), curchld.GetName())
@@ -707,13 +739,13 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	curchld = sinknode
 	curparent = curchld.GetParent()
 	for {
-		log.Printf("curchld (%s) curparent (%s)", curchld.GetName(), GetNodeName(curparent))
+		DebugLogPrintf("curchld (%s) curparent (%s)", curchld.GetName(), GetNodeName(curparent))
 		if curparent == MAXFLOW_TERMINAL {
 			break
 		} else if curparent == nil {
-			log.Fatalf("%s node parent is nil", curchld.GetName())
+			graph.FatalLogf("%s node parent is nil", curchld.GetName())
 		} else if curparent == MAXFLOW_ORPHAN {
-			log.Fatalf("%s node parent is orphan", curchld.GetName())
+			graph.FatalLogf("%s node parent is orphan", curchld.GetName())
 		}
 
 		curval = graph.GetFlow(curchld.GetName(), curparent.GetName())
@@ -734,13 +766,13 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 		if curparent == MAXFLOW_TERMINAL {
 			break
 		} else if curparent == nil {
-			log.Fatalf("%s node parent is nil", curchld.GetName())
+			graph.FatalLogf("%s node parent is nil", curchld.GetName())
 		} else if curparent == MAXFLOW_ORPHAN {
-			log.Fatalf("%s node parent is orphan", curchld.GetName())
+			graph.FatalLogf("%s node parent is orphan", curchld.GetName())
 		}
 
 		if !graph.AddFlow(curparent.GetName(), curchld.GetName(), bottlecap) {
-			log.Printf("push child (%s) (as parent (%s))", curchld.GetName(), GetNodeName(curparent))
+			DebugLogPrintf("push child (%s) (as parent (%s))", curchld.GetName(), GetNodeName(curparent))
 			graph.PushOrphanFront(curchld)
 			orphans++
 		}
@@ -755,13 +787,13 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 		if curparent == MAXFLOW_TERMINAL {
 			break
 		} else if curparent == nil {
-			log.Fatalf("%s node parent is nil", curchld.GetName())
+			graph.FatalLogf("%s node parent is nil", curchld.GetName())
 		} else if curparent == MAXFLOW_ORPHAN {
-			log.Fatalf("%s node parent is orphan", curchld.GetName())
+			graph.FatalLogf("%s node parent is orphan", curchld.GetName())
 		}
 
 		if !graph.AddFlow(curchld.GetName(), curparent.GetName(), bottlecap) {
-			log.Printf("push child (%s) (as parent (%s))", curchld.GetName(), GetNodeName(curparent))
+			DebugLogPrintf("push child (%s) (as parent (%s))", curchld.GetName(), GetNodeName(curparent))
 			graph.PushOrphanFront(curchld)
 			orphans++
 		}
@@ -790,7 +822,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		curnode = curgetnode
 		if curnode != nil {
 			curnode.SetNext(nil)
-			if curnode.GetParent() == nil {
+			if graph.IsParentNull(curnode) {
 				/*if we do not has any upstream to regress ,so it make nothing to do*/
 				curnode = nil
 			}
@@ -803,17 +835,17 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 				break
 			}
 		}
-		log.Printf("curnode (%s)", GetNodeName(curnode))
-		if !curnode.GetSink() {
+		DebugLogPrintf("curnode (%s)", GetNodeName(curnode))
+		if !curnode.IsSink() {
 			/*it is source node side*/
 			for _, lname := range graph.neigh.GetValue(curnode.GetName()) {
 				/*to search for the neighbour node to satisfy connection from source to sink*/
 				lnode = graph.nodemap.GetNode(lname)
 				if lnode == nil {
-					log.Fatalf("can not find lnode (%s) for (%s)", lname, curnode.GetName())
+					graph.FatalLogf("can not find lnode (%s) for (%s)", lname, curnode.GetName())
 				}
 				curname := curnode.GetName()
-				log.Printf("curname(%s) lname(%s)", curname, lname)
+				DebugLogPrintf("curname(%s) lname(%s)", curname, lname)
 				/*it is some flow for the over*/
 				if graph.CanFlow(curname, lname) {
 					if lnode.GetParent() == nil {
@@ -823,11 +855,13 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 						lnode.SetTS(curnode.GetTS())
 						lnode.SetDist(curnode.GetDist() + 1)
 						graph.SetActive(lnode)
-					} else if lnode.GetSink() {
+					} else if lnode.IsSink() {
 						/*we find a route from source to sink ,so break to handle this*/
-						srcnode = curnode
-						sinknode = lnode
-						break
+						if !graph.IsParentNull(lnode) {
+							srcnode = curnode
+							sinknode = lnode
+							break
+						}
 					} else if lnode.GetTS() <= curnode.GetTS() && lnode.GetDist() > curnode.GetDist() {
 						/*********************************************
 						  it means it handles early before curnode and
@@ -847,7 +881,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 			for _, lname := range graph.neigh.GetValue(curnode.GetName()) {
 				lnode = graph.nodemap.GetNode(lname)
 				if lnode == nil {
-					log.Fatalf("can not get lnode(%s) for %s", lname, curnode.GetName())
+					graph.FatalLogf("can not get lnode(%s) for %s", lname, curnode.GetName())
 				}
 				curname := curnode.GetName()
 				if graph.CanFlow(lname, curname) {
@@ -858,11 +892,13 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 						lnode.SetDist(curnode.GetDist() + 1)
 						lnode.SetTS(curnode.GetTS())
 						graph.SetActive(lnode)
-					} else if !lnode.GetSink() {
+					} else if !lnode.IsSink() {
 						/*it is source side node*/
-						srcnode = lnode
-						sinknode = curnode
-						break
+						if !graph.IsParentNull(lnode) {
+							srcnode = lnode
+							sinknode = curnode
+							break
+						}
 					} else if lnode.GetTS() <= curnode.GetTS() &&
 						lnode.GetDist() > curnode.GetDist() {
 						lnode.SetParent(curnode)
@@ -889,11 +925,11 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 					if orphan == nil {
 						break
 					}
-					if orphan.GetSink() {
-						log.Printf("Process sink (%s)", orphan.GetName())
+					if orphan.IsSink() {
+						DebugLogPrintf("Process sink (%s)", orphan.GetName())
 						graph.ProcessSinkOrphan(orphan)
 					} else {
-						log.Printf("Process source (%s)", orphan.GetName())
+						DebugLogPrintf("Process source (%s)", orphan.GetName())
 						graph.ProcessSourceOrphan(orphan)
 					}
 				}
@@ -906,4 +942,14 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 	}
 
 	return graph.flow, nil
+}
+
+func (graph *BKGraph) FatalLogf(format string, a ...interface{}) {
+	graph.DebugState("")
+
+	_, f, l, _ := runtime.Caller(1)
+	s := fmt.Sprintf("%s:%d ", f, l)
+	s += fmt.Sprintf(format, a...)
+	log.Fatalf(s)
+	return
 }

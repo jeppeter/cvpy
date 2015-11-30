@@ -264,7 +264,9 @@ func main() {
 	} else if os.Args[1] == "bk" {
 		log.SetFlags(log.Lshortfile)
 		log.SetFlags(0)
-		bkgraph := BKParseFile(os.Args[2])
+		bkgraph := NewBkGraph()
+		bkgraph.InitGraph(caps, neighs, s, t)
+		//bkgraph := BKParseFile(os.Args[2])
 		stime = time.Now()
 		flow, e = bkgraph.MaxFlow()
 		etime = time.Now()
