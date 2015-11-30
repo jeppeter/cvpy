@@ -30,7 +30,7 @@ func init() {
 }
 
 func DebugLogPrintf(format string, a ...interface{}) {
-	if false {
+	if true {
 		return
 	}
 	_, f, l, _ := runtime.Caller(1)
@@ -510,49 +510,50 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 		/*we search for all the flow to this orphan node*/
 		if graph.CanFlow(curname, orphan.GetName()) {
 			if !curnode.IsSink() {
-				curparent = curnode.GetParent()
-				nearparent = curnode
-				curd = 0
-				for curparent != nil {
-					DebugLogPrintf("node[%s].TS (%d) TIME (%d)", curnode.GetName(), curnode.GetTS(), graph.TIME)
-					if curnode.GetTS() == graph.TIME {
-						curd += curnode.GetDist()
-						break
-					}
-					curd++
-					if curparent == MAXFLOW_TERMINAL {
-						/*we have find the terminal ,it is the source*/
-						curparent.SetTS(graph.TIME)
-						curparent.SetDist(1)
-						break
-					} else if curparent == MAXFLOW_ORPHAN {
-						/*it is orphan for parent ,so set it as the not reachable*/
-						curd = MAXFLOW_INFINITE_D
-						break
-					}
-					curnode = curparent
-					curparent = curnode.GetParent()
-				}
-
-				if curd < MAXFLOW_INFINITE_D {
-					if curd < dmin {
-						/*if we find a new part path from terminal of source to this orphan code ,just get it*/
-						newparent = nearparent
-						dmin = curd
-					}
-					curparent = nearparent
-					DebugLogPrintf("curparent %s curd %d", GetNodeName(curparent), curd)
-					for curparent.GetTS() != graph.TIME {
-						/*it is not the current cycle do this*/
-						curparent.SetTS(graph.TIME)
-						curparent.SetDist(curd)
-						curd--
-						curnode = curparent
-						curparent = curnode.GetParent()
-						DebugLogPrintf("curnode (%s)curparent %s", curnode.GetName(), GetNodeName(curparent))
-
-						if curparent == nil || curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN {
+				if curnode.GetParent() != nil {
+					nearparent = curnode
+					curd = 0
+					for curnode != nil {
+						DebugLogPrintf("node[%s].TS (%d) TIME (%d)", curnode.GetName(), curnode.GetTS(), graph.TIME)
+						if curnode.GetTS() == graph.TIME {
+							curd += curnode.GetDist()
 							break
+						}
+						curd++
+						curparent = curnode.GetParent()
+						if curparent == MAXFLOW_TERMINAL {
+							/*we have find the terminal ,it is the source*/
+							curparent.SetTS(graph.TIME)
+							curparent.SetDist(1)
+							break
+						} else if curparent == MAXFLOW_ORPHAN {
+							/*it is orphan for parent ,so set it as the not reachable*/
+							curd = MAXFLOW_INFINITE_D
+							break
+						}
+						curnode = curparent
+					}
+
+					if curd < MAXFLOW_INFINITE_D {
+						if curd < dmin {
+							/*if we find a new part path from terminal of source to this orphan code ,just get it*/
+							newparent = nearparent
+							dmin = curd
+						}
+						curparent = nearparent
+						DebugLogPrintf("curparent %s curd %d", GetNodeName(curparent), curd)
+						for curparent.GetTS() != graph.TIME {
+							/*it is not the current cycle do this*/
+							curparent.SetTS(graph.TIME)
+							curparent.SetDist(curd)
+							curd--
+							curnode = curparent
+							curparent = curnode.GetParent()
+							DebugLogPrintf("curnode (%s)curparent %s", curnode.GetName(), GetNodeName(curparent))
+
+							if curparent == nil || curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN {
+								break
+							}
 						}
 					}
 				}
@@ -593,6 +594,13 @@ func (graph *BKGraph) ProcessSourceOrphan(orphan *Node) {
 	return
 }
 
+func (graph *BKGraph) LeftFlow(from string, to string) int {
+	if graph.CanFlow(from, to) {
+		return graph.caps.GetValue(from, to) - graph.flows.GetValue(from, to)
+	}
+	return 0
+}
+
 func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 	var newparent, nearparent, curparent, curnode *Node
 	var dmin, curd int
@@ -605,53 +613,54 @@ func (graph *BKGraph) ProcessSinkOrphan(orphan *Node) {
 		if curnode == nil {
 			graph.FatalLogf("can not find %s neighbour %s node", orphan.GetName(), curname)
 		}
+		DebugLogPrintf("[%s->%s] cap (%d)", orphan.GetName(), curnode.GetName(), graph.LeftFlow(orphan.GetName(), curnode.GetName()))
 		if graph.CanFlow(orphan.GetName(), curnode.GetName()) {
 			nearparent = curnode
 			if curnode.IsSink() {
-				/*it is sink node ,so we can do this*/
-				curparent = curnode.GetParent()
-				curd = 0
-				DebugLogPrintf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
-				for curparent != nil {
-					if curnode.GetTS() == graph.TIME {
-						curd += curnode.GetDist()
-						break
-					}
-
-					curd++
-					if curparent == MAXFLOW_TERMINAL {
-						curnode.SetTS(graph.TIME)
-						curnode.SetDist(1)
-						break
-					} else if curparent == MAXFLOW_ORPHAN {
-						/*it is orphan also*/
-						curd = MAXFLOW_INFINITE_D
-						break
-					} else if curparent == nil {
-						/*this is because the sink side not connected by sink*/
-						curd = MAXFLOW_INFINITE_D
-						break
-					}
-					curnode = curparent
-					curparent = curnode.GetParent()
+				if curnode.GetParent() != nil {
+					/*it is sink node ,so we can do this*/
+					curd = 0
 					DebugLogPrintf("curnode (%s) curparent (%s)", curnode.GetName(), GetNodeName(curparent))
-				}
-
-				if curd < MAXFLOW_INFINITE_D {
-					if curd < dmin {
-						newparent = nearparent
-						dmin = curd
-					}
-					curparent = curnode.GetParent()
-					DebugLogPrintf("curnode (%s) parent (%s)", curnode.GetName(), GetNodeName(curparent))
-					for curparent.GetTS() != graph.TIME {
-						curparent.SetTS(graph.TIME)
-						curparent.SetDist(curd)
-						curd--
-						curnode = curparent
-						curparent = curnode.GetParent()
-						if curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN || curparent == nil {
+					for curnode != nil {
+						if curnode.GetTS() == graph.TIME {
+							curd += curnode.GetDist()
 							break
+						}
+
+						curd++
+						curparent = curnode.GetParent()
+						if curparent == MAXFLOW_TERMINAL {
+							curnode.SetTS(graph.TIME)
+							curnode.SetDist(1)
+							break
+						} else if curparent == MAXFLOW_ORPHAN {
+							/*it is orphan also*/
+							curd = MAXFLOW_INFINITE_D
+							break
+						} else if curparent == nil {
+							/*this is because the sink side not connected by sink*/
+							curd = MAXFLOW_INFINITE_D
+							break
+						}
+						curnode = curparent
+					}
+
+					if curd < MAXFLOW_INFINITE_D {
+						if curd < dmin {
+							newparent = nearparent
+							dmin = curd
+						}
+						curparent = curnode.GetParent()
+						DebugLogPrintf("curnode (%s) parent (%s)", curnode.GetName(), GetNodeName(curparent))
+						for curparent.GetTS() != graph.TIME {
+							curparent.SetTS(graph.TIME)
+							curparent.SetDist(curd)
+							curd--
+							curnode = curparent
+							curparent = curnode.GetParent()
+							if curparent == MAXFLOW_TERMINAL || curparent == MAXFLOW_ORPHAN || curparent == nil {
+								break
+							}
 						}
 					}
 				}
@@ -924,6 +933,9 @@ func (graph *BKGraph) GetOrphanListNames() string {
 func (graph *BKGraph) DebugState(desc string) {
 
 	var nodes1 []string
+	if true {
+		return
+	}
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	DebugLogPrintf("%s", desc)
 	nodes1 = graph.SortNodesName()
