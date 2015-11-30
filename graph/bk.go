@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"strconv"
 )
 
 type Node struct {
@@ -264,6 +265,55 @@ func (graph *BKGraph) GetActive() *Node {
 	return nil
 }
 
+func (graph *BKGraph) SortQueueFirst() {
+	var nodesidxs []int
+	var nodesarr []*Node
+	var i, j, val int
+	nodesidxs = []int{}
+	nodesarr = []*Node{}
+	pnode := graph.queue_first
+	for pnode != nil {
+		val, _ = strconv.Atoi(pnode.GetName())
+		nodesarr = append(nodesarr, pnode)
+		nodesidxs = append(nodesidxs, val)
+		DebugLogPrintf("append (%s) int array", pnode.GetName())
+		if pnode.GetNext() == pnode {
+			break
+		}
+		pnode = pnode.GetNext()
+	}
+
+	if len(nodesidxs) <= 1 {
+		return
+	}
+
+	for i = 0; i < len(nodesidxs); i++ {
+		for j = (i + 1); j < len(nodesidxs); j++ {
+			if nodesidxs[i] > nodesidxs[j] {
+				tmpid := nodesidxs[i]
+				nodesidxs[i] = nodesidxs[j]
+				nodesidxs[j] = tmpid
+				tmpnode := nodesarr[i]
+				nodesarr[i] = nodesarr[j]
+				nodesarr[j] = tmpnode
+			}
+		}
+	}
+
+	DebugLogPrintf("nodeidx (%v)", nodesidxs)
+	graph.queue_first = nodesarr[0]
+	for i = 0; i < (len(nodesarr) - 1); i++ {
+		nodesarr[i].SetNext(nodesarr[(i + 1)])
+		DebugLogPrintf("node[%s].next (%s)", nodesarr[i].GetName(), nodesarr[i].GetNext().GetName())
+	}
+
+	val = len(nodesarr) - 1
+	nodesarr[val].SetNext(nodesarr[val])
+	DebugLogPrintf("node[%s].next (%s)", nodesarr[val].GetName(), nodesarr[val].GetNext().GetName())
+	graph.queue_last = nodesarr[val]
+	return
+}
+
 /**********************************************
 *function :
 *         to init the BKGraph inner structure
@@ -303,6 +353,8 @@ func (graph *BKGraph) InitGraph(caps *StringGraph, neighbour *Neigbour, source s
 			graph.AddSinkNode(pnode, psinknode)
 		}
 	}
+
+	graph.SortQueueFirst()
 
 	graph.caps = caps
 	graph.neigh = neighbour
@@ -599,7 +651,7 @@ func (graph *BKGraph) GetParents(pnode *Node) string {
 	return s
 }
 
-func (graph *BKGraph) GetNext(pnode *Node) string {
+func (graph *BKGraph) GetNextList(pnode *Node) string {
 	s := "["
 	i := 0
 	if pnode != nil {
@@ -608,13 +660,12 @@ func (graph *BKGraph) GetNext(pnode *Node) string {
 			if i != 0 {
 				s += ","
 			}
-
+			i++
 			s += fmt.Sprintf("%s", curnext.GetName())
-			if curnext == pnode {
+			if curnext.GetNext() == curnext {
 				break
 			}
 			curnext = curnext.GetNext()
-			i++
 
 		}
 	}
@@ -632,7 +683,7 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	} else {
 		DebugLogPrintf("source node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
 	}
-	DebugLogPrintf("node[%s].next (%s)", pnode.GetName(), graph.GetNext(pnode))
+	DebugLogPrintf("node[%s].next (%s)", pnode.GetName(), graph.GetNextList(pnode))
 	DebugLogPrintf("node[%s].parent list(%s)", pnode.GetName(), graph.GetParents(pnode))
 	DebugLogPrintf("------------------------------")
 
@@ -644,15 +695,14 @@ func (graph *BKGraph) GetQueue(pnode *Node) string {
 	i := 0
 	s := "["
 	for curnode != nil {
-		if curnode == curnode.GetNext() {
-			break
-		}
-
 		if i != 0 {
 			s += ","
 		}
 		i++
 		s += fmt.Sprintf("%s", GetNodeName(curnode))
+		if curnode == curnode.GetNext() {
+			break
+		}
 		curnode = curnode.GetNext()
 	}
 
@@ -664,7 +714,7 @@ func (graph *BKGraph) DebugState(desc string) {
 
 	var i, j int
 	var k1s, k2s []string
-	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	DebugLogPrintf("%s", desc)
 	DebugLogPrintf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
 	k1s = graph.neigh.Iter()
@@ -688,7 +738,7 @@ func (graph *BKGraph) DebugState(desc string) {
 		for j = 0; j < len(k2s); j++ {
 			lname := k2s[j]
 			//if graph.CanFlow(curname, lname) {
-			DebugLogPrintf("(%s -> %s ) flow (%d)", curname, lname, graph.GetFlow(curname, lname))
+			DebugLogPrintf("arc[%s->%s].r_cap (%d)", curname, lname, graph.GetFlow(curname, lname))
 			//}
 		}
 	}
@@ -701,7 +751,7 @@ func (graph *BKGraph) DebugState(desc string) {
 			lnode.DisableDebug()
 		}
 	}
-	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
 
@@ -815,7 +865,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 
 	curnode = nil
 	curgetnode = nil
-	graph.DebugState("MaxFlow Init")
+	graph.DebugState("debug state after init")
 	for {
 		srcnode = nil
 		sinknode = nil

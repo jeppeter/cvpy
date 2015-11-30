@@ -370,12 +370,12 @@ class BKGraph:
 		return
 
 	def debug_arc(self,aidx):
-		logging.debug('+++++++++++++++++++++++++++++++')
-		logging.debug('arc[%s].node_head (%s)'%(self.get_arc_name(aidx),self.get_node_name(self.arcs[aidx].node_head)))
-		logging.debug('arc[%s].arc_next list(%s)'%(self.get_arc_name(aidx),self.get_arc_next(aidx)))
-		logging.debug('arc[%s].arc_sister (%s)'%(self.get_arc_name(aidx),self.get_arc_name(self.arcs[aidx].arc_sister)))
+		#logging.debug('+++++++++++++++++++++++++++++++')
+		#logging.debug('arc[%s].node_head (%s)'%(self.get_arc_name(aidx),self.get_node_name(self.arcs[aidx].node_head)))
+		#logging.debug('arc[%s].arc_next list(%s)'%(self.get_arc_name(aidx),self.get_arc_next(aidx)))
+		#logging.debug('arc[%s].arc_sister (%s)'%(self.get_arc_name(aidx),self.get_arc_name(self.arcs[aidx].arc_sister)))
 		logging.debug('arc[%s].r_cap (%d)'%(self.get_arc_name(aidx),self.arcs[aidx].r_cap))
-		logging.debug('-------------------------------')
+		#logging.debug('-------------------------------')
 		return
 
 	def debug_queue_state(self,notice,q):
