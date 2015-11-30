@@ -945,7 +945,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 }
 
 func (graph *BKGraph) FatalLogf(format string, a ...interface{}) {
-	graph.DebugState("")
+	graph.DebugState(fmt.Sprintf("Fatal on (%d)", graph.TIME))
 
 	_, f, l, _ := runtime.Caller(1)
 	s := fmt.Sprintf("%s:%d ", f, l)
