@@ -364,14 +364,16 @@ func (graph *BKGraph) SetSourceSinkConnectedNode(name string) {
 	srcflow = graph.caps.GetValue(graph.source, name)
 	sinkflow = graph.caps.GetValue(name, graph.sink)
 	pnode := graph.nodemap.GetNode(name)
+	psrcnode := graph.nodemap.GetNode(graph.source)
+	psinknode := graph.nodemap.GetNode(graph.sink)
 	if srcflow > sinkflow {
 		addval = sinkflow
 		/*the node has something in the source flow so add to source side*/
-		graph.InitSource(pnode)
+		graph.AddSourceNode(pnode, psrcnode)
 	} else if srcflow < sinkflow {
 		addval = srcflow
 		/*th node has something in the sink flow ,so add to sink side*/
-		graph.InitSink(pnode)
+		graph.AddSinkNode(pnode, psinknode)
 	} else {
 		/*if it is overflow all over ,so not set the node into the active one*/
 		addval = srcflow
@@ -779,28 +781,30 @@ func (graph *BKGraph) GetLinkArcs(pnode *Node) string {
 func (graph *BKGraph) GetParentLists(pnode *Node) string {
 	s := "["
 	i := 0
+	curchld := pnode
 	curparent := pnode.GetParent()
 	for curparent != nil {
 		if i != 0 {
 			s += ","
 		}
 		if curparent.GetName() == graph.source ||
-			curparent.GetName() == graph.sink {
+			curparent.GetName() == graph.sink || curparent == MAXFLOW_TERMINAL {
 			s += "MAXFLOW_TERMINAL"
+			break
+		} else if curparent == MAXFLOW_ORPHAN {
+			s += "MAXFLOW_ORPHAN"
 			break
 		}
 		i++
-		s += fmt.Sprintf("%s", curparent.GetName())
-		curparent = curparent.GetParent()
+		s += fmt.Sprintf("%s(%s->%s)", curparent.GetName(), curchld.GetName(), curparent.GetName())
+		curchld = curparent
+		curparent = curchld.GetParent()
 	}
 	s += fmt.Sprintf("]cnt(%d)", i)
 	return s
 }
 
 func (graph *BKGraph) DebugNode(pnode *Node) {
-	if pnode.GetDebug() {
-		return
-	}
 	DebugLogPrintf("==============================")
 	if pnode.IsSink() {
 		DebugLogPrintf("node[%s].is_sink (True)", pnode.GetName())
@@ -812,8 +816,6 @@ func (graph *BKGraph) DebugNode(pnode *Node) {
 	DebugLogPrintf("node[%s].node_next list(%s)", pnode.GetName(), graph.GetNextList(pnode))
 	DebugLogPrintf("node[%s].TS (%d) node[%s].DIST (%d)", pnode.GetName(), pnode.GetTS(), pnode.GetName(), pnode.GetDist())
 	DebugLogPrintf("******************************")
-
-	pnode.SetDebug()
 }
 
 func (graph *BKGraph) GetQueue(pnode *Node) string {
@@ -881,44 +883,70 @@ func (graph *BKGraph) SortNodesName() []string {
 			}
 		}
 	}
-
 	return nodesnames
+}
 
+func (graph *BKGraph) ArcCap(from string, to string) int {
+	if graph.caps.GetValue(from, to) > 0 {
+		return graph.GetFlow(from, to)
+	}
+
+	if graph.caps.GetValue(to, from) > 0 {
+		/*it is reverse has value ,so get it*/
+		return graph.flows.GetValue(to, from)
+	}
+	return 0
+}
+
+func (graph *BKGraph) DebugArc(from string, to string) {
+	DebugLogPrintf("arc[%s->%s].r_cap (%d)", from, to, graph.ArcCap(from, to))
+	return
+}
+
+func (graph *BKGraph) GetOrphanListNames() string {
+	var pnode *Node
+
+	s := fmt.Sprintf("cnt(%d)[", graph.orphans.Len())
+	cnt := 0
+
+	for curv := graph.orphans.Front(); curv != nil; curv = curv.Next() {
+		if cnt != 0 {
+			s += ","
+		}
+		pnode = curv.Value.(*Node)
+		s += pnode.GetName()
+		cnt++
+	}
+	s += "]"
+	return s
 }
 
 func (graph *BKGraph) DebugState(desc string) {
 
-	var i, j int
-	var k1s, k2s []string
+	var nodes1 []string
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	DebugLogPrintf("%s", desc)
+	nodes1 = graph.SortNodesName()
 
-	for _, curname := range graph.SortNodesName() {
+	for _, curname := range nodes1 {
 		curnode := graph.nodemap.GetNode(curname)
 		graph.DebugNode(curnode)
 	}
 
-	k1s = graph.neigh.Iter()
-	for i = 0; i < len(k1s); i++ {
-		curname := k1s[i]
-		k2s = graph.neigh.GetValue(curname)
-		for j = 0; j < len(k2s); j++ {
-			lname := k2s[j]
-			//if graph.CanFlow(curname, lname) {
-			DebugLogPrintf("arc[%s->%s].r_cap (%d)", curname, lname, graph.GetFlow(curname, lname))
-			//}
+	for _, from := range nodes1 {
+		if from == graph.source || from == graph.sink {
+			continue
 		}
-	}
-
-	for _, curname := range graph.neigh.Iter() {
-		curnode := graph.nodemap.GetNode(curname)
-		curnode.DisableDebug()
-		for _, lname := range graph.neigh.GetValue(curname) {
-			lnode := graph.nodemap.GetNode(lname)
-			lnode.DisableDebug()
+		for _, to := range graph.neigh.GetValue(from) {
+			if to == graph.sink || to == graph.source {
+				continue
+			}
+			graph.DebugArc(from, to)
 		}
 	}
 	DebugLogPrintf("queue_first list(%s)", graph.GetQueue(graph.queue_first))
+	DebugLogPrintf("TIME (%d) flow (%d)", graph.TIME, graph.flow)
+	DebugLogPrintf("orphan_list (%s)", graph.GetOrphanListNames())
 	DebugLogPrintf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	return
 }
@@ -931,7 +959,6 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 	DebugLogPrintf("srcnode (%s) sinknode (%s)", srcnode.GetName(), sinknode.GetName())
 
 	bottlecap = graph.GetFlow(srcnode.GetName(), sinknode.GetName())
-
 	/*now we should check source side*/
 	curparent = srcnode.GetParent()
 	curchld = srcnode
@@ -973,6 +1000,7 @@ func (graph *BKGraph) Augment(srcnode *Node, sinknode *Node) int {
 		curchld = curparent
 		curparent = curchld.GetParent()
 	}
+	DebugLogPrintf("bottlecap (%d)", bottlecap)
 
 	/*now we get the bottle cap ,and add it to the flow*/
 	graph.AddFlow(srcnode.GetName(), sinknode.GetName(), bottlecap)
@@ -1129,14 +1157,14 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 		}
 
 		graph.TIME += 1
-		graph.DebugState(fmt.Sprintf("After Handle (%d)", graph.TIME))
+		graph.DebugState(fmt.Sprintf("debug state after arcs handle(%d)", graph.TIME))
 
 		if srcnode != nil && sinknode != nil {
 			curnode.SetNext(curnode)
 			curgetnode = curnode
 
 			orph := graph.Augment(srcnode, sinknode)
-			graph.DebugState(fmt.Sprintf("After Augment (%d)", graph.TIME))
+			graph.DebugState(fmt.Sprintf("debug state after augment(%d)", graph.TIME))
 			if orph > 0 {
 				for {
 					orphan := graph.GetOrphan()
@@ -1152,7 +1180,7 @@ func (graph *BKGraph) MaxFlow() (flow int, err error) {
 					}
 				}
 			}
-			graph.DebugState(fmt.Sprintf("After Orphan handle (%d)", graph.TIME))
+			graph.DebugState(fmt.Sprintf("debug state after orphan handle (%d)", graph.TIME))
 		} else {
 			curgetnode = nil
 		}
