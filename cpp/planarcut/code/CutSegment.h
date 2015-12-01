@@ -34,40 +34,40 @@ class CutSegment : private CutGrid
 {
 private:
 
-  int DirToOfs[4];
+    int DirToOfs[4];
 
-  enum EMask {
-    IDX_SINK,
-    IDX_SOURCE,
-    IDX_UNDETERMINED,
-  };
+    enum EMask {
+        IDX_SINK,
+        IDX_SOURCE,
+        IDX_UNDETERMINED,
+    };
 
-  uchar *imData;
-  EMask *imMask;
-  bool bFormatRGB;
+    uchar *imData;
+    EMask *imMask;
+    bool bFormatRGB;
 
-  int width;
-  int height;
+    int width;
+    int height;
 
-  CapType edgeCost(int row, int col, EDir dir);
+    CapType edgeCost(int row, int col, EDir dir);
 
 public:
-  CutSegment(int width, int height);
-  virtual ~CutSegment();
+    CutSegment(int width, int height);
+    virtual ~CutSegment();
 
-  void setImageData(const uchar *grey);
-  void setImageData(const uchar *r, const uchar *g, const uchar *b);
+    void setImageData(const uchar *grey);
+    void setImageData(const uchar *r, const uchar *g, const uchar *b);
 
-  void setSourceSink(const uchar *stMask, uchar source, uchar sink);
+    void setSourceSink(const uchar *stMask, uchar source, uchar sink);
 
-  virtual double gradient(double color1, double color2);       //greyscale information of adjacent pixels
-  virtual double gradient(double color1[3], double color2[3]); //RGB-color information of adjacent pixels
+    virtual double gradient(double color1, double color2);       //greyscale information of adjacent pixels
+    virtual double gradient(double color1[3], double color2[3]); //RGB-color information of adjacent pixels
 
-  double segment();
+    double segment();
 
-  CutPlanar::ELabel getLabel(int x, int y);
+    CutPlanar::ELabel getLabel(int x, int y);
 
-  void getLabels(CutPlanar::ELabel *lmask);
+    void getLabels(CutPlanar::ELabel *lmask);
 };
 
 

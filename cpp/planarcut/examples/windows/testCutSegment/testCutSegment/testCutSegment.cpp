@@ -37,241 +37,248 @@
 using namespace std;
 
 
-unsigned char *loadSimplePPM(int &w, int &h, const string &filename) {
+unsigned char *loadSimplePPM(int &w, int &h, const string &filename)
+{
 
-  char line[1000];
-  int depth = 0;
-  unsigned char *rgb = 0;
-  long lastpos;
+    char line[1000];
+    int depth = 0;
+    unsigned char *rgb = 0;
+    long lastpos;
 
-  /*  streampos lastpos;
-      ifstream ifs(filename.c_str(), ios_base::binary);*/
+    /*  streampos lastpos;
+        ifstream ifs(filename.c_str(), ios_base::binary);*/
 
-  FILE *fh = fopen(filename.c_str(), "rb");
-  if (fh == NULL) {
-    cerr << "can not open " << filename.c_str() << endl;
-    exit(4);
-  }
+    FILE *fh = fopen(filename.c_str(), "rb");
+    if (fh == NULL) {
+        cerr << "can not open " << filename.c_str() << endl;
+        exit(4);
+    }
 
-  w = 0, h = 0;
-
-  fgets(line, 1000, fh);
-
-  if (strcmp(line, "P6\n")) {
-    cerr << filename << " is no PPM-Datei\n";
-    return false;
-  }
-
-  while (!feof(fh)) {
-
-    lastpos = ftell(fh);
+    w = 0, h = 0;
 
     fgets(line, 1000, fh);
 
-    if (line[0] == '#') {
-      //      cout << "Comment: " << line;
-    } else if (!w) {
-      if (sscanf(line, "%d %d", &w, &h) < 2) {
-        cerr << "error while reading the file " << filename;
-        cerr << " expected width and height of image\n";
-        return 0;
-      }
-    } else if (!depth) {
-      if (sscanf(line, "%d", &depth) < 1) {
-        cerr << "error while reading the file " << filename;
-        cerr << " expected color depth\n";
-        return 0;
-      }
-    } else {
-      rgb = new unsigned char[w * h * 3];
-      fseek(fh, lastpos, SEEK_SET);
-      fread(rgb, 1, w * h * 3, fh);
-      break;
+    if (strcmp(line, "P6\n")) {
+        cerr << filename << " is no PPM-Datei\n";
+        return false;
     }
 
-  }
+    while (!feof(fh)) {
 
-  fclose(fh);
+        lastpos = ftell(fh);
 
-  return rgb;
+        fgets(line, 1000, fh);
 
-}
+        if (line[0] == '#') {
+            //      cout << "Comment: " << line;
+        } else if (!w) {
+            if (sscanf(line, "%d %d", &w, &h) < 2) {
+                cerr << "error while reading the file " << filename;
+                cerr << " expected width and height of image\n";
+                return 0;
+            }
+        } else if (!depth) {
+            if (sscanf(line, "%d", &depth) < 1) {
+                cerr << "error while reading the file " << filename;
+                cerr << " expected color depth\n";
+                return 0;
+            }
+        } else {
+            rgb = new unsigned char[w * h * 3];
+            fseek(fh, lastpos, SEEK_SET);
+            fread(rgb, 1, w * h * 3, fh);
+            break;
+        }
 
+    }
 
-bool saveSimplePPM(unsigned char *rgb, int w, int h, const string &filename) {
+    fclose(fh);
 
-  ofstream fos(filename.c_str(), ios_base::binary);
-  ostringstream ost;
-  string s;
-
-  if (!fos)
-    return false;
-
-  fos << "P6" << endl;
-
-  ost << w << " " << h << endl;
-
-  fos << ost.str();
-  fos << "255" << endl;
-
-  fos.write((const char*)rgb, w * h * 3);
-
-  fos.close();
-
-  return true;
-
-}
-
-
-unsigned char *RGBDataToGrey(unsigned char *rgb, int w, int h) {
-
-  unsigned char *pic = new unsigned char[w * h];
-  int i;
-
-  for (i = 0; i < w * h; i++)
-    pic[i] = rgb[i * 3];
-
-  return pic;
+    return rgb;
 
 }
 
 
-unsigned char *GreyDataToRGB(unsigned char *pic, int w, int h) {
+bool saveSimplePPM(unsigned char *rgb, int w, int h, const string &filename)
+{
 
-  unsigned char *rgb = new unsigned char[w * h * 3];
-  int i;
+    ofstream fos(filename.c_str(), ios_base::binary);
+    ostringstream ost;
+    string s;
 
-  for (i = 0; i < w * h; i++)
-    rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = pic[i];
+    if (!fos)
+        return false;
 
-  return rgb;
+    fos << "P6" << endl;
+
+    ost << w << " " << h << endl;
+
+    fos << ost.str();
+    fos << "255" << endl;
+
+    fos.write((const char*)rgb, w * h * 3);
+
+    fos.close();
+
+    return true;
+
+}
+
+
+unsigned char *RGBDataToGrey(unsigned char *rgb, int w, int h)
+{
+
+    unsigned char *pic = new unsigned char[w * h];
+    int i;
+
+    for (i = 0; i < w * h; i++)
+        pic[i] = rgb[i * 3];
+
+    return pic;
+
+}
+
+
+unsigned char *GreyDataToRGB(unsigned char *pic, int w, int h)
+{
+
+    unsigned char *rgb = new unsigned char[w * h * 3];
+    int i;
+
+    for (i = 0; i < w * h; i++)
+        rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = pic[i];
+
+    return rgb;
 
 }
 
 
 unsigned char *SegMaskAndGreyDataToRGB(CutPlanar::ELabel *mask,
                                        unsigned char *pic,
-                                       int w, int h) {
+                                       int w, int h)
+{
 
-  unsigned char *rgb = new unsigned char[w * h * 3];
-  int i;
+    unsigned char *rgb = new unsigned char[w * h * 3];
+    int i;
 
-  for (i = 0; i < w * h; i++) {
+    for (i = 0; i < w * h; i++) {
 
-    rgb[i * 3] = (mask[i] == CutPlanar::LABEL_SINK) ? (unsigned char)(pic[i * 3] / 255.f * 200.f) : 255;
-    rgb[i * 3 + 1] = (unsigned char)(pic[i * 3 + 1] / 255.f * 200.f);
-    rgb[i * 3 + 2] = (mask[i] == CutPlanar::LABEL_SINK) ? 255 : (unsigned char)(pic[i * 3 + 2] / 255.f * 200.f);
+        rgb[i * 3] = (mask[i] == CutPlanar::LABEL_SINK) ? (unsigned char)(pic[i * 3] / 255.f * 200.f) : 255;
+        rgb[i * 3 + 1] = (unsigned char)(pic[i * 3 + 1] / 255.f * 200.f);
+        rgb[i * 3 + 2] = (mask[i] == CutPlanar::LABEL_SINK) ? 255 : (unsigned char)(pic[i * 3 + 2] / 255.f * 200.f);
 
-  }
+    }
 
-  return rgb;
-
-}
-
-
-unsigned char *getSegmentationInfo(unsigned char *rgb, int w, int h) {
-
-  unsigned char *seginfo = new unsigned char[w * h];
-  unsigned char r, g, b;
-  int i;
-
-  for (i = 0; i < w * h; i++) {
-
-    r = rgb[i * 3];
-    g = rgb[i * 3 + 1];
-    b = rgb[i * 3 + 2];
-
-    if (r >= 240 &&
-        g <= 10  &&
-        b <= 10) {
-      seginfo[i] = 1;
-    } else if (r <= 10 &&
-               g <= 10 &&
-               b >= 240) {
-      seginfo[i] = 2;
-    } else {
-      seginfo[i] = 0;
-    };
-
-  }
-
-  return seginfo;
+    return rgb;
 
 }
 
 
+unsigned char *getSegmentationInfo(unsigned char *rgb, int w, int h)
+{
 
-int _tmain(int argc, _TCHAR* argv[]) {
+    unsigned char *seginfo = new unsigned char[w * h];
+    unsigned char r, g, b;
+    int i;
 
-  CutSegment *sc;
-  int w, h;
-  uchar *seg, *rgb, *rgbNew, *grey;
-  CutPlanar::ELabel *mask;
+    for (i = 0; i < w * h; i++) {
 
-  if (argc < 2) {
-    cerr << "calling convention: testCutGrid [image-filename]\n"
-         << "for example: 'testCutSegment ../../../pics/walk.ppm'\n\n";
-    return -1;
-  }
+        r = rgb[i * 3];
+        g = rgb[i * 3 + 1];
+        b = rgb[i * 3 + 2];
 
+        if (r >= 240 &&
+                g <= 10  &&
+                b <= 10) {
+            seginfo[i] = 1;
+        } else if (r <= 10 &&
+                   g <= 10 &&
+                   b >= 240) {
+            seginfo[i] = 2;
+        } else {
+            seginfo[i] = 0;
+        };
 
-  size_t pos;
-  string picname, segname, basename, suffix;
-  char tmp[4096]; //just needed for windows character conversion
+    }
 
-  WideCharToMultiByte(CP_ACP, 0, argv[1], -1, tmp, 4096, NULL, NULL);
-  picname = tmp;
-  pos = picname.rfind(".ppm");
+    return seginfo;
 
-  if (pos == string::npos) {
-    cerr << "testCutGrid only accepts .ppm images\n";
-    return -1;
-  }
-
-  suffix = picname.substr(pos);
-  basename = picname.substr(0, pos);
-
-  picname = basename + suffix;
-  segname = basename + "seg" + suffix;
-
-  DEBUG_OUT("segname %s\n", segname.c_str());
-  //load the input images from file
-  rgb = loadSimplePPM(w, h, segname);
-  seg = getSegmentationInfo(rgb, w, h);
-  delete [] rgb;
-  rgb = loadSimplePPM(w, h, picname);
-  DEBUG_OUT("\n");
-  grey = RGBDataToGrey(rgb, w, h);
-  DEBUG_OUT("\n");
-  cout << "Image width: " << w << " and image height " << h << endl;
-
-  //perform segmentation task
-  sc = new CutSegment(w, h);
-  sc->setImageData(grey);
-  DEBUG_OUT("\n");
-  sc->setSourceSink(seg, 1, 2);
-  DEBUG_OUT("\n");
-  cout << "Cut: " << sc->segment() << "\n";
-  DEBUG_OUT("\n");
-  mask = new CutPlanar::ELabel[w * h];
-  sc->getLabels(mask);
-  DEBUG_OUT("\n");
-  delete sc;
-
-  //read out segmentation result and save to disk
-  rgbNew = SegMaskAndGreyDataToRGB(mask, rgb, w, h);
-  DEBUG_OUT("\n");
-  saveSimplePPM(rgbNew, w, h, string("segresult.ppm"));
-  DEBUG_OUT("\n");
-  cout << "\nSegmentation result written to 'segresult.ppm'\n\n";
+}
 
 
-  delete [] grey;
-  delete [] rgb;
-  delete [] rgbNew;
-  delete [] seg;
-  delete [] mask;
 
-  return 0;
+int _tmain(int argc, _TCHAR* argv[])
+{
+
+    CutSegment *sc;
+    int w, h;
+    uchar *seg, *rgb, *rgbNew, *grey;
+    CutPlanar::ELabel *mask;
+
+    if (argc < 2) {
+        cerr << "calling convention: testCutGrid [image-filename]\n"
+             << "for example: 'testCutSegment ../../../pics/walk.ppm'\n\n";
+        return -1;
+    }
+
+
+    size_t pos;
+    string picname, segname, basename, suffix;
+    char tmp[4096]; //just needed for windows character conversion
+
+    WideCharToMultiByte(CP_ACP, 0, argv[1], -1, tmp, 4096, NULL, NULL);
+    picname = tmp;
+    pos = picname.rfind(".ppm");
+
+    if (pos == string::npos) {
+        cerr << "testCutGrid only accepts .ppm images\n";
+        return -1;
+    }
+
+    suffix = picname.substr(pos);
+    basename = picname.substr(0, pos);
+
+    picname = basename + suffix;
+    segname = basename + "seg" + suffix;
+
+    DEBUG_OUT("segname %s\n", segname.c_str());
+    //load the input images from file
+    rgb = loadSimplePPM(w, h, segname);
+    seg = getSegmentationInfo(rgb, w, h);
+    delete [] rgb;
+    rgb = loadSimplePPM(w, h, picname);
+    DEBUG_OUT("\n");
+    grey = RGBDataToGrey(rgb, w, h);
+    DEBUG_OUT("\n");
+    cout << "Image width: " << w << " and image height " << h << endl;
+
+    //perform segmentation task
+    sc = new CutSegment(w, h);
+    sc->setImageData(grey);
+    DEBUG_OUT("\n");
+    sc->setSourceSink(seg, 1, 2);
+    DEBUG_OUT("\n");
+    cout << "Cut: " << sc->segment() << "\n";
+    DEBUG_OUT("\n");
+    mask = new CutPlanar::ELabel[w * h];
+    sc->getLabels(mask);
+    DEBUG_OUT("\n");
+    delete sc;
+
+    //read out segmentation result and save to disk
+    rgbNew = SegMaskAndGreyDataToRGB(mask, rgb, w, h);
+    DEBUG_OUT("\n");
+    saveSimplePPM(rgbNew, w, h, string("segresult.ppm"));
+    DEBUG_OUT("\n");
+    cout << "\nSegmentation result written to 'segresult.ppm'\n\n";
+
+
+    delete [] grey;
+    delete [] rgb;
+    delete [] rgbNew;
+    delete [] seg;
+    delete [] mask;
+
+    return 0;
 
 }

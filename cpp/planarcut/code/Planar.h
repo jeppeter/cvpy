@@ -33,96 +33,98 @@ class PlanarFace
 
 class PlanarEdge
 {
-  friend class PlanarVertex; //for efficiency vertex and edge are closely connected
+    friend class PlanarVertex; //for efficiency vertex and edge are closely connected
 
-  CapType cap;  //forward edge capacity
-  CapType rcap; //backward edge capacity
+    CapType cap;  //forward edge capacity
+    CapType rcap; //backward edge capacity
 
-  PlanarVertex *tail;     //an edge points from the tail vertex
-  PlanarVertex *head;     //to the head vertex.
+    PlanarVertex *tail;     //an edge points from the tail vertex
+    PlanarVertex *head;     //to the head vertex.
 
-  PlanarFace   *tailDual; //the face left of the edge wrt. the pointing direction
-  PlanarFace   *headDual; //the face right of the edge wrt. the pointing direction
+    PlanarFace   *tailDual; //the face left of the edge wrt. the pointing direction
+    PlanarFace   *headDual; //the face right of the edge wrt. the pointing direction
 
-  //these are for fast access to edge IDs
-  int tailEdgeID; //the ID of this edge with respect to the tail vertex
-  int headEdgeID; //the ID of this edge with respect to the head vertex
+    //these are for fast access to edge IDs
+    int tailEdgeID; //the ID of this edge with respect to the tail vertex
+    int headEdgeID; //the ID of this edge with respect to the head vertex
 
-  uchar  flags; //a maximum of 8 flags that can be used freely
+    uchar  flags; //a maximum of 8 flags that can be used freely
 
 
 public:
 
-  PlanarEdge();
-  CapType getCapacity() { return cap; }
-  CapType getRevCapacity() { return rcap; }
+    PlanarEdge();
+    CapType getCapacity() { return cap; }
+    CapType getRevCapacity() { return rcap; }
 
-  void   setCapacity(CapType cap) { this->cap = cap; }
-  void   setRevCapacity(CapType rcap) { this->rcap = rcap; }
+    void   setCapacity(CapType cap) { this->cap = cap; }
+    void   setRevCapacity(CapType rcap) { this->rcap = rcap; }
 
-  void   setEdge(PlanarVertex *tail,     PlanarVertex *head,
-                 PlanarFace   *tailDual, PlanarFace   *headDual,
-                 CapType cap = 1.0, CapType rcap = 0.0);
+    void   setEdge(PlanarVertex *tail,     PlanarVertex *head,
+                   PlanarFace   *tailDual, PlanarFace   *headDual,
+                   CapType cap = 1.0, CapType rcap = 0.0);
 
-  void  setFlags(uchar value) { flags = value; }
-  uchar getFlags() { return flags; }
+    void  setFlags(uchar value) { flags = value; }
+    uchar getFlags() { return flags; }
 
-  PlanarVertex *getHead() { return head; }
-  PlanarVertex *getTail() { return tail; }
-  PlanarFace   *getHeadDual() { return headDual; }
-  PlanarFace   *getTailDual() { return tailDual; }
+    PlanarVertex *getHead() { return head; }
+    PlanarVertex *getTail() { return tail; }
+    PlanarFace   *getHeadDual() { return headDual; }
+    PlanarFace   *getTailDual() { return tailDual; }
 
 };
 
 class PlanarVertex
 {
-  friend class PlanarEdge; //for efficiency vertex and edge are closely connected
+    friend class PlanarEdge; //for efficiency vertex and edge are closely connected
 
-  int nEdges;             //number of adjacent edges
-  PlanarEdge **edgesCCW;  //ccw list of adjacent edges
+    int nEdges;             //number of adjacent edges
+    PlanarEdge **edgesCCW;  //ccw list of adjacent edges
 
 public:
-  PlanarVertex();
-  ~PlanarVertex();
+    PlanarVertex();
+    ~PlanarVertex();
 
-  int         getNumEdges() { return nEdges; };
-  PlanarEdge *getEdge(int id) { id = id % nEdges; return (id < 0) ? edgesCCW[id + nEdges] : edgesCCW[id]; };
-  inline void setEdgesCCW(PlanarEdge **ccw, int nEdges);
-  inline int  getEdgeID(PlanarEdge *e);
+    int         getNumEdges() { return nEdges; };
+    PlanarEdge *getEdge(int id) { id = id % nEdges; return (id < 0) ? edgesCCW[id + nEdges] : edgesCCW[id]; };
+    inline void setEdgesCCW(PlanarEdge **ccw, int nEdges);
+    inline int  getEdgeID(PlanarEdge *e);
 };
 
 
 /***************************************************
  *** PlanarVertex INLINE ***************************
  ***************************************************/
-void PlanarVertex::setEdgesCCW(PlanarEdge **ccw, int nEdges) {
+void PlanarVertex::setEdgesCCW(PlanarEdge **ccw, int nEdges)
+{
 
-  if (nEdges != this->nEdges) {
-    if (this->nEdges)
-      delete [] edgesCCW;
-    if (nEdges)
-      edgesCCW = new PlanarEdge*[nEdges];
-    this->nEdges = nEdges;
-  }
-  for (int i = 0; i < nEdges; i++) {
-    edgesCCW[i] = ccw[i];
-    if (edgesCCW[i]->getTail() == this)
-      edgesCCW[i]->tailEdgeID = i;
-    else if (edgesCCW[i]->getHead() == this)
-      edgesCCW[i]->headEdgeID = i;
-  }
+    if (nEdges != this->nEdges) {
+        if (this->nEdges)
+            delete [] edgesCCW;
+        if (nEdges)
+            edgesCCW = new PlanarEdge*[nEdges];
+        this->nEdges = nEdges;
+    }
+    for (int i = 0; i < nEdges; i++) {
+        edgesCCW[i] = ccw[i];
+        if (edgesCCW[i]->getTail() == this)
+            edgesCCW[i]->tailEdgeID = i;
+        else if (edgesCCW[i]->getHead() == this)
+            edgesCCW[i]->headEdgeID = i;
+    }
 
 }
 
 
-int PlanarVertex::getEdgeID(PlanarEdge *e) {
-  //for efficiency edge IDs are stored in the edges themselves
-  if (e->getTail() == this)
-    return e->tailEdgeID;
-  else if (e->getHead() == this)
-    return e->headEdgeID;
-  else
-    return -1;
+int PlanarVertex::getEdgeID(PlanarEdge *e)
+{
+    //for efficiency edge IDs are stored in the edges themselves
+    if (e->getTail() == this)
+        return e->tailEdgeID;
+    else if (e->getHead() == this)
+        return e->headEdgeID;
+    else
+        return -1;
 }
 
 #endif
