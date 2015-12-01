@@ -6,18 +6,18 @@
 *                          Frank R. Schmidt <info@frank-r-schmidt.de>        *
 ******************************************************************************
 
-  If you use this software for research purposes, YOU MUST CITE the following 
+  If you use this software for research purposes, YOU MUST CITE the following
   paper in any resulting publication:
 
     [1] Efficient Planar Graph Cuts with Applications in Computer Vision.
-        F. R. Schmidt, E. Töppe, D. Cremers, 
-	    IEEE CVPR, Miami, Florida, June 2009		
+        F. R. Schmidt, E. Töppe, D. Cremers,
+      IEEE CVPR, Miami, Florida, June 2009
 
 ******************************************************************************
 
   This software is released under the LGPL license. Details are explained
   in the files 'COPYING' and 'COPYING.LESSER'.
-	
+
 *****************************************************************************/
 
 #ifndef __CUTSEGMENT_H__
@@ -32,11 +32,11 @@ class CutSegment;
 
 class CutSegment : private CutGrid
 {
- private:
+private:
 
   int DirToOfs[4];
 
-  enum EMask { 
+  enum EMask {
     IDX_SINK,
     IDX_SOURCE,
     IDX_UNDETERMINED,
@@ -51,7 +51,7 @@ class CutSegment : private CutGrid
 
   CapType edgeCost(int row, int col, EDir dir);
 
- public:
+public:
   CutSegment(int width, int height);
   virtual ~CutSegment();
 
@@ -59,10 +59,10 @@ class CutSegment : private CutGrid
   void setImageData(const uchar *r, const uchar *g, const uchar *b);
 
   void setSourceSink(const uchar *stMask, uchar source, uchar sink);
-  
+
   virtual double gradient(double color1, double color2);       //greyscale information of adjacent pixels
   virtual double gradient(double color1[3], double color2[3]); //RGB-color information of adjacent pixels
-  
+
   double segment();
 
   CutPlanar::ELabel getLabel(int x, int y);

@@ -6,18 +6,18 @@
 *                          Frank R. Schmidt <info@frank-r-schmidt.de>        *
 ******************************************************************************
 
-  If you use this software for research purposes, YOU MUST CITE the following 
+  If you use this software for research purposes, YOU MUST CITE the following
   paper in any resulting publication:
 
     [1] Efficient Planar Graph Cuts with Applications in Computer Vision.
-        F. R. Schmidt, E. Töppe, D. Cremers, 
-	    IEEE CVPR, Miami, Florida, June 2009		
+        F. R. Schmidt, E. Töppe, D. Cremers,
+      IEEE CVPR, Miami, Florida, June 2009
 
 ******************************************************************************
 
   This software is released under the LGPL license. Details are explained
   in the files 'COPYING' and 'COPYING.LESSER'.
-	
+
 *****************************************************************************/
 
 #ifndef __CUTPLANAR_H__
@@ -30,19 +30,19 @@
 #include <vector>
 
 
-class CutPlanar 
+class CutPlanar
 {
 public:
   static const int FIRST_VERT =  0;
   static const int LAST_VERT  = -1;
 
-  enum ECheckFlags 
+  enum ECheckFlags
   {
     CHECK_NONE              = 0x00,
     CHECK_CONNECTIVITY      = 0x01,
     CHECK_NON_NEGATIVE_COST = 0x02,
     CHECK_PLANARITY         = 0x04,
-    CHECK_ALL               = 0xFF, 
+    CHECK_ALL               = 0xFF,
   };
 
   enum ELabel
@@ -58,11 +58,11 @@ public:
   //define graph
   //class works in state, i.e., the arrays may be altered.
   void initialize(int numVerts, PlanarVertex *vertexList,
-		  int numEdges, PlanarEdge   *edgeList,
-		  int numFaces, PlanarFace   *faceList,
-		  int idxSource          = FIRST_VERT,  //sets which node should be source
-		  int idxSink            = LAST_VERT,   //sets which node should be sink
-		  ECheckFlags checkInput = CHECK_ALL);  //enables advanced input validation
+                  int numEdges, PlanarEdge   *edgeList,
+                  int numFaces, PlanarFace   *faceList,
+                  int idxSource          = FIRST_VERT,  //sets which node should be source
+                  int idxSink            = LAST_VERT,   //sets which node should be sink
+                  ECheckFlags checkInput = CHECK_ALL);  //enables advanced input validation
 
   void setSource(int idxSource);
   void setSink  (int idxSink);
@@ -80,7 +80,7 @@ protected:
   virtual void performChecks(ECheckFlags checks);
 
 
-  
+
 private:
   // planar encoding
   int nVerts;
@@ -92,14 +92,14 @@ private:
   // source and sink
   int sourceID; // previously PlanarVertex *pvSource
   int sinkID;   // previously PlanarVertex *pvSink
-  
+
   bool computedFlow; // stores whether the flow is already computed
-                     // has to be maintained by 'maxflow' and 'initialize'
+  // has to be maintained by 'maxflow' and 'initialize'
   double maxFlow;
   double capEps;     // zero capacity darts are replaced by this value
 
-  PlanarFace *pfStartOfCut; //if computedFlow, retains the first 
-                            //face of the cut loop in T*
+  PlanarFace *pfStartOfCut; //if computedFlow, retains the first
+  //face of the cut loop in T*
 
   //primal spanning tree
   DynLeaf *primalTreeNodes; //nodes of the primal spanning tree
@@ -113,9 +113,9 @@ private:
   bool completelyLabeled;
   bool *isLabeled;
   ELabel *labels;
-  
+
   //set during constructSpanningTrees() if Source is blocked
-  bool isSourceBlocked; 
+  bool isSourceBlocked;
 
   //definition of planar input graph
 

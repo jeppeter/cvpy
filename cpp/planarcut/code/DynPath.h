@@ -6,18 +6,18 @@
 *                          Frank R. Schmidt <info@frank-r-schmidt.de>        *
 ******************************************************************************
 
-  If you use this software for research purposes, YOU MUST CITE the following 
+  If you use this software for research purposes, YOU MUST CITE the following
   paper in any resulting publication:
 
     [1] Efficient Planar Graph Cuts with Applications in Computer Vision.
-        F. R. Schmidt, E. Töppe, D. Cremers, 
-	    IEEE CVPR, Miami, Florida, June 2009		
+        F. R. Schmidt, E. Töppe, D. Cremers,
+      IEEE CVPR, Miami, Florida, June 2009
 
 ******************************************************************************
 
   This software is released under the LGPL license. Details are explained
   in the files 'COPYING' and 'COPYING.LESSER'.
-	
+
 *****************************************************************************/
 
 #ifndef __DYNPATH_H__
@@ -71,21 +71,21 @@ struct ResultSplit {
 class DynNode {
 
   unsigned char reversed;
-  
-public: 
+
+public:
   //the temp flag is used by prepareRootPath to remember the
   //computed reverse states of the nodes on the path to the root
   bool getTemp() { return (reversed & TMP_MASK) != 0; };
-  void setTemp(bool b) { if (getTemp()!=b) reversed ^= TMP_MASK; };
+  void setTemp(bool b) { if (getTemp() != b) reversed ^= TMP_MASK; };
 
   //the mapping flag indicates wether the forward cost describe the
   //cost of the arc- or the anti-arc of the corresponding edge in the graph
-  bool getMapping() { return (reversed & MAP_MASK) != 0; }; 
-  void setMapping(bool b) { if (getMapping()!=b) reversed ^= MAP_MASK; };
+  bool getMapping() { return (reversed & MAP_MASK) != 0; };
+  void setMapping(bool b) { if (getMapping() != b) reversed ^= MAP_MASK; };
 
   //reversed state access
   bool getReversed() { return (reversed & REV_MASK) != 0; };
-  void setReversed(bool b) { if (getReversed()!=b) reversed ^= REV_MASK; };
+  void setReversed(bool b) { if (getReversed() != b) reversed ^= REV_MASK; };
 
   //sets pn as the left/right child - this will only set the structural relationship!
   //no cost fields are reset or updated!
@@ -121,16 +121,16 @@ public:
 
   DynNode();
 
-  CapType getNetMin(bool rState=false) { return (rState ? netMinR : netMin); };
-  CapType getNetCost(bool rState=false) { return (rState ? netCostR : netCost); };
+  CapType getNetMin(bool rState = false) { return (rState ? netMinR : netMin); };
+  CapType getNetCost(bool rState = false) { return (rState ? netCostR : netCost); };
 
-  void setNetMin(CapType netMin, bool rState=false);
-  void setNetCost(CapType netCost, bool rState=false);
+  void setNetMin(CapType netMin, bool rState = false);
+  void setNetCost(CapType netCost, bool rState = false);
 
   //returns pointer to the net (minimal)costs in forward and backward
   //direction while respecting the reverse state (rState: reversed state of parent)
-  void getNetMinPtr(CapType **pNetMin, CapType **pNetMinR, bool rState=false); 
-  void getNetCostPtr(CapType **pNetCost, CapType **pNetCostR, bool rState=false);
+  void getNetMinPtr(CapType **pNetMin, CapType **pNetMinR, bool rState = false);
+  void getNetCostPtr(CapType **pNetCost, CapType **pNetCostR, bool rState = false);
 
   //normalizes reverse state to zero while leaving the tree structure unchanged
   void normalizeReverseState();
@@ -151,9 +151,9 @@ public:
 //DynLeafs constitute actual nodes in the DynTREE and can therefore be
 //connected across different DynRoots (as they can be weakly connected)
 
-//A DynRoot is nothing but a binary tree of DynNodes. 
+//A DynRoot is nothing but a binary tree of DynNodes.
 //A single DynRoot is represented by the root node of the corresponding tree.
-//In a way a DynRoot can therefore be regarded as a DynNode and is directly 
+//In a way a DynRoot can therefore be regarded as a DynNode and is directly
 //derived from it.
 class DynRoot : private DynNode {
 
@@ -164,14 +164,14 @@ class DynRoot : private DynNode {
 
   //creates a new root with "this" as left and rightPath as right child
   //NOTE: does no rebalancing of resulting tree!
-  DynRoot *construct(DynRoot *rightPath, CapType cost, CapType costR, 
-		     bool revMapping=false, void *data=0);
+  DynRoot *construct(DynRoot *rightPath, CapType cost, CapType costR,
+                     bool revMapping = false, void *data = 0);
 
   //used by DynLeaf::expose(): detects the next weak connection on the
-  //path to the DynTree root and converts it to a strong one 
-  DynRoot *splice(); 
+  //path to the DynTree root and converts it to a strong one
+  DynRoot *splice();
 
- public:
+public:
 
   DynRoot();
 
@@ -186,10 +186,10 @@ class DynRoot : private DynNode {
   DynLeaf *getMinCostLeaf();      //get node closest to tail having minimal edge costs along path
   void     addCost(CapType cost); //increases weights of all edges within path
   void     reverse();             //NOTE: may be applied to the root only!
-  DynRoot *concatenate(DynRoot *rightPath, 
-		       CapType cost, CapType costR, 
-		       bool revMapping=false, 
-		       void *data=0); 
+  DynRoot *concatenate(DynRoot *rightPath,
+                       CapType cost, CapType costR,
+                       bool revMapping = false,
+                       void *data = 0);
   void     destroy(ResultDestroy *dr);
 
 
@@ -198,7 +198,7 @@ class DynRoot : private DynNode {
   bool checkCostIntegrity(); //checks on the cost field integrity of the DynRoot
   bool checkStructuralIntegrity(); //checks on the structural integrity of the DynRoot
 #endif
- 
+
 };
 
 
@@ -208,9 +208,9 @@ class DynRoot : private DynNode {
 
 
 
-//A DynLeaf is a DynNode that is part of a DynRoot binary tree and is a leaf 
-//(has no children). It provides operations on the path that is represented 
-//by the chain of leaf nodes of the binary DynRoot tree. The operations 
+//A DynLeaf is a DynNode that is part of a DynRoot binary tree and is a leaf
+//(has no children). It provides operations on the path that is represented
+//by the chain of leaf nodes of the binary DynRoot tree. The operations
 //always act on the path the calling leaf node is part of and with
 //respect to the calling leaf node.
 class DynLeaf : private DynNode {
@@ -222,8 +222,8 @@ class DynLeaf : private DynNode {
   CapType  wCost;   //cost of the weak connection in forward direction
   CapType  wCostR;  //cost of the weak connection in backward direction
 
-  //static stack declarations - 
-  //use a global stacks for path computations so they do not have to be 
+  //static stack declarations -
+  //use a global stacks for path computations so they do not have to be
   //allocated for each call separately
 
   //stack pointer
@@ -236,7 +236,7 @@ class DynLeaf : private DynNode {
   static int idxDataL;
   static int idxDataR;
   static int idxRPath;
-  
+
   //stacks
   static DynRoot* stackRightSide[STACKSIZE]; //subtrees of resulting right path
   static DynRoot* stackLeftSide[STACKSIZE];  //subtrees of resulting left path
@@ -248,26 +248,26 @@ class DynLeaf : private DynNode {
   static void*    stackDataL[STACKSIZE];     //data fields for temporarily deleted nodes left of split
   static DynNode* stackRPath[STACKSIZE];     //path to the root (used by DynNode::prepareRootPath())
 
- protected:
+protected:
 
-  //computes for each node on the path from "this" to the root 
+  //computes for each node on the path from "this" to the root
   //the reversed state and returns grossmin(this).
   //(used by getPrev, getNext, getEdgeCost(Dbl))
   CapType prepareRootPath();
   void prepareRootPathDbl(CapType &grossMin, CapType &grossMinR);
 
   //decomposes the path tree along the path from the calling node to the root
-  //and sorts the ensuing subtrees according to wether they belong to the left 
+  //and sorts the ensuing subtrees according to wether they belong to the left
   //or right subpath
   void disassemble();
-  //recomposes the subpath from the subtrees on the global stacks 
-  void reassemble(DynRoot*& pdpl, DynRoot*& pdpr); 
+  //recomposes the subpath from the subtrees on the global stacks
+  void reassemble(DynRoot*& pdpl, DynRoot*& pdpr);
   //(used by split() and divide() for convencience)
 
- public:
+public:
 
 #if defined DYNPATH_DEBUG
-  int id; 
+  int id;
 #endif
 
   DynLeaf();
@@ -279,10 +279,10 @@ class DynLeaf : private DynNode {
   bool     getWeakMapping() { return DynNode::getMapping(); };
   void    *getWeakData() { return data; };
 
-  void setWeakLink(DynLeaf *parent, 
-		   CapType cap, CapType rcap, 
-		   bool mapping,
-		   void *linkData);
+  void setWeakLink(DynLeaf *parent,
+                   CapType cap, CapType rcap,
+                   bool mapping,
+                   void *linkData);
 
   DynRoot *getPath();  //returns the path containing the calling node
   DynLeaf *getNext();  //returns the next node on the DynTree-path
@@ -294,13 +294,13 @@ class DynLeaf : private DynNode {
   //subpaths: the first path contains all nodes to the left of the calling
   //node, the second path is the calling node itself and the third part
   //consists of the remaining nodes
-  void split(ResultSplit *psr); 
-  //divides the path at the calling node, with the calling node 
+  void split(ResultSplit *psr);
+  //divides the path at the calling node, with the calling node
   //ending up in the right part
   void divide(ResultSplit *psr);
-  
+
   //makes sure the path from the calling node to the root of the
-  //DynTREE has no weak connections (i.e. it is a single a DynRoot) 
+  //DynTREE has no weak connections (i.e. it is a single a DynRoot)
   DynRoot *expose();
 
 };
@@ -313,13 +313,13 @@ inline void DynNode::setAsLChild(DynNode *pn, bool rState) {
 
   this->bLeft = pn;
   pn->bParent = this;
-  
-  newHead = pn->isLeaf()?pn:((pn->getReversed()==rState)?pn->bHead:pn->bTail);
+
+  newHead = pn->isLeaf() ? pn : ((pn->getReversed() == rState) ? pn->bHead : pn->bTail);
 
   if (rState)
     this->bTail = newHead;
   else
-    this->bHead = newHead;    
+    this->bHead = newHead;
 }
 
 
@@ -329,8 +329,8 @@ inline void DynNode::setAsRChild(DynNode *pn, bool rState) {
   this->bRight = pn;
   pn->bParent  = this;
 
-  newTail = pn->isLeaf()?pn:((pn->getReversed()==rState)?pn->bTail:pn->bHead);
-    
+  newTail = pn->isLeaf() ? pn : ((pn->getReversed() == rState) ? pn->bTail : pn->bHead);
+
   if (rState)
     this->bHead = newTail;
   else
@@ -353,7 +353,7 @@ inline void DynNode::setNetCost(CapType netCost, bool rState) {
     this->netCost = netCost;
 }
 
-  
+
 inline void DynNode::getNetMinPtr(CapType **pNetMin, CapType **pNetMinR, bool rState) {
   rState ^= getReversed();
 
@@ -420,7 +420,7 @@ inline DynLeaf *DynRoot::getHead() {
 
   if (getReversed())
     return static_cast<DynLeaf*>(bTail);
-  
+
   return static_cast<DynLeaf*>(bHead);
 }
 
@@ -437,14 +437,14 @@ inline DynLeaf *DynRoot::getTail() {
 
 
 inline void DynRoot::addCost(CapType cost) {
-    if (this->isLeaf())
-      return;
+  if (this->isLeaf())
+    return;
 
-    CapType netMin = getNetMin(getReversed());
-    setNetMin(netMin + cost, getReversed());
+  CapType netMin = getNetMin(getReversed());
+  setNetMin(netMin + cost, getReversed());
 
-    netMin = getNetMin(!getReversed());
-    setNetMin(netMin - cost, !getReversed());
+  netMin = getNetMin(!getReversed());
+  setNetMin(netMin - cost, !getReversed());
 }
 
 
@@ -459,12 +459,12 @@ inline void DynRoot::reverse() {
  ***************************************************/
 
 inline DynLeaf *DynLeaf::getNext() {
-//std::cout  <<"  [<" << this << ">::getNext():] Entering\n";   
-  
+//std::cout  <<"  [<" << this << ">::getNext():] Entering\n";
+
   DynLeaf *pl;
 
   pl = getNextDyn();
-//std::cout  <<"  [<" << this << ">::getNext():] getNextDyn: "<<pl<<"\n";   
+//std::cout  <<"  [<" << this << ">::getNext():] getNextDyn: "<<pl<<"\n";
 
   if (!pl) //this leaf is tail of the DynPath it belongs to
     return wParent;
@@ -502,7 +502,7 @@ inline DynLeaf *DynLeaf::getPrevDyn() {
 
   }
 
-  if (!found) 
+  if (!found)
     return static_cast<DynLeaf*>(0); //"this" is already head of the path
 
   //determine sibling of pn
@@ -512,16 +512,16 @@ inline DynLeaf *DynLeaf::getPrevDyn() {
     pnSib = pn->bLeft;
 
   lChildRState = pnSib->getReversed() ^ parentRState;
-  
-  //the previous node on the path is the tail of the subpath of which 
+
+  //the previous node on the path is the tail of the subpath of which
   //the sibling is the root node
-  if (lChildRState) 
+  if (lChildRState)
     prevLeaf = static_cast<DynLeaf*>(pnSib->bHead);
   else
     prevLeaf = static_cast<DynLeaf*>(pnSib->bTail);
 
   if (!prevLeaf)
-    return static_cast<DynLeaf*>(pnSib); 
+    return static_cast<DynLeaf*>(pnSib);
 
   return prevLeaf;
 
@@ -555,7 +555,7 @@ inline DynLeaf *DynLeaf::getNextDyn() {
 
   }
 
-  if (!found) 
+  if (!found)
     return (DynLeaf*)0; //"this" is already tail of the path
 
   //determine sibling of pn
@@ -566,15 +566,15 @@ inline DynLeaf *DynLeaf::getNextDyn() {
 
   lChildRState = pnSib->getReversed() ^ parentRState;
 
-  //the next node on the path is the head of the subpath of which 
+  //the next node on the path is the head of the subpath of which
   //the sibling is the root node
-  if (lChildRState) 
+  if (lChildRState)
     nextLeaf = static_cast<DynLeaf*>(pnSib->bTail);
   else
     nextLeaf = static_cast<DynLeaf*>(pnSib->bHead);
 
   if (!nextLeaf)
-    return static_cast<DynLeaf*>(pnSib); 
+    return static_cast<DynLeaf*>(pnSib);
 
   return nextLeaf;
 
@@ -606,12 +606,12 @@ inline CapType DynLeaf::getEdgeCost() {
 
     //compute grossMin for current node
     if (!pn->bParent) //root node
-      grossMin = pn->getNetMin(pn->getTemp()); 
+      grossMin = pn->getNetMin(pn->getTemp());
     else if (!ch->isLeaf()) //inner node
-      grossMin = grossMin - ch->getNetMin(ch->getTemp()); 
+      grossMin = grossMin - ch->getNetMin(ch->getTemp());
     //NOTE: grossmin(bparent) = grossmin(child) - netmin(child);
   }
-  if (!found) 
+  if (!found)
     return 0; //"this" is the last node of the path
   CapType cost = pn->getNetCost(pn->getTemp()) + grossMin;
   return cost;
@@ -657,7 +657,7 @@ inline bool DynLeaf::getEdgeCostDbl(CapType &cost, CapType &costR) {
 
   }
 
-  if (!found) 
+  if (!found)
     return 0; //this ist der letzte Knoten im Pfad
 
   cost  = pn->getNetCost(pn->getTemp()) + grossMin;

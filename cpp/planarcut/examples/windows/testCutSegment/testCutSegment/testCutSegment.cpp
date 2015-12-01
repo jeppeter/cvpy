@@ -6,18 +6,18 @@
 *                          Frank R. Schmidt <info@frank-r-schmidt.de>        *
 ******************************************************************************
 
-  If you use this software for research purposes, YOU MUST CITE the following 
+  If you use this software for research purposes, YOU MUST CITE the following
   paper in any resulting publication:
 
     [1] Efficient Planar Graph Cuts with Applications in Computer Vision.
-        F. R. Schmidt, E. Töppe, D. Cremers, 
-	    IEEE CVPR, Miami, Florida, June 2009		
+        F. R. Schmidt, E. Töppe, D. Cremers,
+      IEEE CVPR, Miami, Florida, June 2009
 
 ******************************************************************************
 
   This software is released under the LGPL license. Details are explained
   in the files 'COPYING' and 'COPYING.LESSER'.
-	
+
 *****************************************************************************/
 
 #include "stdafx.h"
@@ -48,11 +48,11 @@ unsigned char *loadSimplePPM(int &w, int &h, const string &filename) {
       ifstream ifs(filename.c_str(), ios_base::binary);*/
 
   FILE *fh = fopen(filename.c_str(), "rb");
-  if (fh == NULL){
+  if (fh == NULL) {
     cerr << "can not open " << filename.c_str() << endl;
     exit(4);
   }
-  
+
   w = 0, h = 0;
 
   fgets(line, 1000, fh);
@@ -65,30 +65,30 @@ unsigned char *loadSimplePPM(int &w, int &h, const string &filename) {
   while (!feof(fh)) {
 
     lastpos = ftell(fh);
-    
+
     fgets(line, 1000, fh);
 
     if (line[0] == '#') {
       //      cout << "Comment: " << line;
     } else if (!w) {
       if (sscanf(line, "%d %d", &w, &h) < 2) {
-	cerr << "error while reading the file " << filename;
-	cerr << " expected width and height of image\n";
-	return 0;
+        cerr << "error while reading the file " << filename;
+        cerr << " expected width and height of image\n";
+        return 0;
       }
     } else if (!depth) {
       if (sscanf(line, "%d", &depth) < 1) {
-	cerr << "error while reading the file " << filename;
-	cerr << " expected color depth\n";
-	return 0;
+        cerr << "error while reading the file " << filename;
+        cerr << " expected color depth\n";
+        return 0;
       }
     } else {
-      rgb = new unsigned char[w*h*3];
+      rgb = new unsigned char[w * h * 3];
       fseek(fh, lastpos, SEEK_SET);
-      fread(rgb, 1, w*h*3, fh);
+      fread(rgb, 1, w * h * 3, fh);
       break;
     }
-  
+
   }
 
   fclose(fh);
@@ -114,22 +114,22 @@ bool saveSimplePPM(unsigned char *rgb, int w, int h, const string &filename) {
   fos << ost.str();
   fos << "255" << endl;
 
-  fos.write((const char*)rgb, w*h*3);
+  fos.write((const char*)rgb, w * h * 3);
 
   fos.close();
-  
+
   return true;
 
 }
 
 
 unsigned char *RGBDataToGrey(unsigned char *rgb, int w, int h) {
-  
-  unsigned char *pic = new unsigned char[w*h];
+
+  unsigned char *pic = new unsigned char[w * h];
   int i;
 
-  for (i=0; i<w*h; i++)
-    pic[i] = rgb[i*3];
+  for (i = 0; i < w * h; i++)
+    pic[i] = rgb[i * 3];
 
   return pic;
 
@@ -138,32 +138,32 @@ unsigned char *RGBDataToGrey(unsigned char *rgb, int w, int h) {
 
 unsigned char *GreyDataToRGB(unsigned char *pic, int w, int h) {
 
-  unsigned char *rgb = new unsigned char[w*h*3];
+  unsigned char *rgb = new unsigned char[w * h * 3];
   int i;
 
-  for (i=0; i<w*h; i++)
-    rgb[i*3] = rgb[i*3+1] = rgb[i*3+2] = pic[i];
-  
+  for (i = 0; i < w * h; i++)
+    rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = pic[i];
+
   return rgb;
 
 }
 
 
 unsigned char *SegMaskAndGreyDataToRGB(CutPlanar::ELabel *mask,
-				       unsigned char *pic,
-				       int w, int h) {
+                                       unsigned char *pic,
+                                       int w, int h) {
 
-  unsigned char *rgb = new unsigned char[w*h*3];
+  unsigned char *rgb = new unsigned char[w * h * 3];
   int i;
 
-  for (i=0; i<w*h; i++) {
+  for (i = 0; i < w * h; i++) {
 
-    rgb[i*3] = (mask[i]==CutPlanar::LABEL_SINK) ? (unsigned char)(pic[i*3] / 255.f * 200.f) : 255;
-    rgb[i*3+1] = (unsigned char)(pic[i*3+1] / 255.f * 200.f);
-    rgb[i*3+2] = (mask[i]==CutPlanar::LABEL_SINK) ? 255 : (unsigned char)(pic[i*3+2] / 255.f * 200.f);
+    rgb[i * 3] = (mask[i] == CutPlanar::LABEL_SINK) ? (unsigned char)(pic[i * 3] / 255.f * 200.f) : 255;
+    rgb[i * 3 + 1] = (unsigned char)(pic[i * 3 + 1] / 255.f * 200.f);
+    rgb[i * 3 + 2] = (mask[i] == CutPlanar::LABEL_SINK) ? 255 : (unsigned char)(pic[i * 3 + 2] / 255.f * 200.f);
 
   }
-  
+
   return rgb;
 
 }
@@ -171,30 +171,30 @@ unsigned char *SegMaskAndGreyDataToRGB(CutPlanar::ELabel *mask,
 
 unsigned char *getSegmentationInfo(unsigned char *rgb, int w, int h) {
 
-  unsigned char *seginfo = new unsigned char[w*h];
+  unsigned char *seginfo = new unsigned char[w * h];
   unsigned char r, g, b;
   int i;
 
-  for (i=0; i<w*h; i++) {
+  for (i = 0; i < w * h; i++) {
 
-    r = rgb[i*3];
-    g = rgb[i*3+1];
-    b = rgb[i*3+2];
+    r = rgb[i * 3];
+    g = rgb[i * 3 + 1];
+    b = rgb[i * 3 + 2];
 
     if (r >= 240 &&
-	   g <= 10  &&
-	   b <= 10) {
+        g <= 10  &&
+        b <= 10) {
       seginfo[i] = 1;
     } else if (r <= 10 &&
-	     g <= 10 &&
-	     b >= 240) {
+               g <= 10 &&
+               b >= 240) {
       seginfo[i] = 2;
     } else {
       seginfo[i] = 0;
     };
 
   }
-    
+
   return seginfo;
 
 }
@@ -210,7 +210,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
 
   if (argc < 2) {
     cerr << "calling convention: testCutGrid [image-filename]\n"
-		 << "for example: 'testCutSegment ../../../pics/walk.ppm'\n\n";
+         << "for example: 'testCutSegment ../../../pics/walk.ppm'\n\n";
     return -1;
   }
 
@@ -218,7 +218,7 @@ int _tmain(int argc, _TCHAR* argv[]) {
   size_t pos;
   string picname, segname, basename, suffix;
   char tmp[4096]; //just needed for windows character conversion
-  
+
   WideCharToMultiByte(CP_ACP, 0, argv[1], -1, tmp, 4096, NULL, NULL);
   picname = tmp;
   pos = picname.rfind(".ppm");
@@ -230,11 +230,11 @@ int _tmain(int argc, _TCHAR* argv[]) {
 
   suffix = picname.substr(pos);
   basename = picname.substr(0, pos);
- 
+
   picname = basename + suffix;
   segname = basename + "seg" + suffix;
 
-  DEBUG_OUT("segname %s\n",segname.c_str());
+  DEBUG_OUT("segname %s\n", segname.c_str());
   //load the input images from file
   rgb = loadSimplePPM(w, h, segname);
   seg = getSegmentationInfo(rgb, w, h);
@@ -249,11 +249,11 @@ int _tmain(int argc, _TCHAR* argv[]) {
   sc = new CutSegment(w, h);
   sc->setImageData(grey);
   DEBUG_OUT("\n");
-  sc->setSourceSink(seg,1,2);
+  sc->setSourceSink(seg, 1, 2);
   DEBUG_OUT("\n");
   cout << "Cut: " << sc->segment() << "\n";
   DEBUG_OUT("\n");
-  mask = new CutPlanar::ELabel[w*h];
+  mask = new CutPlanar::ELabel[w * h];
   sc->getLabels(mask);
   DEBUG_OUT("\n");
   delete sc;
