@@ -91,7 +91,7 @@ CutGrid::CutGrid(int nRows, int nCols) : idxSource(0), idxSink(0)
 
 
             verts[v].setEdgesCCW(edgesCCW, e);
-
+            verts[v].SetXY(i,j);
         }
     }
 

@@ -80,10 +80,15 @@ class PlanarVertex
 
     int nEdges;             //number of adjacent edges
     PlanarEdge **edgesCCW;  //ccw list of adjacent edges
+    int x,y;
 
 public:
     PlanarVertex();
     ~PlanarVertex();
+
+    void        SetXY(int x,int y){this->x = x;this->y = y;};
+    int         GetX(){return this->x; };
+    int         GetY(){return this->y;};
 
     int         getNumEdges() { return nEdges; };
     PlanarEdge *getEdge(int id) { id = id % nEdges; return (id < 0) ? edgesCCW[id + nEdges] : edgesCCW[id]; };
