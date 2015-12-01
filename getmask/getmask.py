@@ -6,6 +6,31 @@ import logging
 import numpy as np
 import os
 
+class Rect:
+	def __init__(self,x1,y1,x2,y2):
+		if x1 < x2:
+			self.__left = x1
+			self.__right = x2
+		else:
+			self.__left = x2
+			self.__right = x1
+		if y1 < y2:
+			self.__up = y1
+			self.__down = y2
+		else:
+			self.__up = y2
+			self.__down = y1
+		return
+
+	def Left(self):
+		return self.__left
+	def Right(self):
+		return self.__right
+	def Up(self):
+		return self.__up
+	def Down(self):
+		return self.__down
+
 class MouseRegion:
 	def __resetxy (self):
 		self.__cursx = -1
@@ -14,58 +39,65 @@ class MouseRegion:
 		self.__curey = -1
 		return
 	def __init__(self):
-		self.__startx = []
-		self.__starty = []
-		self.__endx = []
-		self.__endy = []
+		self.__sourcereg = []
+		self.__sinkreg = []
 		self.__resetxy()
 		return
 
-	def ShiftValue(self):
-		if len(self.__startx) == 0 :
-			return (None,None,None,None)
-		sx = self.__startx[0]
-		sy = self.__starty[0]
-		ex = self.__endx[0]
-		ey = self.__endy[0]
-		self.__startx = self.__startx[1:]
-		self.__starty = self.__starty[1:]
-		self.__endx = self.__endx[1:]
-		self.__endy = self.__endy[1:]
-		return (sx,sy,ex,ey)
+	def ShiftSource(self):
+		if len(self.__sourcereg) == 0 :
+			return None
+		reg = self.__sourcereg[0]
+		self.__sourcereg = self.__sourcereg[1:]
+		return reg
 
-	def Start(self,x,y):
+	def ShiftSink(self):
+		if len(self.__sinkreg) == 0 :
+			return None
+		reg = self.__sinkreg[0]
+		self.__sinkreg = self.__sinkreg[1:]
+		return reg
+
+	def SourceStart(self,x,y):
 		self.__cursx = x
 		self.__cursy = y
 		return
 
-	def End(self,x,y):
+	def SourceEnd(self,x,y):
 		self.__curex = x
 		self.__curey = y
-		if self.__cursx < self.__curex :
-			self.__startx.append(self.__cursx)
-			self.__endx.append(self.__curex)
-		else:
-			self.__startx.append(self.__curex)
-			self.__endx.append(self.__cursx)
+		reg = Rect(self.__cursx,self.__cursy,self.__curex,self.__curey)
+		self.__sourcereg.append(reg)
+		self.__resetxy()
+		return
 
-		if self.__cursy < self.__curey:
-			self.__starty.append(self.__cursy)
-			self.__endy.append(self.__curey)
-		else:
-			self.__starty.append(self.__curey)
-			self.__endy.append(self.__cursy)
+	def SinkStart(self,x,y):
+		self.__cursx = x
+		self.__cursy = y
+		return
+
+	def SinkEnd(self,x,y):
+		self.__curex = x
+		self.__curey = y
+		reg = Rect(self.__cursx,self.__cursy,self.__curex,self.__curey)
+		self.__sinkreg.append(reg)
 		self.__resetxy()
 		return
 
 
 def GetMouseEvent(event,x,y,flags,param):
-	if event == cv2.EVENT_LBUTTONDOWN:
-		logging.info('start (%d:%d)'%(x,y))
-		param.Start(x,y)
+	if event == cv2.EVENT_LBUTTONDOWN and (flags & 0x10) == 0x10:
+		logging.info('sourcestart (%d:%d) flags (%d)'%(x,y,flags))
+		param.SourceStart(x,y)
+	elif event == cv2.EVENT_LBUTTONUP and (flags & 0x10) == 0x10:
+		logging.info('sourceend (%d:%d) flags (%d)'%(x,y,flags))
+		param.SourceEnd(x,y)
+	elif event == cv2.EVENT_LBUTTONDOWN:
+		logging.info('sinkstart (%d:%d) flags (%d)'%(x,y,flags))
+		param.SinkStart(x,y)
 	elif event == cv2.EVENT_LBUTTONUP:
-		logging.info('end (%d:%d)'%(x,y))
-		param.End(x,y)
+		logging.info('sinkstart (%d:%d) flags (%d)'%(x,y,flags))
+		param.SinkEnd(x,y)
 	return
 
 def GetMask(infile):
@@ -87,14 +119,31 @@ def GetMask(infile):
 	cv2.setMouseCallback(bname,GetMouseEvent,selects)
 	cv2.imshow(bname,simg)
 	cv2.waitKey(0)
+	i = 0
 	while True:
-		sx,sy,ex,ey = selects.ShiftValue()
-		if sx is None:
+		r = selects.ShiftSource()
+		if r is None:
 			break
-		logging.info('get (%d:%d)->(%d:%d)'%(sx,sy,ex,ey))
-		for i in range(sx,ex):
-			for j in range(sy,ey):
+		i += 1
+		logging.info('source get (%d:%d)->(%d:%d)'%(r.Left(),r.Up(),r.Right(),r.Down()))
+		for i in range(r.Left(),r.Right()):
+			for j in range(r.Up(),r.Down()):
 				dimg[j][i] = (1,1,250)
+	if i == 0 :
+		raise Exception('please select a region for source by mouse click with SHIFT')
+	i = 0
+	while True:
+		r = selects.ShiftSink()
+		if r is None:
+			break
+		i += 1
+		logging.info('sink get (%d:%d)->(%d:%d)'%(r.Left(),r.Up(),r.Right(),r.Down()))
+		for i in range(r.Left(),r.Right()):
+			for j in range(r.Up(),r.Down()):
+				dimg[j][i] = (250,1,1)
+
+	if i == 0 :
+		raise Exception('please select a region for sink by mouse click')
 	sname = '%s.ppm'%(bname)
 	mname = '%sseg.ppm'%(bname)
 	cv2.imwrite(sname,simg)

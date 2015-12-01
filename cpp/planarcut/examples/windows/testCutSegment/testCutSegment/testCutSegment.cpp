@@ -240,16 +240,22 @@ int _tmain(int argc, _TCHAR* argv[]) {
   seg = getSegmentationInfo(rgb, w, h);
   delete [] rgb;
   rgb = loadSimplePPM(w, h, picname);
+  DEBUG_OUT("\n");
   grey = RGBDataToGrey(rgb, w, h);
+  DEBUG_OUT("\n");
   cout << "Image width: " << w << " and image height " << h << endl;
 
   //perform segmentation task
   sc = new CutSegment(w, h);
   sc->setImageData(grey);
+  DEBUG_OUT("\n");
   sc->setSourceSink(seg,1,2);
+  DEBUG_OUT("\n");
   cout << "Cut: " << sc->segment() << "\n";
+  DEBUG_OUT("\n");
   mask = new CutPlanar::ELabel[w*h];
   sc->getLabels(mask);
+  DEBUG_OUT("\n");
   delete sc;
 
   //read out segmentation result and save to disk

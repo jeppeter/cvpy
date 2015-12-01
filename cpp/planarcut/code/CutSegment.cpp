@@ -22,6 +22,7 @@
 
 #include "CutSegment.h"
 #include "PlanarException.h"
+#include "outdebug.h"
 
 CapType CutSegment::edgeCost(int row, int col, EDir dir) {
   int i = row * width + col;
@@ -91,11 +92,9 @@ void CutSegment::setSourceSink(const uchar *stMask, uchar source, uchar sink) {
   int maxl   = width*height;
   int *queue = new int[maxl];
   int sp, rp;
-
   // create EMask array
   for (idx=0; idx<maxl; idx++)
     imMask[idx] = IDX_UNDETERMINED;
-
   //search for first node marked as source and define at as THE source
   for (idx=0; idx<width*height; idx++)
     if (stMask[idx] == source)
@@ -128,16 +127,16 @@ void CutSegment::setSourceSink(const uchar *stMask, uchar source, uchar sink) {
       imMask[idx-width] = IDX_SOURCE;
     }
   }
-
   //search for first node marked as sink and define at as THE sink
   for (idx=0; idx<width*height; idx++)
     if (stMask[idx] == sink)
       break; 
-  if (idx >= width*height)
+  if (idx >= width*height){
+    DEBUG_OUT("idx %d width*height(%d*%d = %d)\n",idx,width,height,width*height);
     throw ExceptionSinkNotDefined();
+  }
   imMask[idx] = IDX_SINK;
   setSink(idx / width, idx % width);
-
   //mark all nodes lying in the same component as the source
   sp = rp = 0;
   queue[sp++] = idx;
