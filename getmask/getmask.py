@@ -4,6 +4,7 @@ import cv2
 import sys
 import logging
 import numpy as np
+import os
 
 class MouseRegion:
 	def __resetxy (self):
@@ -60,8 +61,10 @@ class MouseRegion:
 
 def GetMouseEvent(event,x,y,flags,param):
 	if event == cv2.EVENT_LBUTTONDOWN:
+		logging.info('start (%d:%d)'%(x,y))
 		param.Start(x,y)
 	elif event == cv2.EVENT_LBUTTONUP:
+		logging.info('end (%d:%d)'%(x,y))
 		param.End(x,y)
 	return
 
@@ -74,26 +77,28 @@ def GetMask(infile):
 		return
 	h = simg.shape[0]
 	w = simg.shape[1]
+	b = os.path.basename(infile)
+	bname,extname = os.path.splitext(b)
 	logging.info('w (%d) h (%d)'%(w,h))
 	dimg = np.zeros((h,w,3), np.uint8)
-	for i in xrange(h):
-		for j in xrange(w):
-			dimg[i][j] = (255,255,255)
-	name = '%s'%(infile)
+	dimg.fill(255)
 	selects = MouseRegion()
-	cv2.namedWindow(name)
-	cv2.setMouseCallback(name,GetMouseEvent,selects)
-	cv2.imshow(name,simg)
+	cv2.namedWindow(bname)
+	cv2.setMouseCallback(bname,GetMouseEvent,selects)
+	cv2.imshow(bname,simg)
 	cv2.waitKey(0)
 	while True:
 		sx,sy,ex,ey = selects.ShiftValue()
 		if sx is None:
 			break
+		logging.info('get (%d:%d)->(%d:%d)'%(sx,sy,ex,ey))
 		for i in range(sx,ex):
 			for j in range(sy,ey):
 				dimg[j][i] = (1,1,250)
-
-	cv2.imwrite('saved.ppm',dimg)
+	sname = '%s.ppm'%(bname)
+	mname = '%sseg.ppm'%(bname)
+	cv2.imwrite(sname,simg)
+	cv2.imwrite(mname,dimg)
 	return
 
 
