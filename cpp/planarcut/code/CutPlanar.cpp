@@ -885,7 +885,7 @@ void CutPlanar::constructSpanningTrees()
                 peCurEdge->setFlags((peCurEdge->getFlags() & 0xfe) + 1);
 
             }
-
+            DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n",curVertIdx,curEdgeIdx[curVertIdx],(curEdgeIdx[curVertIdx]+1));
             curEdgeIdx[curVertIdx]++;
 
             peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
@@ -971,7 +971,9 @@ void CutPlanar::constructSpanningTrees()
 
             curVertIdx = getVertIndex(pvCurVert);
 
+            DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n",curVertIdx,curEdgeIdx[curVertIdx],pvCurVert->getEdgeID(peCurEdge));
             curEdgeIdx[curVertIdx] = pvCurVert->getEdgeID(peCurEdge);
+            DEBUG_OUT("maxEdgeIdx[%d] (%d -> %d)\n",curVertIdx,maxEdgeIdx[curVertIdx],curEdgeIdx[curVertIdx]+pvCurVert->getNumEdges());
             maxEdgeIdx[curVertIdx] = curEdgeIdx[curVertIdx] + pvCurVert->getNumEdges();
 
             plCurNode = primalTreeNodes + curVertIdx;
