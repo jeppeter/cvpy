@@ -3,7 +3,7 @@ package main
 const REV_MASK uint8 = 1
 const TMP_MASK uint8 = 2
 const MAP_MASK uint8 = 4
-const CAP_INF float64 = -1.0
+const CAP_INF float64 = float64(1e+308)
 
 type DynNode struct {
 	parent   *DynNode
@@ -118,8 +118,22 @@ func (dyn *DynNode) GetData() interface{} {
 	return dyn.data
 }
 
+func (dyn *DynNode)GetNetmin(b bool) float64 {
+	if b {
+		return dyn.netminR
+	}
+	return dyn.netmin	
+}
+
+func (dyn *DynNode)GetNetcost(b bool) float64 {
+	if b {
+		return dyn.netcostR
+	}
+	return dyn.netcost
+}
+
 func (dyn *DynNode) RotateRight(gross, grossR float64) {
-	var u, v *DynNode
+	var u, v, w *DynNode
 	var pnetmin, pnetminR *float64
 	var rstate bool
 
@@ -129,13 +143,14 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 	}
 	dyn.NormalizeReserveState()
 	u = dyn
-	v = dyn.left
+	v = dyn.right
 
 	if v.IsLeaf() {
 		return
 	}
 
 	v.NormalizeReserveState()
+	w = v.left
 
 	uold := *dyn
 	vold := *v
@@ -148,10 +163,31 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 	minUR := grossR
 	minvold := v.netmin + minU
 	minvoldR := v.netminR + minUR
+	minwold := w.netmin + minvold
+	minwoldR := w.netminR + minvoldR
 
 	costU := u.netcost + minU
 	costUR := u.netcostR + minUR
 	costV := v.netcost + minvold
 	costVR := v.netcostR + minvoldR
-	minvl := 
+
+	costW := w.netcost + minwold
+	costwR := w.netcostR + minwoldR
+
+	minVr := CAP_INF
+	minVrR := CAP_INF
+
+	minUl := CAP_INF
+	minUlR := CAP_INF
+
+	minWr := CAP_INF
+	minWrR := CAP_INF
+
+	minWl := CAP_INF
+	minWlR := CAP_INF
+
+	if !v.right.IsLeaf() {
+		rstate = v.right.GetReserved()
+		minVr = 
+	}
 }
