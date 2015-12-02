@@ -1,8 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
 
 type Vertice struct {
 	edgesccw []*Edge
@@ -30,6 +27,14 @@ func (vert *Vertice) GetEdge(idx int) *Edge {
 func (vert *Vertice)SetCCWEdges(num int ,edges []*Edge) {
 	vert.numedges = num
 	vert.edgesccw = edges
+
+	for i := 0;i <num ;i ++{
+		if edges[i].GetTail() == vert{
+			edges[i].SetTailEdgeId(i)
+		} else if edges[i].GetHead() == vert {
+			edges[i].SetHeadEdgeId(i)
+		}
+	}
 	return
 }
 
@@ -45,4 +50,8 @@ func (vert *Vertice)GetX() int {
 
 func (vert *Vertice)GetY() int{
 	return vert.y
+}
+
+func (vert *Vertice)GetEdgeNum()int {
+	return vert.numedges
 }
