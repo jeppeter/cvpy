@@ -9,7 +9,7 @@ type Edge struct {
 	headdual   *Face
 	tailedgeid int
 	headedgeid int
-	flags      int
+	flags      uint8
 }
 
 func NewEdge() *Edge {
@@ -72,11 +72,11 @@ func (e *Edge) SetEdge(tail, head *Vertice, taildual, headdual *Face, caps, rcap
 	return
 }
 
-func (e *Edge) SetFlags(flag int) {
+func (e *Edge) SetFlags(flag uint8) {
 	e.flags = flag
 }
 
-func (e *Edge) GetFlags() int {
+func (e *Edge) GetFlags() uint8 {
 	return e.flags
 }
 
