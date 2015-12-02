@@ -118,18 +118,75 @@ func (dyn *DynNode) GetData() interface{} {
 	return dyn.data
 }
 
-func (dyn *DynNode)GetNetmin(b bool) float64 {
+func (dyn *DynNode) GetNetmin(b bool) float64 {
 	if b {
 		return dyn.netminR
 	}
-	return dyn.netmin	
+	return dyn.netmin
 }
 
-func (dyn *DynNode)GetNetcost(b bool) float64 {
+func (dyn *DynNode) GetNetcost(b bool) float64 {
 	if b {
 		return dyn.netcostR
 	}
 	return dyn.netcost
+}
+
+func (dyn *DynNode) SetAsRChild(pn *DynNode, rstate bool) {
+	var newtail *DynNode
+	dyn.right = pn
+	pn.parent = dyn
+
+	if pn.IsLeaf() {
+		newtail = pn
+	} else {
+		if pn.GetReserved() == rstate {
+			newtail = pn.tail
+		} else {
+			newtail = pn.head
+		}
+	}
+
+	if rstate {
+		dyn.head = newtail
+	} else {
+		dyn.tail = newtail
+	}
+	return
+}
+
+func (dyn *DynNode) SetAsLChild(pn *DynNode, rstate bool) {
+	var newhead *DynNode
+	dyn.left = pn
+	pn.parent = dyn
+
+	if pn.IsLeaf() {
+		newhead = pn
+	} else {
+		if pn.GetReserved() == rstate {
+			newhead = pn.head
+		} else {
+			newhead = pn.tail
+		}
+	}
+
+	if rstate {
+		dyn.tail = newhead
+	} else {
+		dyn.head = newhead
+	}
+}
+
+func MMin64(u, v, w float64) float64 {
+	min := u
+	if min > v {
+		min = v
+	}
+
+	if min > w {
+		min = w
+	}
+	return min
 }
 
 func (dyn *DynNode) RotateRight(gross, grossR float64) {
@@ -154,11 +211,14 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 
 	uold := *dyn
 	vold := *v
+	wold := *w
 	umapping := uold.GetMapping()
 	vmapping := vold.GetMapping()
+	wmapping := wold.GetMapping()
 
 	udata := uold.GetData()
 	vdata := vold.GetData()
+	wdata := wold.GetData()
 	minU := gross
 	minUR := grossR
 	minvold := v.netmin + minU
@@ -188,6 +248,41 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 
 	if !v.right.IsLeaf() {
 		rstate = v.right.GetReserved()
-		minVr = 
+		minVr = v.right.GetNetmin(rstate) + minvold
+		minVrR = v.right.GetNetmin(!rstate) + minvoldR
 	}
+
+	if !v.left.IsLeaf() {
+		rstate = v.left.GetReserved()
+		minUl = v.left.GetNetmin(rstate) + minU
+		minUlR = v.left.GetNetmin(!rstate) + minUR
+	}
+
+	if !w.right.IsLeaf() {
+		rstate = w.right.GetReserved()
+		minWr = w.right.GetNetmin(rstate) + minwold
+		minWrR = w.right.GetNetmin(!rstate) + minwoldR
+	}
+
+	if !w.left.IsLeaf() {
+		rstate = w.left.GetReserved()
+		minWl = w.left.GetNetmin(rstate) + minwold
+		minwlr = w.left.GetNetmin(!rstate) + minwoldR
+	}
+
+	unew := w
+	wnew := u
+	vnew := v
+
+	unew.SetAsRChild(wold.left, false)
+	unew.SetAsLChild(uold.left, false)
+
+	vnew.SetAsLChild(wold.right, false)
+	wnew.SetAsLChild(unew, false)
+
+	minWnew := minU
+	minWnewR := minUR
+
+	minVnew := MMin64(costV, minWr, minVr)
+
 }
