@@ -104,3 +104,11 @@ func (e *Edge) SetHeadEdgeId(id int) {
 	e.headedgeid = id
 	return
 }
+
+func (e *Edge) GetTailEdgeId() int {
+	return e.tailedgeid
+}
+
+func (e *Edge) GetHeadEdgeId() int {
+	return e.headedgeid
+}

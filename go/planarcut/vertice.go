@@ -55,3 +55,13 @@ func (vert *Vertice)GetY() int{
 func (vert *Vertice)GetEdgeNum()int {
 	return vert.numedges
 }
+
+func (vert *Vertice)GetEdgeId(e *Edge) int {
+	if e.GetTail() == vert {
+		return e.GetTailEdgeId()
+	} else if e.GetHead() == vert {
+		return e.GetHeadEdgeId()
+	}else {
+		return -1
+	}
+}
