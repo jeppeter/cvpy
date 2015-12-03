@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -402,13 +403,15 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 
 	g := ParseFile(os.Args[1])
+	stime := time.Now()
 	f, e := g.Dijkstra()
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "error %s\n", e.Error())
 		os.Exit(4)
 	}
+	etime := time.Now()
 
 	path := g.GetPath()
-	fmt.Fprintf(os.Stdout, "(%s) dist (%d) path (%v)\n", os.Args[1], f, path)
+	fmt.Fprintf(os.Stdout, "(%s) dist (%d) path (%v) (%s)\n", os.Args[1], f, path, etime.Sub(stime))
 
 }
