@@ -98,7 +98,7 @@ func (rb *RBTree) __find_insert_parent(data RBTreeData, from *RBTreeElem) *RBTre
 	return nil
 }
 
-func (rb *RBTree) find_insert_parent(data *RBTreeData) *RBTreeElem {
+func (rb *RBTree) find_insert_parent(data RBTreeData) *RBTreeElem {
 	if rb.root.Data.Less(data) {
 		if rb.root.GetRight() != nil {
 			return rb.__find_insert_parent(data, rb.root.GetRight())
@@ -133,7 +133,7 @@ func (rb *RBTree) __get_uncle(elem *RBTreeElem) *RBTreeElem {
 	var grandma *RBTreeElem
 	grandma = rb.__get_grandma(elem)
 	if grandma == nil {
-		return uncle
+		return nil
 	}
 
 	if grandma.GetLeft() == elem.GetParent() {
@@ -165,43 +165,6 @@ func (rb *RBTree) __min_elem(from *RBTreeElem) *RBTreeElem {
 		return rb.__min_elem(from.GetLeft())
 	}
 	return from
-}
-
-func (rb *RBTree) __insert_into_right(parent *RBTreeElem, chld *RBTreeElem) {
-}
-
-func (rb *RBTree) __insert_into_left(parent *RBTreeElem, chld *RBTreeElem) {
-
-}
-
-func (rb *RBTree) __replace_node(orig *RBTreeElem, newone *RBTreeElem) {
-	var parent, left, right *RBTreeElem
-	parent = orig.GetParent()
-	left = orig.GetLeft()
-	right = orig.GetRight()
-	if right != newone && left != newone {
-		log.Fatalf("(%s) not as child for (%s)", newone.Data.Stringer(), orig.Data.Stringer())
-	}
-
-	if orig == parent.GetLeft() {
-		parent.SetLeft(newone)
-	} else {
-		parent.SetRight(newone)
-	}
-
-	newone.SetParent(parent)
-	orig.SetParent(nil)
-
-	if newone == left {
-		if parent.GetRight() != nil {
-			rb.__insert_into_right(newone, orig.GetRight())
-		}
-	} else {
-		if parent.GetLeft() != nil {
-			rb.__insert_into_left(newone, orig.GetLeft())
-		}
-	}
-	return
 }
 
 func (rb *RBTree) __get_sibling(elem *RBTreeElem) *RBTreeElem {
@@ -319,7 +282,7 @@ func (rb *RBTree) Insert(data RBTreeData) int {
 				parent.SetLeft(insertp)
 			}
 			insertp.SetParent(parent)
-			rb.__rebalanced(insertp)
+			rb.__rebalanced_case1(insertp)
 			rb.count++
 		} else {
 			log.Fatalf("can not find parent to insert (%s)", data.Stringer())
@@ -373,7 +336,7 @@ func (rb *RBTree) __delete_elem_case6(elem *RBTreeElem) {
 func (rb *RBTree) __delete_elem_case5(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
 	parent := elem.GetParent()
-	if sibling && sibling.GetColor() == RB_BLACK {
+	if sibling != nil && sibling.GetColor() == RB_BLACK {
 		if elem == parent.GetLeft() && rb.__get_color(sibling.GetRight()) == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_RED {
 			sibling.SetColor(RB_RED)
 			sibling.GetLeft().SetColor(RB_BLACK)
@@ -392,7 +355,7 @@ func (rb *RBTree) __delete_elem_case5(elem *RBTreeElem) {
 func (rb *RBTree) __delete_elem_case4(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
 	parent := elem.GetParent()
-	if sibling && parent.GetColor() == RB_RED && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
+	if sibling != nil && parent.GetColor() == RB_RED && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
 		sibling.SetColor(RB_RED)
 		parent.SetColor(RB_BLACK)
 	} else {
@@ -403,7 +366,7 @@ func (rb *RBTree) __delete_elem_case4(elem *RBTreeElem) {
 
 func (rb *RBTree) __delete_elem_case3(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
-	if sibling && elem.GetParent().GetColor() == RB_BLACK && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
+	if sibling != nil && elem.GetParent().GetColor() == RB_BLACK && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
 		sibling.SetColor(RB_RED)
 		rb.__delete_elem_case1(elem.GetParent())
 	} else {
@@ -458,6 +421,7 @@ func (rb *RBTree) __replace_node(oldelem *RBTreeElem, newelem *RBTreeElem) {
 }
 
 func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
+	var chld *RBTreeElem
 	deleteone := elem
 	if elem.GetLeft() != nil && elem.GetRight() != nil {
 		pred := rb.__max_elem(elem)
@@ -484,7 +448,7 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 
 	rb.count--
 
-	err := rb.__verify()
+	err = rb.__verify()
 	if err != nil {
 		return 0, err
 	}
@@ -493,7 +457,6 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 }
 
 func (rb *RBTree) Delete(data RBTreeData) (cnt int, err error) {
-	var deleteone, chld *RBTreeElem
 	elem := rb.__find_data(data)
 	if elem == nil {
 		cnt = rb.count
@@ -602,7 +565,7 @@ func (rb *RBTree) __verify_property5_recursive(elem *RBTreeElem, cnt int, setcnt
 }
 
 func (rb *RBTree) __verify_property5(elem *RBTreeElem) error {
-	setcnt = -1
+	setcnt := -1
 	return rb.__verify_property5_recursive(elem, 0, &setcnt)
 }
 
