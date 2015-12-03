@@ -9,9 +9,10 @@ const RB_BLACK int = 1
 const RB_RED int = 2
 
 type RBTreeData interface {
-	Less(b *RBTreeData) bool
-	Equal(b *RBTreeData) bool
+	Less(b RBTreeData) bool
+	Equal(b RBTreeData) bool
 	Stringer() string
+	TypeName() string
 }
 
 type RBTreeElem struct {
@@ -19,7 +20,7 @@ type RBTreeElem struct {
 	left   *RBTreeElem
 	right  *RBTreeElem
 	color  int
-	Data   *RBTreeData
+	Data   RBTreeData
 }
 
 type RBTree struct {
@@ -27,7 +28,7 @@ type RBTree struct {
 	count int
 }
 
-func NewRBTreeElem(data *RBTreeData) *RBTreeElem {
+func NewRBTreeElem(data RBTreeData) *RBTreeElem {
 	p := &RBTreeElem{}
 	p.Data = data
 	p.color = RB_RED
@@ -80,7 +81,7 @@ func NewRBTree() *RBTree {
 	return p
 }
 
-func (rb *RBTree) __find_insert_parent(data *RBTreeData, from *RBTreeElem) *RBTreeElem {
+func (rb *RBTree) __find_insert_parent(data RBTreeData, from *RBTreeElem) *RBTreeElem {
 	if from.Data.Less(data) {
 		if from.GetRight() != nil {
 			return rb.__find_insert_parent(data, from.GetRight())
@@ -303,7 +304,7 @@ func (rb *RBTree) __rebalanced_case1(insertp *RBTreeElem) {
 	return
 }
 
-func (rb *RBTree) Insert(data *RBTreeData) int {
+func (rb *RBTree) Insert(data RBTreeData) int {
 	if rb.count == 0 {
 		rb.root = NewRBTreeElem(data)
 		rb.root.SetColor(RB_BLACK)
@@ -328,7 +329,7 @@ func (rb *RBTree) Insert(data *RBTreeData) int {
 	return rb.count
 }
 
-func (rb *RBTree) __find_data_from(data *RBTreeData, from *RBTreeElem) *RBTreeElem {
+func (rb *RBTree) __find_data_from(data RBTreeData, from *RBTreeElem) *RBTreeElem {
 	if from.Data.Equal(data) {
 		return from
 	} else {
@@ -341,7 +342,7 @@ func (rb *RBTree) __find_data_from(data *RBTreeData, from *RBTreeElem) *RBTreeEl
 	return nil
 }
 
-func (rb *RBTree) __find_data(data *RBTreeData) *RBTreeElem {
+func (rb *RBTree) __find_data(data RBTreeData) *RBTreeElem {
 	if rb.count == 0 {
 		return nil
 	}
@@ -491,7 +492,7 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 	return rb.count, nil
 }
 
-func (rb *RBTree) Delete(data *RBTreeData) (cnt int, err error) {
+func (rb *RBTree) Delete(data RBTreeData) (cnt int, err error) {
 	var deleteone, chld *RBTreeElem
 	elem := rb.__find_data(data)
 	if elem == nil {
@@ -503,7 +504,7 @@ func (rb *RBTree) Delete(data *RBTreeData) (cnt int, err error) {
 	return rb.__delete_one(elem)
 }
 
-func (rb *RBTree) GetMin() *RBTreeData {
+func (rb *RBTree) GetMin() RBTreeData {
 	elem := rb.__min_elem(rb.root)
 	if elem == nil {
 		return nil
@@ -516,7 +517,7 @@ func (rb *RBTree) GetMin() *RBTreeData {
 	return elem.Data
 }
 
-func (rb *RBTree) GetMax() *RBTreeData {
+func (rb *RBTree) GetMax() RBTreeData {
 	elem := rb.__max_elem(rb.root)
 	if elem == nil {
 		return nil

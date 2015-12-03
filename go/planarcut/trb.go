@@ -4,54 +4,86 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"reflect"
 	"strconv"
 	"time"
+	"unsafe"
 )
 
-type IntData int
+type IntData struct {
+	inner int
+}
 
 func (i *IntData) Stringer() string {
-	return fmt.Sprintf("%d", *i)
+	return fmt.Sprintf("%d", i.inner)
 }
 
-func (i *IntData) Less(j *IntData) bool {
-	if *i < *j {
+func (i *IntData) TypeName() string {
+	return "IntData"
+}
+
+func (i *IntData) Less(j RBTreeData) bool {
+	var jv *IntData
+	if i.TypeName() != j.TypeName() {
+		panic(fmt.Sprintf("i (%s) not type j (%s)", i.TypeName(), j.TypeName()))
+	}
+	jv = ((*IntData)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
+	if i.inner < jv.inner {
 		return true
 	}
 	return false
 }
 
-func (i *IntData) Equal(j *IntData) bool {
-	if *i == *j {
+func (i *IntData) Equal(j RBTreeData) bool {
+	var jv *IntData
+	if i.TypeName() != j.TypeName() {
+		panic(fmt.Sprintf("i (%s) not type j (%s)", i.TypeName(), j.TypeName()))
+	}
+	jv = ((*IntData)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
+	if i.inner == jv.inner {
 		return true
 	}
 	return false
+}
+
+func NewIntData(i int) *IntData {
+	p := &IntData{}
+	p.inner = i
+	return p
 }
 
 func main() {
+	var getdata RBTreeData
+	var pi *IntData
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "%s num\n", os.Args[0])
 		os.Exit(4)
 	}
 
 	num, _ := strconv.Atoi(os.Args[1])
-	nums := []IntData{}
-	getnums := []IntData{}
-	rand.Seed(float64(time.Now().Nanosecond()))
+	nums := []*IntData{}
+	getnums := []*IntData{}
+	rand.Seed(int64(time.Now().Nanosecond()))
 	rbtree := NewRBTree()
 	for i := 0; i < num; i++ {
-		ni := rand.Int31n((num * 100))
-		nums = append(nums, ni)
-		rbtree.Insert(ni)
+		pi = NewIntData(rand.Int() % (num * 100))
+		nums = append(nums, pi)
+		rbtree.Insert(pi)
 	}
 
 	for i := 0; i < num; i++ {
-		ni := rbtree.GetMin()
-		getnums = append(getnums, ni.Data)
+		getdata = rbtree.GetMin()
+		if getdata == nil {
+			break
+		}
+		pi = ((*IntData)(unsafe.Pointer((reflect.ValueOf(getdata).Pointer()))))
+		getnums = append(getnums, pi)
 	}
 
-	fmt.Fprintf(os.Stdout, "random get (%v)\n", nums)
-	fmt.Fprintf(os.Stdout, "sort by rbtree (%v)\n", getnums)
+	for i := 0; i < num; i++ {
+		fmt.Fprintf(os.Stdout, "[%d]=(%s) (%s)\n", i, nums[i].Stringer(), getnums[i].Stringer())
+	}
+
 	return
 
 }
