@@ -483,6 +483,11 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 
 	rb.count--
 
+	err := rb.__verify()
+	if err != nil {
+		return 0, err
+	}
+
 	return rb.count, nil
 }
 
@@ -504,7 +509,10 @@ func (rb *RBTree) GetMin() *RBTreeData {
 		return nil
 	}
 
-	rb.__delete_one(elem)
+	_, err := rb.__delete_one(elem)
+	if err != nil {
+		log.Fatal("%s", err.Error())
+	}
 	return elem.Data
 }
 
@@ -513,7 +521,10 @@ func (rb *RBTree) GetMax() *RBTreeData {
 	if elem == nil {
 		return nil
 	}
-	rb.__delete_one(elem)
+	_, err := rb.__delete_one(elem)
+	if err != nil {
+		log.Fatal("%s", err.Error())
+	}
 	return elem.Data
 }
 
@@ -569,12 +580,29 @@ func (rb *RBTree) __verify_property4(elem *RBTreeElem) error {
 
 func (rb *RBTree) __verify_property5_recursive(elem *RBTreeElem, cnt int, setcnt *int) error {
 	if elem == nil {
-
+		if *setcnt == -1 {
+			*setcnt = cnt
+		}
+		if *setcnt != cnt {
+			return fmt.Errorf("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
+		}
+		return nil
 	}
+
+	if elem.GetColor() == RB_BLACK {
+		cnt++
+	}
+
+	err := rb.__verify_property5_recursive(elem.GetLeft(), cnt, setcnt)
+	if err != nil {
+		return err
+	}
+	return rb.__verify_property5_recursive(elem.GetRight(), cnt, setcnt)
 }
 
 func (rb *RBTree) __verify_property5(elem *RBTreeElem) error {
-
+	setcnt = -1
+	return rb.__verify_property5_recursive(elem, 0, &setcnt)
 }
 
 func (rb *RBTree) __verify() error {
