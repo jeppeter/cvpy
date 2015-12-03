@@ -73,18 +73,20 @@ func main() {
 		nums = append(nums, pi)
 		rbtree.Insert(pi)
 	}
-
-	for i := 0; i < num; i++ {
-		getdata = rbtree.GetMin()
-		if getdata == nil {
-			break
+	if true {
+		for i := 0; i < num; i++ {
+			getdata = rbtree.GetMin()
+			if getdata == nil {
+				break
+			}
+			pi = ((*IntData)(unsafe.Pointer((reflect.ValueOf(getdata).Pointer()))))
+			log.Printf("getdata (%s)", pi.Stringer())
+			getnums = append(getnums, pi)
 		}
-		pi = ((*IntData)(unsafe.Pointer((reflect.ValueOf(getdata).Pointer()))))
-		getnums = append(getnums, pi)
-	}
 
-	for i := 0; i < num; i++ {
-		fmt.Fprintf(os.Stdout, "[%d]=(%s) (%s)\n", i, nums[i].Stringer(), getnums[i].Stringer())
+		for i := 0; i < num; i++ {
+			fmt.Fprintf(os.Stdout, "[%d]=(%s) (%s)\n", i, nums[i].Stringer(), getnums[i].Stringer())
+		}
 	}
 
 	return

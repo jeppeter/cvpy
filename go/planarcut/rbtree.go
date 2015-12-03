@@ -116,31 +116,11 @@ func (rb *RBTree) find_insert_parent(data RBTreeData) *RBTreeElem {
 }
 
 func (rb *RBTree) __get_grandma(elem *RBTreeElem) *RBTreeElem {
-	var cur *RBTreeElem
-	cur = elem.GetParent()
-	if cur == nil {
-		return nil
-	}
-
-	cur = cur.GetParent()
-	if cur == nil {
-		return nil
-	}
-	return cur
+	return elem.GetParent().GetParent()
 }
 
 func (rb *RBTree) __get_uncle(elem *RBTreeElem) *RBTreeElem {
-	var grandma *RBTreeElem
-	grandma = rb.__get_grandma(elem)
-	if grandma == nil {
-		return nil
-	}
-
-	if grandma.GetLeft() == elem.GetParent() {
-		return grandma.GetRight()
-	} else {
-		return grandma.GetLeft()
-	}
+	return rb.__get_sibling(elem.GetParent())
 }
 
 func (rb *RBTree) __is_leaf(elem *RBTreeElem) bool {
@@ -169,9 +149,6 @@ func (rb *RBTree) __min_elem(from *RBTreeElem) *RBTreeElem {
 
 func (rb *RBTree) __get_sibling(elem *RBTreeElem) *RBTreeElem {
 	parent := elem.GetParent()
-	if parent == nil {
-		return nil
-	}
 	if elem == parent.GetLeft() {
 		return parent.GetRight()
 	} else {
@@ -182,26 +159,26 @@ func (rb *RBTree) __get_sibling(elem *RBTreeElem) *RBTreeElem {
 }
 
 func (rb *RBTree) __rotate_left(insertp *RBTreeElem) {
-	var saved_p, saved_left_n *RBTreeElem
-	parent := insertp.GetParent()
 	right := insertp.GetRight()
-	saved_p = parent.GetLeft()
-	saved_left_n = right.GetLeft()
-	parent.SetLeft(right)
-	right.SetLeft(saved_p)
-	saved_p.SetRight(saved_left_n)
+	rb.__replace_node(insertp, right)
+	insertp.SetRight(right.GetLeft())
+	if right.GetLeft() != nil {
+		right.GetLeft().SetParent(insertp)
+	}
+	right.SetLeft(insertp)
+	insertp.SetParent(right)
 	return
 }
 
 func (rb *RBTree) __rotate_right(insertp *RBTreeElem) {
-	var saved_p, saved_right_n *RBTreeElem
-	parent := insertp.GetParent()
 	left := insertp.GetLeft()
-	saved_p = parent.GetRight()
-	saved_right_n = left.GetRight()
-	parent.SetRight(left)
-	left.SetRight(saved_p)
-	saved_p.SetLeft(saved_right_n)
+	rb.__replace_node(insertp, left)
+	insertp.SetLeft(left.GetRight())
+	if left.GetRight() != nil {
+		left.GetRight().SetParent(insertp)
+	}
+	left.SetRight(insertp)
+	insertp.SetParent(left)
 	return
 }
 
@@ -210,9 +187,12 @@ func (rb *RBTree) __rebalanced_case5(insertp *RBTreeElem) {
 	parent := insertp.GetParent()
 	parent.SetColor(RB_BLACK)
 	grandma.SetColor(RB_RED)
-	if insertp == parent.GetLeft() {
+	if insertp == parent.GetLeft() && parent == grandma.GetLeft() {
 		rb.__rotate_right(grandma)
 	} else {
+		if insertp != parent.GetRight() || parent != grandma.GetRight() {
+			panic(fmt.Sprintf("insert (%s) not right of (%s) or parent (%s) not right of grandma (%s)", insertp.Data.Stringer(), parent.Data.Stringer(), parent.Data.Stringer(), grandma.Data.Stringer()))
+		}
 		rb.__rotate_left(grandma)
 	}
 }
@@ -267,7 +247,9 @@ func (rb *RBTree) __rebalanced_case1(insertp *RBTreeElem) {
 	return
 }
 
-func (rb *RBTree) Insert(data RBTreeData) int {
+func (rb *RBTree) Insert(data RBTreeData) error {
+	var err error
+	err = nil
 	if rb.count == 0 {
 		rb.root = NewRBTreeElem(data)
 		rb.root.SetColor(RB_BLACK)
@@ -285,11 +267,11 @@ func (rb *RBTree) Insert(data RBTreeData) int {
 			rb.__rebalanced_case1(insertp)
 			rb.count++
 		} else {
-			log.Fatalf("can not find parent to insert (%s)", data.Stringer())
+			err = fmt.Errorf("can not find parent for (%s)", data.Stringer())
 		}
 
 	}
-	return rb.count
+	return err
 }
 
 func (rb *RBTree) __find_data_from(data RBTreeData, from *RBTreeElem) *RBTreeElem {
@@ -402,8 +384,8 @@ func (rb *RBTree) __delete_elem_case1(elem *RBTreeElem) {
 
 func (rb *RBTree) __replace_node(oldelem *RBTreeElem, newelem *RBTreeElem) {
 	var parent *RBTreeElem
+	parent = nil
 	if oldelem.GetParent() == nil {
-		parent = nil
 		rb.root = newelem
 	} else {
 		parent = oldelem.GetParent()
@@ -413,7 +395,6 @@ func (rb *RBTree) __replace_node(oldelem *RBTreeElem, newelem *RBTreeElem) {
 			parent.SetRight(newelem)
 		}
 	}
-
 	if newelem != nil {
 		newelem.SetParent(parent)
 	}
@@ -506,6 +487,7 @@ func (rb *RBTree) __verify_property1(elem *RBTreeElem) error {
 
 		return rb.__verify_property1(elem.GetRight())
 	}
+	log.Fatalf("(%s) color is (%d)", elem.Data.Stringer(), elem.GetColor())
 	return fmt.Errorf("(%s) color is (%d)", elem.Data.Stringer(), elem.GetColor())
 }
 
@@ -515,6 +497,7 @@ func (rb *RBTree) __verify_property2(elem *RBTreeElem) error {
 	}
 
 	if elem.GetColor() != RB_BLACK {
+		log.Fatalf("(%s) color not black (%d)", elem.Data.Stringer(), elem.GetColor())
 		return fmt.Errorf("(%s) color not black (%d)", elem.Data.Stringer(), elem.GetColor())
 	}
 	return nil
@@ -527,10 +510,12 @@ func (rb *RBTree) __verify_property4(elem *RBTreeElem) error {
 
 	if elem.GetColor() == RB_RED {
 		if rb.__get_color(elem.GetLeft()) != RB_BLACK {
+			log.Fatalf("(%s).left(%s) = (%d) not black", elem.Data.Stringer(), elem.GetLeft().Data.Stringer(), elem.GetLeft().GetColor())
 			return fmt.Errorf("(%s).left(%s) = (%d) not black", elem.Data.Stringer(), elem.GetLeft().Data.Stringer(), elem.GetLeft().GetColor())
 		}
 
 		if rb.__get_color(elem.GetRight()) != RB_BLACK {
+			log.Fatalf("(%s).right(%s) = (%d) not black", elem.Data.Stringer(), elem.GetRight().Data.Stringer(), elem.GetRight().GetColor())
 			return fmt.Errorf("(%s).right(%s) = (%d) not black", elem.Data.Stringer(), elem.GetRight().Data.Stringer(), elem.GetRight().GetColor())
 		}
 
@@ -548,6 +533,7 @@ func (rb *RBTree) __verify_property5_recursive(elem *RBTreeElem, cnt int, setcnt
 			*setcnt = cnt
 		}
 		if *setcnt != cnt {
+			log.Fatalf("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
 			return fmt.Errorf("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
 		}
 		return nil
