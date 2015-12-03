@@ -69,7 +69,6 @@ func main() {
 	rbtree := NewRBTree()
 	for i := 0; i < num; i++ {
 		pi = NewIntData(rand.Int() % (num * 100))
-		log.Printf("insert (%s)", pi.Stringer())
 		nums = append(nums, pi)
 		rbtree.Insert(pi)
 	}
@@ -80,7 +79,6 @@ func main() {
 				break
 			}
 			pi = ((*IntData)(unsafe.Pointer((reflect.ValueOf(getdata).Pointer()))))
-			log.Printf("getdata (%s)", pi.Stringer())
 			getnums = append(getnums, pi)
 		}
 

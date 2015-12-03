@@ -304,11 +304,18 @@ func (rb *RBTree) __get_color(elem *RBTreeElem) int {
 func (rb *RBTree) __delete_elem_case6(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
 	parent := elem.GetParent()
+	sibling.SetColor(parent.GetColor())
 	parent.SetColor(RB_BLACK)
 	if elem == parent.GetLeft() {
+		if sibling.GetRight().GetColor() != RB_RED {
+			log.Fatalf("(%s) not red", sibling.GetRight().Data.Stringer())
+		}
 		sibling.GetRight().SetColor(RB_BLACK)
 		rb.__rotate_left(parent)
 	} else {
+		if sibling.GetLeft().GetColor() != RB_RED {
+			log.Fatalf("(%s) not red", sibling.GetLeft().Data.Stringer())
+		}
 		sibling.GetLeft().SetColor(RB_BLACK)
 		rb.__rotate_right(parent)
 	}
@@ -318,16 +325,14 @@ func (rb *RBTree) __delete_elem_case6(elem *RBTreeElem) {
 func (rb *RBTree) __delete_elem_case5(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
 	parent := elem.GetParent()
-	if sibling != nil && sibling.GetColor() == RB_BLACK {
-		if elem == parent.GetLeft() && rb.__get_color(sibling.GetRight()) == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_RED {
-			sibling.SetColor(RB_RED)
-			sibling.GetLeft().SetColor(RB_BLACK)
-			rb.__rotate_right(sibling)
-		} else if elem == parent.GetRight() && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_RED {
-			sibling.SetColor(RB_RED)
-			sibling.GetRight().SetColor(RB_BLACK)
-			rb.__rotate_left(sibling)
-		}
+	if elem == parent.GetLeft() && rb.__get_color(sibling) == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_RED && rb.__get_color(sibling.GetRight()) == RB_BLACK {
+		sibling.SetColor(RB_RED)
+		sibling.GetLeft().SetColor(RB_BLACK)
+		rb.__rotate_right(sibling)
+	} else if elem == parent.GetRight() && rb.__get_color(sibling) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_RED && rb.__get_color(sibling.GetLeft()) == RB_BLACK {
+		sibling.SetColor(RB_RED)
+		sibling.GetRight().SetColor(RB_BLACK)
+		rb.__rotate_left(sibling)
 	}
 
 	rb.__delete_elem_case6(elem)
@@ -337,7 +342,7 @@ func (rb *RBTree) __delete_elem_case5(elem *RBTreeElem) {
 func (rb *RBTree) __delete_elem_case4(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
 	parent := elem.GetParent()
-	if sibling != nil && parent.GetColor() == RB_RED && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
+	if rb.__get_color(parent) == RB_RED && rb.__get_color(sibling) == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
 		sibling.SetColor(RB_RED)
 		parent.SetColor(RB_BLACK)
 	} else {
@@ -348,7 +353,7 @@ func (rb *RBTree) __delete_elem_case4(elem *RBTreeElem) {
 
 func (rb *RBTree) __delete_elem_case3(elem *RBTreeElem) {
 	sibling := rb.__get_sibling(elem)
-	if sibling != nil && elem.GetParent().GetColor() == RB_BLACK && sibling.GetColor() == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
+	if rb.__get_color(elem.GetParent()) == RB_BLACK && rb.__get_color(sibling) == RB_BLACK && rb.__get_color(sibling.GetLeft()) == RB_BLACK && rb.__get_color(sibling.GetRight()) == RB_BLACK {
 		sibling.SetColor(RB_RED)
 		rb.__delete_elem_case1(elem.GetParent())
 	} else {
@@ -364,9 +369,9 @@ func (rb *RBTree) __delete_elem_case2(elem *RBTreeElem) {
 		parent.SetColor(RB_RED)
 		sibling.SetColor(RB_BLACK)
 		if elem == parent.GetLeft() {
-			rb.__rotate_left(elem)
+			rb.__rotate_left(parent)
 		} else {
-			rb.__rotate_right(elem)
+			rb.__rotate_right(parent)
 		}
 	}
 
@@ -405,8 +410,14 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 	var chld *RBTreeElem
 	deleteone := elem
 	if elem.GetLeft() != nil && elem.GetRight() != nil {
-		pred := rb.__max_elem(elem)
+		pred := rb.__max_elem(elem.GetLeft())
+		elem.Data = pred.Data
 		deleteone = pred
+		log.Printf("change dete to (%s)", deleteone.Data.Stringer())
+	}
+
+	if deleteone.GetRight() != nil && deleteone.GetLeft() != nil {
+		log.Fatalf("not set (%s) has both left and right", deleteone.Data.Stringer())
 	}
 
 	if deleteone.GetRight() == nil {
@@ -416,7 +427,7 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 	}
 
 	if deleteone.GetColor() == RB_BLACK {
-		deleteone.SetColor(chld.GetColor())
+		deleteone.SetColor(rb.__get_color(chld))
 		rb.__delete_elem_case1(deleteone)
 	}
 
