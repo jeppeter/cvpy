@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
-	"container/list"
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
+	"unsafe"
 )
 
 const MAXINT int = (1 << 31)
@@ -32,6 +33,36 @@ func NewVertice(name string) *Vertice {
 	p.nedges = 0
 	p.link_next = nil
 	return p
+}
+
+func (vert *Vertice) Stringer() string {
+	return fmt.Sprintf("(%s) dist (%d)", vert.name, vert.dist)
+}
+func (vert *Vertice) TypeName() string {
+	return "Vertice"
+}
+func (vert *Vertice) Equal(j RBTreeData) bool {
+	var jv *Vertice
+	if vert.TypeName() != j.TypeName() {
+		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+	}
+	jv = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
+	if jv.dist == vert.dist {
+		return true
+	}
+	return false
+}
+
+func (vert *Vertice) Less(j RBTreeData) bool {
+	var jv *Vertice
+	if vert.TypeName() != j.TypeName() {
+		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+	}
+	jv = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
+	if vert.dist < jv.dist {
+		return true
+	}
+	return false
 }
 
 func (vert *Vertice) GetDist() int {
@@ -124,7 +155,7 @@ type Graph struct {
 	verts  map[string]*Vertice
 	source string
 	sink   string
-	queue  *list.List
+	queue  *RBTree
 }
 
 func NewGraph() *Graph {
@@ -133,7 +164,7 @@ func NewGraph() *Graph {
 	p.verts = make(map[string]*Vertice)
 	p.source = ""
 	p.sink = ""
-	p.queue = list.New()
+	p.queue = NewRBTree()
 	return p
 }
 
@@ -182,37 +213,20 @@ func (g *Graph) AddEdge(from, to string, caps int) error {
 }
 
 func (g *Graph) InsertQueue(vert *Vertice) {
-	if vert.GetNext() != nil || vert.IsVisited() {
-		return
-	}
-
-	g.queue.PushBack(vert)
+	g.queue.Insert(vert)
 	return
 }
 
 func (g *Graph) GetQueue() *Vertice {
-	var psel, cur *Vertice
-	var curelm, selelm *list.Element
-	var mindist int
-	psel = nil
-	mindist = MAXINT
-	selelm = nil
-	for curelm = g.queue.Front(); curelm != nil; curelm = curelm.Next() {
-		cur = curelm.Value.(*Vertice)
-		if cur.GetDist() < mindist {
-			psel = cur
-			mindist = cur.GetDist()
-			selelm = curelm
-		}
+	var rbdata RBTreeData
+	var pvert *Vertice
+	rbdata = g.queue.GetMin()
+	if rbdata == nil {
+		return nil
 	}
 
-	if selelm != nil {
-		g.queue.Remove(selelm)
-		psel.SetNext(nil)
-		psel.Visit()
-	}
-
-	return psel
+	pvert = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(rbdata).Pointer()))))
+	return pvert
 }
 
 func (g *Graph) Dijkstra1() (dist int, err error) {
