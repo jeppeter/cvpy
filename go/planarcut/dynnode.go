@@ -72,7 +72,32 @@ func (dyn *DynNode) SetReserved(b bool) {
 		dyn.reserved ^= REV_MASK
 	}
 	return
+}
 
+func (dyn *DynNode) SetHeight(height int) {
+	dyn.height = height
+	return
+}
+
+func (dyn *DynNode) GetHeight() int {
+	return dyn.height
+}
+
+func (dyn *DynNode) SetNetMin(val float64, rstate bool) {
+	if rstate {
+		dyn.netminR = val
+	} else {
+		dyn.netmin = val
+	}
+	return
+}
+
+func (dyn *DynNode) SetNetCost(val float64, rstate bool) {
+	if rstate {
+		dyn.netcostR = val
+	} else {
+		dyn.netcost = val
+	}
 }
 
 func (dyn *DynNode) NormalizeReserveState() {
@@ -116,6 +141,11 @@ func (dyn *DynNode) NormalizeReserveState() {
 
 func (dyn *DynNode) GetData() interface{} {
 	return dyn.data
+}
+
+func (dyn *DynNode) SetData(data interface{}) {
+	dyn.data = data
+	return
 }
 
 func (dyn *DynNode) GetNetmin(b bool) float64 {
@@ -187,6 +217,14 @@ func MMin64(u, v, w float64) float64 {
 		min = w
 	}
 	return min
+}
+
+func MaxInt(u, v int) int {
+	if u > v {
+		return u
+	} else {
+		return v
+	}
 }
 
 func (dyn *DynNode) GetNetMinPtr(pNetMin, pNetMinR **float64, rstate bool) {
@@ -285,4 +323,46 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 	minUNewR := MMin64(costUR, minUrR, minVrR)
 
 	/*for DynPath.cpp:170*/
+	unew.SetNetMin(minUNew-minVNew, false)
+	unew.SetNetMin(minUNewR-minVNewR, true)
+
+	if !vnew.left.IsLeaf() {
+		rstate = vnew.left.GetReserved()
+		vnew.left.SetNetMin(minVl-minVNew, rstate)
+		vnew.right.SetNetMin(minVlR-minVNewR, !rstate)
+	}
+
+	if !unew.left.IsLeaf() {
+		rstate = unew.left.GetReserved()
+		unew.left.SetNetMin(minVr-minUNew, rstate)
+		unew.left.SetNetMin(minVrR-minUNewR, !rstate)
+	}
+
+	if !unew.right.IsLeaf() {
+		rstate = unew.right.GetReserved()
+		unew.right.SetNetMin(minUr-minUNew, rstate)
+		unew.right.SetNetMin(minUrR-minUNewR, !rstate)
+	}
+
+	/*for DynPath.cpp:200*/
+	vnew.SetNetCost(costV-minVNew, false)
+	vnew.SetNetCost(costVR-minVNewR, true)
+	vnew.SetMapping(vmapping)
+
+	/*for DynPath.cpp:203*/
+	vnew.SetData(vdata)
+
+	unew.SetNetCost(costU-minUNew, false)
+	unew.SetNetCost(costUR-minUNewR, true)
+	unew.SetMapping(umapping)
+	unew.SetData(udata)
+
+	/*for DynPath.cpp:211*/
+	unew.SetHeight(MaxInt(unew.left.GetHeight(), unew.right.GetHeight()) + 1)
+	vnew.SetHeight(MaxInt(vnew.left.GetHeight(), vnew.right.GetHeight()) + 1)
+	return
+}
+
+func (dyn *DynNode) RotateLeft(gross, grossR float64) {
+
 }
