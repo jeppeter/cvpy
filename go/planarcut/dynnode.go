@@ -189,6 +189,19 @@ func MMin64(u, v, w float64) float64 {
 	return min
 }
 
+func (dyn *DynNode) GetNetMinPtr(pNetMin, pNetMinR **float64, rstate bool) {
+	rstate ^= dyn.GetReserved()
+
+	if rstate {
+		*pNetMin = &(dyn.netminR)
+		*pNetMinR = &(dyn.netmin)
+	} else {
+		*pNetMin = &(dyn.netmin)
+		*pNetMinR = &(dyn.netminR)
+	}
+	return
+}
+
 func (dyn *DynNode) RotateRight(gross, grossR float64) {
 	var u, v, w *DynNode
 	var pnetmin, pnetminR *float64
@@ -200,7 +213,7 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 	}
 	dyn.NormalizeReserveState()
 	u = dyn
-	v = dyn.right
+	v = dyn.left
 
 	if v.IsLeaf() {
 		return
@@ -211,78 +224,65 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 
 	uold := *dyn
 	vold := *v
-	wold := *w
 	umapping := uold.GetMapping()
 	vmapping := vold.GetMapping()
-	wmapping := wold.GetMapping()
 
 	udata := uold.GetData()
 	vdata := vold.GetData()
-	wdata := wold.GetData()
+
 	minU := gross
 	minUR := grossR
+
 	minvold := v.netmin + minU
 	minvoldR := v.netminR + minUR
-	minwold := w.netmin + minvold
-	minwoldR := w.netminR + minvoldR
 
 	costU := u.netcost + minU
 	costUR := u.netcostR + minUR
+
 	costV := v.netcost + minvold
 	costVR := v.netcostR + minvoldR
 
-	costW := w.netcost + minwold
-	costwR := w.netcostR + minwoldR
+	minVl := CAP_INF
+	minVlR := CAP_INF
 
 	minVr := CAP_INF
 	minVrR := CAP_INF
 
-	minUl := CAP_INF
-	minUlR := CAP_INF
-
-	minWr := CAP_INF
-	minWrR := CAP_INF
-
-	minWl := CAP_INF
-	minWlR := CAP_INF
-
-	if !v.right.IsLeaf() {
-		rstate = v.right.GetReserved()
-		minVr = v.right.GetNetmin(rstate) + minvold
-		minVrR = v.right.GetNetmin(!rstate) + minvoldR
-	}
+	minUr := CAP_INF
+	minUrR := CAP_INF
 
 	if !v.left.IsLeaf() {
-		rstate = v.left.GetReserved()
-		minUl = v.left.GetNetmin(rstate) + minU
-		minUlR = v.left.GetNetmin(!rstate) + minUR
+		/*here is DynPath.cpp:136*/
+		v.left.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minVl = *pnetmin + minvold
+		minVlR = *pnetminR + minvoldR
 	}
 
-	if !w.right.IsLeaf() {
-		rstate = w.right.GetReserved()
-		minWr = w.right.GetNetmin(rstate) + minwold
-		minWrR = w.right.GetNetmin(!rstate) + minwoldR
+	if !v.right.IsLeaf() {
+		v.right.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minVr = *pnetmin + minvold
+		minVrR = *pnetminR + minvoldR
 	}
 
-	if !w.left.IsLeaf() {
-		rstate = w.left.GetReserved()
-		minWl = w.left.GetNetmin(rstate) + minwold
-		minwlr = w.left.GetNetmin(!rstate) + minwoldR
+	if !u.right.IsLeaf() {
+		u.right.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minUr = *pnetmin + minU
+		minUrR = *pnetminR + minUR
 	}
 
-	unew := w
-	wnew := u
-	vnew := v
+	vnew := u
+	unew := v
 
-	unew.SetAsRChild(wold.left, false)
-	unew.SetAsLChild(uold.left, false)
+	vnew.SetAsLChild(vold.left, false)
+	unew.SetAsLChild(vold.right, false)
+	unew.SetAsRChild(uold.right, false)
+	vnew.SetAsRChild(unew, false)
 
-	vnew.SetAsLChild(wold.right, false)
-	wnew.SetAsLChild(unew, false)
+	minVNew := minU
+	minVNewR := minUR
 
-	minWnew := minU
-	minWnewR := minUR
+	minUNew := MMin64(costU, minUr, minVr)
+	minUNewR := MMin64(costUR, minUrR, minVrR)
 
-	minVnew := MMin64(costV, minWr, minVr)
-
+	/*for DynPath.cpp:170*/
 }
