@@ -365,4 +365,114 @@ func (dyn *DynNode) RotateRight(gross, grossR float64) {
 
 func (dyn *DynNode) RotateLeft(gross, grossR float64) {
 
+	var u, v *DynNode
+	var pnetmin, pnetminR *float64
+	var rstate bool
+	if dyn.IsLeaf() {
+		return
+	}
+	dyn.NormalizeReserveState()
+	u = dyn
+	v = dyn.right
+
+	if v.IsLeaf() {
+		return
+	}
+	v.NormalizeReserveState()
+	uold := *dyn
+	vold := *v
+
+	umapping := uold.GetMapping()
+	vmapping := vold.GetMapping()
+
+	udata := uold.GetData()
+	vdata := vold.GetData()
+
+	minU := gross
+	minUR := grossR
+
+	minVOld := v.netmin + minU
+	minVOldR := v.netminR + minUR
+
+	costU := u.netcost + minU
+	costUR := u.netcostR + minUR
+
+	costV := v.netcost + minVOld
+	costVR := v.netcostR + minVOldR
+
+	minVl := CAP_INF
+	minVlR := CAP_INF
+
+	minVr := CAP_INF
+	minVrR := CAP_INF
+
+	minUl := CAP_INF
+	minUlR := CAP_INF
+
+	if !v.left.IsLeaf() {
+		v.left.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minVl = *pnetmin + minVOld
+		minVlR = *pnetminR + minVOldR
+	}
+
+	if !v.right.IsLeaf() {
+		v.right.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minVr = *pnetmin + minVOld
+		minVrR = *pnetminR + minVOldR
+	}
+
+	if !u.left.IsLeaf() {
+		u.right.GetNetMinPtr(&pnetmin, &pnetminR, false)
+		minUl = *pnetmin + minU
+		minUlR = *pnetminR + minUR
+	}
+
+	vnew := u
+	unew := v
+
+	vnew.SetAsRChild(vold.right, false)
+	unew.SetAsRChild(vold.left, false)
+	unew.SetAsLChild(uold.left, false)
+	vnew.SetAsLChild(unew, false)
+
+	minVNew := minU
+	minVNewR := minUR
+
+	minUNew := MMin64(costU, minUl, minVl)
+	minUNewR := MMin64(costUR, minUlR, minVlR)
+
+	unew.SetNetMin(minUNew-minVNew, false)
+	unew.SetNetMin(minUNewR-minVNewR, true)
+
+	if !vnew.right.IsLeaf() {
+		rstate = vnew.right.GetReserved()
+		vnew.right.SetNetMin(minVr-minVNew, rstate)
+		vnew.right.SetNetMin(minVrR - min minVNewR, !rstate)
+	}
+
+	if !unew.right.IsLeaf() {
+		rstate = unew.right.GetReserved()
+		unew.right.SetNetMin(minVl - minUNew, rstate)
+		unew.right.SetNetMin(minVlR - minUNewR, !rstate)
+	}
+
+	if !unew.left.IsLeaf() {
+		rstate = unew.left.GetReserved()
+		unew.left.SetNetMin(minUl-minUNew, rstate)
+		unew.left.SetNetMin(minUlR-minUNewR, !rstate)
+	}
+
+	vnew.SetNetCost(costV - minVNew ,false)
+	vnew.SetNetCost(costVR - minVNewR,true)
+	vnew.SetMapping(vmapping)
+	vnew.SetData(vdata)
+
+	unew.SetNetCost(costU - minUNew ,false)
+	unew.SetNetCost(costUR - minUNewR ,true)
+	unew.SetMapping(umapping)
+	unew.SetData(udata)
+
+	unew.SetHeight(MaxInt(unew.left.GetHeight(), unew.right.GetHeight())+1)
+	vnew.SetHeight(MaxInt(vnew.left.GetHeight(), vnew.right.GetHeight())+1)
+	return
 }
