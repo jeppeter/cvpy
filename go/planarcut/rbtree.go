@@ -439,10 +439,11 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 	}
 
 	rb.count--
-
-	err = rb.__verify()
-	if err != nil {
-		return 0, err
+	if false {
+		err = rb.__verify()
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return rb.count, nil
