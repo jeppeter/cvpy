@@ -829,6 +829,7 @@ void CutPlanar::constructSpanningTrees()
     curBranch = 0;
     curBranchLength = 0;
     curBranchLeaves = new DynLeaf*[nVerts];
+    memset(curBranchLeaves,0,sizeof(DynLeaf*)*nVerts);
 
 
     while (!(pvCurVert == pvSink && curEdgeIdx[curVertIdx] >= maxEdgeIdx[curVertIdx])) {
@@ -967,14 +968,16 @@ void CutPlanar::constructSpanningTrees()
 
             bAddedNewPrimEdge = true;
 
-            if (pInDartCap == &arcCap)
+            if (pInDartCap == &arcCap){
                 pvCurVert = peCurEdge->getTail();
-            else
+            }else{
                 pvCurVert = peCurEdge->getHead();
+            }
 
-            if (pvCurVert == pvSource)
+            if (pvCurVert == pvSource){
                 isSourceBlocked = false;
-
+            }
+            DEBUG_OUT("curVertIdx (%d -> %d)\n",curVertIdx,getVertIndex(pvCurVert));
             curVertIdx = getVertIndex(pvCurVert);
 
             DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n",curVertIdx,curEdgeIdx[curVertIdx],pvCurVert->getEdgeID(peCurEdge));
@@ -987,8 +990,14 @@ void CutPlanar::constructSpanningTrees()
             // plCurNode->id = curVertIdx;
 
             //add the current node to the new branch
+            if (curBranchLeaves[curBranchLength]!= NULL){
+                DEBUG_OUT("curBranchLeaves[%d]  ( %d -> %d)\n",curBranchLength,getDynNodeIndex(curBranchLeaves[curBranchLength]),getDynNodeIndex(plCurNode));
+            }else {
+                DEBUG_OUT("curBranchLeaves[%d]  ( -1 -> %d)\n",curBranchLength,getDynNodeIndex(plCurNode));
+            }
+            DEBUG_OUT("curBranchLength (%d -> %d)\n",curBranchLength,curBranchLength+1);
             curBranchLeaves[curBranchLength++] = plCurNode;
-
+            DEBUG_OUT("[%d] setWeakLink\n",getDynNodeIndex(plCurNode));
             plCurNode->setWeakLink(0,
                                    *pInDartCap, *pOutDartCap,
                                    pInDartCap == &antiArcCap,
