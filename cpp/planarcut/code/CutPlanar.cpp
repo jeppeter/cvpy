@@ -848,10 +848,12 @@ void CutPlanar::constructSpanningTrees()
             pInDartCap  = &antiArcCap;
             pOutDartCap = &arcCap;
             pvDartTail  = peCurEdge->getHead();
+            DEBUG_OUT("[%d] as tail\n",curVertIdx);
         } else { //edge points to current vertex
             pInDartCap  = &arcCap;
             pOutDartCap = &antiArcCap;
             pvDartTail  = peCurEdge->getTail();
+            DEBUG_OUT("[%d] as head\n",curVertIdx);
         }
 
 
@@ -879,6 +881,7 @@ void CutPlanar::constructSpanningTrees()
                 }
 
                 int fIdx = getFaceIndex(pfLeft);
+                DEBUG_OUT("dual[%d] Parent [%d] edge [%d]\n",fIdx,getFaceIndex(pfRight),getEdgeIndex(peCurEdge));
                 dualTreeParent[fIdx] = pfRight;
                 dualTreeEdge[fIdx]   = peCurEdge;
 
@@ -900,10 +903,12 @@ void CutPlanar::constructSpanningTrees()
                 pInDartCap  = &antiArcCap;
                 pOutDartCap = &arcCap;
                 pvDartTail  = peCurEdge->getHead();
+                DEBUG_OUT("[%d] as tail\n",getVertIndex(pvCurVert));
             } else { //edge points to current vertex
                 pInDartCap  = &arcCap;
                 pOutDartCap = &antiArcCap;
                 pvDartTail  = peCurEdge->getTail();
+                DEBUG_OUT("[%d] as head\n",getVertIndex(pvCurVert));
             }
 
 
@@ -912,7 +917,7 @@ void CutPlanar::constructSpanningTrees()
 
         //check if a backtrack has to be performed
         if (curEdgeIdx[curVertIdx] == maxEdgeIdx[curVertIdx]) {
-
+            DEBUG_OUT("[%d] edges visited all\n",curVertIdx);
             if (pvCurVert != pvSink) {  //no backtrack at the sink
 
                 //go back via the edge that lead to the currrent vertex (current edge)
@@ -921,6 +926,7 @@ void CutPlanar::constructSpanningTrees()
                 else
                     pvCurVert = peCurEdge->getHead();
 
+                DEBUG_OUT("curVertIdx (%d -> %d)\n",curVertIdx,getVertIndex(pvCurVert));
                 curVertIdx = getVertIndex(pvCurVert);
 
                 //check if there has been found a new primary spanning tree edge in the last step

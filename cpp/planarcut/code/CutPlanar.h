@@ -121,6 +121,7 @@ private:
     int getVertIndex(PlanarVertex *pv) {return pv - verts;}
     int getFaceIndex(PlanarFace *pf)   {return pf - faces;}
     int getDynNodeIndex(DynLeaf *pl)   {return pl - primalTreeNodes;}
+    int getEdgeIndex(PlanarEdge*e)     {return e - edges;}
 
     //constructs the primal and dual spanning trees used by maxflow()
     void constructSpanningTrees();
