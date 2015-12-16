@@ -226,6 +226,7 @@ double CutPlanar::getMaxFlow()
 
         pr = plSource->expose();
         plTailD = pr->getMinCostLeaf();
+        DEBUG_OUT("srcdynnode[%d] tailD dynnode[%d]\n",this->getDynNodeIndex(plSource),this->getDynNodeIndex(plTailD));
 
         //augmentation step
         CapType augCap = plTailD->getEdgeCost();
@@ -235,6 +236,7 @@ double CutPlanar::getMaxFlow()
         //the nodes between plHeadD and plSink lie on the
         //same DynPath due to the call of expose()
         plHeadD = plTailD->getNextDyn();
+        DEBUG_OUT("plTailD[%d] getnextDyn plHeadD[%d]\n",this->getDynNodeIndex(plTailD),this->getDynNodeIndex(plHeadD));
 
         //find the edge that has is to be saturated
         ResultSplit sres;
@@ -243,6 +245,7 @@ double CutPlanar::getMaxFlow()
         plTailD->setWeakLink(0, 0, 0, false, 0);
 
         peD = static_cast<PlanarEdge*>(sres.dataBefore);
+        DEBUG_OUT("peD[%d]\n",this->getEdgeIndex(peD));
 
         //update the capacity of peD in the graph as well
         if (!sres.mappingBefore) {
@@ -608,8 +611,10 @@ void CutPlanar::preFlow()
         w  = edges[i].getCapacity();
         rw = edges[i].getRevCapacity();
 
-        eta = cgNodes[faceHIdx]->dijkWeight - cgNodes[faceTIdx]->dijkWeight;
 
+        eta = cgNodes[faceHIdx]->dijkWeight - cgNodes[faceTIdx]->dijkWeight;
+        DEBUG_OUT("edge[%d].cap (%f) .rcap (%f) dualgraph nodes[%d].dijkWeight (%f) - nodes[%d].dijkWeight (%f)\n",
+            i,w,rw,faceHIdx,cgNodes[faceHIdx]->dijkWeight,faceTIdx,cgNodes[faceTIdx]->dijkWeight);
         w  = w  - eta;
         rw = rw + eta;
 
@@ -851,12 +856,12 @@ void CutPlanar::constructSpanningTrees()
             pInDartCap  = &antiArcCap;
             pOutDartCap = &arcCap;
             pvDartTail  = peCurEdge->getHead();
-            DEBUG_OUT("[%d] as tail\n",curVertIdx);
+            DEBUG_OUT("vert[%d] as tail\n",curVertIdx);
         } else { //edge points to current vertex
             pInDartCap  = &arcCap;
             pOutDartCap = &antiArcCap;
             pvDartTail  = peCurEdge->getTail();
-            DEBUG_OUT("[%d] as head\n",curVertIdx);
+            DEBUG_OUT("vert[%d] as head\n",curVertIdx);
         }
 
 
@@ -886,7 +891,7 @@ void CutPlanar::constructSpanningTrees()
                 }
 
                 int fIdx = getFaceIndex(pfLeft);
-                DEBUG_OUT("dual[%d] Parent [%d] edge [%d]\n",fIdx,getFaceIndex(pfRight),getEdgeIndex(peCurEdge));
+                DEBUG_OUT("dual face[%d] Parent face[%d] edge[%d]\n",fIdx,getFaceIndex(pfRight),getEdgeIndex(peCurEdge));
                 dualTreeParent[fIdx] = pfRight;
                 dualTreeEdge[fIdx]   = peCurEdge;
 
@@ -910,12 +915,12 @@ void CutPlanar::constructSpanningTrees()
                 pInDartCap  = &antiArcCap;
                 pOutDartCap = &arcCap;
                 pvDartTail  = peCurEdge->getHead();
-                DEBUG_OUT("[%d] as tail\n",getVertIndex(pvCurVert));
+                DEBUG_OUT("vert[%d] as tail\n",getVertIndex(pvCurVert));
             } else { //edge points to current vertex
                 pInDartCap  = &arcCap;
                 pOutDartCap = &antiArcCap;
                 pvDartTail  = peCurEdge->getTail();
-                DEBUG_OUT("[%d] as head\n",getVertIndex(pvCurVert));
+                DEBUG_OUT("vert[%d] as head\n",getVertIndex(pvCurVert));
             }
 
 
