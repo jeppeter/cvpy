@@ -177,6 +177,7 @@ double CutPlanar::getMaxFlow()
     DynLeaf *plTailD, *plHeadD, *plTailE, *plHeadE;
 
     int tailEIdx, headEIdx;
+    int i;
 
     PlanarEdge *peD, *peE;
     PlanarFace *pfLeft, *pfRight;
@@ -200,6 +201,9 @@ double CutPlanar::getMaxFlow()
     if (primalTreeNodes)
         delete [] primalTreeNodes;
     primalTreeNodes = new DynLeaf[nVerts];
+    for (i=0;i<nVerts;i++){
+        primalTreeNodes[i].idx = i;
+    }
 
     if (dualTreeParent)
         delete [] dualTreeParent;

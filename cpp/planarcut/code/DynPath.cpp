@@ -1605,7 +1605,7 @@ void DynLeaf::prepareRootPathDbl(CapType &grossMin, CapType &grossMinR)
 
 void DynLeaf::disassemble()
 {
-    DynNode *pn, *pnP, *pnC;       //node variables for parent and child
+    DynNode *pn=NULL, *pnP=NULL, *pnC=NULL;       //node variables for parent and child
     DynRoot *pdp;
 
     CapType grossMin, grossMinR;   //current grossmin value
@@ -1630,9 +1630,12 @@ void DynLeaf::disassemble()
     //compute and save path to root node
     pn = this;
 
+    memset(stackRPath,0,sizeof(stackRPath));
     while (pn->bParent != 0) {
 
+        DEBUG_OUT("stackRPath[%d] (%d -> %d)\n",idxRPath,getDynNodeIdx(stackRPath[idxRPath]),getDynNodeIdx(pn));
         stackRPath[idxRPath++] = pn;
+        DEBUG_OUT("pn (dynnode[%d] -> dynnode[%d].parent dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn),getDynNodeIdx(pn->bParent));
         pn = pn->bParent;
 
     }
@@ -1651,7 +1654,7 @@ void DynLeaf::disassemble()
 
         cost  = grossMin  + pnP->netCost;
         costR = grossMinR + pnP->netCostR;
-
+        DEBUG_OUT("pnC (%d -> %d)\n",pnC ? pnC->idx : -1 , stackRPath[idxRPath-1] ? stackRPath[idxRPath-1]->idx : -1);
         pnC = stackRPath[--idxRPath]; //get next child on path to destination node
 
         bool toRPath = (pnC == pnP->bLeft); //true, if the path continues left
@@ -1821,6 +1824,7 @@ DynRoot *DynLeaf::expose()
     DynRoot *pdp;
 
     //make "this" the first node in the path
+    DEBUG_OUT("dynode[%d] expose\n",this->idx);
     divide(&sres);
 
     if (sres.leftPath) {

@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <float.h>
 #include <math.h>
+#include "outdebug.h"
 
 #include "CutPlanarDefs.h"
 
@@ -109,6 +110,7 @@ public:
     DynNode *bRight;    //right child
 
     void *data;  //user defined data
+    int idx;
 
     CapType netCost, netCostR; //net costs
     CapType netMin, netMinR;   //net minimal costs of an edge in the path
@@ -140,7 +142,10 @@ public:
 };
 
 
-
+inline int getDynNodeIdx(DynNode* pNode)
+{
+    return pNode ? pNode->idx:-1;
+}
 
 
 
@@ -156,7 +161,7 @@ public:
 //A single DynRoot is represented by the root node of the corresponding tree.
 //In a way a DynRoot can therefore be regarded as a DynNode and is directly
 //derived from it.
-class DynRoot : private DynNode
+class DynRoot : public DynNode
 {
 
     friend class DynLeaf;  //authorize DynRoot to convert from DynNode to DynLeaf
@@ -215,7 +220,7 @@ public:
 //by the chain of leaf nodes of the binary DynRoot tree. The operations
 //always act on the path the calling leaf node is part of and with
 //respect to the calling leaf node.
-class DynLeaf : private DynNode
+class DynLeaf : public DynNode
 {
 
     friend class DynRoot; //authorize DynLeaf to convert from DynNode to DynRoot
@@ -392,16 +397,21 @@ inline void DynNode::getNetCostPtr(CapType **pNetCost, CapType **pNetCostR, bool
 
 inline void DynNode::normalizeReverseState()
 {
+    DEBUG_OUT("dynnode[%d].Reserved (%s)\n",getDynNodeIdx(this),this->getReversed() ? "True" : "False");
     if (!getReversed()) return; //is normalized already
 
     setReversed(false);
     setMapping(!getMapping());
 
     DynNode *pn = bLeft;
+    DEBUG_OUT("dynnode[%d].left (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(bLeft) ,getDynNodeIdx(bRight));
+    DEBUG_OUT("dynnode[%d].right (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(bRight),getDynNodeIdx(bLeft));
     bLeft = bRight;
     bRight = pn;
 
+
     pn = bHead;
+
     bHead = bTail;
     bTail = pn;
 
