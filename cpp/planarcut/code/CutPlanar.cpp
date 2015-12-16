@@ -837,12 +837,14 @@ void CutPlanar::constructSpanningTrees()
         DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n",curVertIdx,curEdgeIdx[curVertIdx],(curEdgeIdx[curVertIdx]+1));
         curEdgeIdx[curVertIdx]++;
         peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
+        DEBUG_OUT("vert[%d].edges[%d] (edge[%d])\n",this->getVertIndex(pvCurVert),curEdgeIdx[curVertIdx],this->getEdgeIndex(peCurEdge));
 
         PlanarVertex *pvTail = peCurEdge->getTail();
         PlanarVertex *pvDartTail;
 
         arcCap     = peCurEdge->getCapacity();
         antiArcCap = peCurEdge->getRevCapacity();
+        DEBUG_OUT("edge[%d].cap (%f) .recap (%f)\n",this->getEdgeIndex(peCurEdge),arcCap,antiArcCap);
 
         //get capacities of the two darts
         if (pvCurVert == pvTail) { //edge points away from current vertex
@@ -876,9 +878,11 @@ void CutPlanar::constructSpanningTrees()
                 if (arcCap) {
                     pfRight = peCurEdge->getHeadDual();
                     pfLeft = peCurEdge->getTailDual();
+                    DEBUG_OUT("edge[%d].Head (face[%d]) .Tail (face[%d])\n",this->getEdgeIndex(peCurEdge),this->getFaceIndex(pfRight),this->getFaceIndex(pfLeft));
                 } else {
                     pfRight = peCurEdge->getTailDual();
                     pfLeft = peCurEdge->getHeadDual();
+                    DEBUG_OUT("edge[%d].Tail (face[%d]) .Head (face[%d])\n",this->getEdgeIndex(peCurEdge),this->getFaceIndex(pfRight),this->getFaceIndex(pfLeft));
                 }
 
                 int fIdx = getFaceIndex(pfLeft);
@@ -893,11 +897,13 @@ void CutPlanar::constructSpanningTrees()
             curEdgeIdx[curVertIdx]++;
 
             peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
+            DEBUG_OUT("vert[%d].edges[%d] (%d)\n",this->getVertIndex(pvCurVert),curEdgeIdx[curVertIdx],this->getEdgeIndex(peCurEdge));
 
             pvTail = peCurEdge->getTail();
 
             arcCap     = peCurEdge->getCapacity();
             antiArcCap = peCurEdge->getRevCapacity();
+            DEBUG_OUT("edge[%d].tail (vert[%d]) .cap(%f) .recap(%f)\n",this->getEdgeIndex(peCurEdge),this->getVertIndex(pvTail),arcCap,antiArcCap);
 
             //get capacities of the two darts
             if (pvCurVert == pvTail) { //edge points away from current vertex
@@ -964,6 +970,8 @@ void CutPlanar::constructSpanningTrees()
                 linkData    = (void *)peCurEdge;
 
                 curBranchLength = 0;
+                DEBUG_OUT("dynnode[%d] linkCost(%f) linkCostR(%f) mapping(%s) linkData(edge[%d])\n",
+                    this->getDynNodeIndex(plCurNode),linkCost,linkCostR,linkMapping ? "True":"False",this->getEdgeIndex(peCurEdge));
             }
 
             bAddedNewPrimEdge = true;
@@ -997,7 +1005,7 @@ void CutPlanar::constructSpanningTrees()
             }
             DEBUG_OUT("curBranchLength (%d -> %d)\n",curBranchLength,curBranchLength+1);
             curBranchLeaves[curBranchLength++] = plCurNode;
-            DEBUG_OUT("[%d] setWeakLink\n",getDynNodeIndex(plCurNode));
+            DEBUG_OUT("dynnode[%d] setWeakLink\n",getDynNodeIndex(plCurNode));
             plCurNode->setWeakLink(0,
                                    *pInDartCap, *pOutDartCap,
                                    pInDartCap == &antiArcCap,
