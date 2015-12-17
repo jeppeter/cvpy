@@ -1028,10 +1028,11 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     CapType minU, minUR;
     int revFac;
 
+    DEBUG_OUT("rightPath 0x%p\n",rightPath);
     if (!rightPath)
         return 0;
 
-    //create a new root with left and right part as children
+    //create a new root with left and right part as children    
     pdp = construct(rightPath, cost, costR, revMapping, data);
 
     u = pdp;
@@ -1193,13 +1194,19 @@ DynRoot *DynRoot::construct(DynRoot *rightPath,
     CapType *pLNetMin = &infCap, *pLNetMinR = &infCap;
     CapType *pRNetMin = &infCap, *pRNetMinR = &infCap;
 
-    if (!isLeaf())
+    if (!isLeaf()){
+        DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(this));
         getNetMinPtr(&pLNetMin, &pLNetMinR);
+    }
 
-    if (!rightPath->isLeaf())
+    if (!rightPath->isLeaf()){
+        DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(rightPath));
         rightPath->getNetMinPtr(&pRNetMin, &pRNetMinR);
+    }
 
+    DEBUG_OUT("dynnode[%d].netMin (%f -> %f)\n",getDynNodeIdx(pn),pn->netMin,mmin3(cost,*pLNetMin,*pRNetMin));
     pn->netMin  = mmin3(cost, *pLNetMin,  *pRNetMin);
+    DEBUG_OUT("dynnode[%d].netMinR (%f -> %f)\n",getDynNodeIdx(pn),pn->netMinR,mmin3(costR,*pLNetMinR,*pRNetMinR));
     pn->netMinR = mmin3(costR, *pLNetMinR, *pRNetMinR);
 
     pn->netCost  = cost  - pn->netMin;
@@ -1690,19 +1697,25 @@ void DynLeaf::disassemble()
 
 void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
 {
-    CapType cost, costR;           //cost of recently deleted node
-    bool  mapping;               //arc / anti-arc association of costs
-    void    *data;
+    CapType cost=CapType(0), costR=CapType(0);           //cost of recently deleted node
+    bool  mapping=false;               //arc / anti-arc association of costs
+    void    *data=NULL;
 
     //reassemble left subpath from inside to outside
     //otherwise no log-runtime is guaranteed
-    if (idxLeftSide != 0)
+    if (idxLeftSide != 0){
+        DEBUG_OUT("pdpl (0x%p -> stackLeftSide[%d]0x%p)\n",pdpl,idxLeftSide-1,stackLeftSide[idxLeftSide-1]);
         pdpl = stackLeftSide[--idxLeftSide];
+    }
 
     while (idxLeftSide != 0) {
+        DEBUG_OUT("costR (%f -> stackCostL[%d] %f)\n",costR,idxCostL-1,stackCostL[idxCostL-1]);
         costR   = stackCostL[--idxCostL];
+        DEBUG_OUT("cost  (%f -> stackCostL[%d] %f)\n",cost,idxCostL-1,stackCostL[idxCostL-1]);
         cost    = stackCostL[--idxCostL];
+        DEBUG_OUT("mapping (%s -> stackMappingL[%d] %s)\n",mapping ? "True":"False",idxMappingL-1,stackMappingL[idxMappingL-1] ? "True":"False");
         mapping = stackMappingL[--idxMappingL];
+        DEBUG_OUT("data (0x%p -> stackDataL[%d] 0x%p)\n",data,idxDataL-1,stackDataL[idxDataL-1]);
         data    = stackDataL[--idxDataL];
         pdpl    = stackLeftSide[--idxLeftSide]->concatenate(pdpl, cost, costR, mapping, data);
     }
@@ -1710,12 +1723,18 @@ void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
 
     //reassemble right subpath from inside to outside
     //otherwise no log-runtime is guaranteed
-    if (idxRightSide != 0)
+    if (idxRightSide != 0){
+        DEBUG_OUT("pdpr (0x%p -> stackRightSide[%d] 0x%p)\n",pdpr,idxRightSide-1,stackRightSide[idxRightSide-1]);
         pdpr = stackRightSide[--idxRightSide];
+    }
 
     while (idxRightSide != 0) {
+        DEBUG_OUT("costR (%f -> stackCostR[%d] %f)\n",costR,idxCostR-1,stackCostR[idxCostR-1]);
         costR   = stackCostR[--idxCostR];
+        DEBUG_OUT("cost  (%f -> stackCostR[%d] %f)\n",cost,idxCostR-1,stackCostR[idxCostR-1]);
         cost    = stackCostR[--idxCostR];
+        DEBUG_OUT("mapping (%s -> stackMappingR[%d] %s)\n",mapping ? "True" : "False",
+            idxMappingR-1,stackMappingR[idxMappingR-1] ? "True":"False");
         mapping = stackMappingR[--idxMappingR];
         data    = stackDataR[--idxDataR];
         pdpr    = pdpr->concatenate(stackRightSide[--idxRightSide],
@@ -1799,9 +1818,13 @@ void DynLeaf::divide(ResultSplit *psr)
     //save data of the edge where the divide happens and delete from the stack
     if (idxCostL != 0)
         if (psr) {
+            DEBUG_OUT("costBeforeR (%f -> stackCostL[%d]%f)\n",psr->costBeforeR,idxCostL-1,stackCostL[idxCostL-1]);
             psr->costBeforeR   = stackCostL[--idxCostL];
+            DEBUG_OUT("costBefore  (%f -> stackCostL[%d]%f)\n",psr->costBefore,idxCostL-1,stackCostL[idxCostL-1]);
             psr->costBefore    = stackCostL[--idxCostL];
-            psr->mappingBefore = stackMappingL[--idxMappingL];
+            DEBUG_OUT("mappingBefore (%s -> stackMappingL[%d]%s)\n",psr->mappingBefore ? "True":"False",
+                idxMappingL - 1,stackMappingL[idxMappingL-1] ? "True":"False");
+            psr->mappingBefore = stackMappingL[--idxMappingL];            
             psr->dataBefore    = stackDataL[--idxDataL];
         }
 
