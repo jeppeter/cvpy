@@ -52,7 +52,7 @@ class PlanarEdge
 
 
 public:
-
+    int idx;
     PlanarEdge();
     CapType getCapacity() { return cap; }
     CapType getRevCapacity() { return rcap; }
@@ -71,7 +71,6 @@ public:
     PlanarVertex *getTail() { return tail; }
     PlanarFace   *getHeadDual() { return headDual; }
     PlanarFace   *getTailDual() { return tailDual; }
-
 };
 
 class PlanarVertex
@@ -131,5 +130,15 @@ int PlanarVertex::getEdgeID(PlanarEdge *e)
     else
         return -1;
 }
+
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+int getLinkDataIndex(void* pdata);
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif

@@ -29,6 +29,7 @@
 #include <float.h>
 #include <math.h>
 #include "outdebug.h"
+#include "Planar.h"
 
 #include "CutPlanarDefs.h"
 
@@ -320,15 +321,20 @@ inline void DynNode::setAsLChild(DynNode *pn, bool rState)
 {
     DynNode *newHead;
 
+    DEBUG_OUT("dynnode[%d].left (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bLeft),getDynNodeIdx(pn));
     this->bLeft = pn;
+    DEBUG_OUT("dynnode[%d].parent (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn->bParent),getDynNodeIdx(this));
     pn->bParent = this;
 
     newHead = pn->isLeaf() ? pn : ((pn->getReversed() == rState) ? pn->bHead : pn->bTail);
 
-    if (rState)
+    if (rState){
+        DEBUG_OUT("dynnode[%d].tail (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bTail),getDynNodeIdx(newHead));
         this->bTail = newHead;
-    else
+    }else{
+        DEBUG_OUT("dynnode[%d].head (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bHead),getDynNodeIdx(newHead));
         this->bHead = newHead;
+    }
 }
 
 
@@ -336,15 +342,20 @@ inline void DynNode::setAsRChild(DynNode *pn, bool rState)
 {
     DynNode *newTail;
 
+    DEBUG_OUT("dynnode[%d].right (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bRight),getDynNodeIdx(pn));
     this->bRight = pn;
+    DEBUG_OUT("dynnode[%d].parent (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn->bParent),getDynNodeIdx(this));
     pn->bParent  = this;
 
     newTail = pn->isLeaf() ? pn : ((pn->getReversed() == rState) ? pn->bTail : pn->bHead);
 
-    if (rState)
+    if (rState){
+        DEBUG_OUT("dynnode[%d].head (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bHead),getDynNodeIdx(newTail));
         this->bHead = newTail;
-    else
+    }else{
+        DEBUG_OUT("dynnode[%d].tail (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bTail),getDynNodeIdx(newTail));
         this->bTail = newTail;
+    }
 }
 
 

@@ -1,7 +1,7 @@
 #ifndef __OUT_DEBUG_H__
 #define __OUT_DEBUG_H__
 
-#define DEBUG_OUT(...) do{fprintf(stdout,"%s:%d\t",__FILE__,__LINE__);fprintf(stdout,__VA_ARGS__);}while(0)
+#define DEBUG_OUT(...) do{fprintf(stdout,"%s:%s:%d\t",__FILE__,__FUNCTION__,__LINE__);fprintf(stdout,__VA_ARGS__);}while(0)
 #define DEBUG_BUFFER_FMT(p,l,...) \
 do\
 {\

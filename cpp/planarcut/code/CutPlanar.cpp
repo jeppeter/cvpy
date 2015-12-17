@@ -767,7 +767,7 @@ void CutPlanar::constructSpanningTrees()
 
     //pointers to entities in the graph
     PlanarVertex *pvCurVert, *pvSource, *pvSink;
-    PlanarEdge   *peCurEdge;
+    PlanarEdge   *peCurEdge=NULL;
     PlanarFace   *pfLeft, *pfRight;
 
     //pointer to current node in primal spanning tree T
@@ -846,6 +846,7 @@ void CutPlanar::constructSpanningTrees()
         DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n",curVertIdx,curEdgeIdx[curVertIdx],(curEdgeIdx[curVertIdx]+1));
         curEdgeIdx[curVertIdx]++;
         peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
+        peCurEdge->idx = this->getEdgeIndex(peCurEdge);
         DEBUG_OUT("vert[%d].edges[%d] (edge[%d])\n",this->getVertIndex(pvCurVert),curEdgeIdx[curVertIdx],this->getEdgeIndex(peCurEdge));
 
         PlanarVertex *pvTail = peCurEdge->getTail();
@@ -906,6 +907,7 @@ void CutPlanar::constructSpanningTrees()
             curEdgeIdx[curVertIdx]++;
 
             peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
+            peCurEdge->idx = this->getEdgeIndex(peCurEdge);
             DEBUG_OUT("vert[%d].edges[%d] (%d)\n",this->getVertIndex(pvCurVert),curEdgeIdx[curVertIdx],this->getEdgeIndex(peCurEdge));
 
             pvTail = peCurEdge->getTail();
@@ -1014,7 +1016,7 @@ void CutPlanar::constructSpanningTrees()
             }
             DEBUG_OUT("curBranchLength (%d -> %d)\n",curBranchLength,curBranchLength+1);
             curBranchLeaves[curBranchLength++] = plCurNode;
-            DEBUG_OUT("dynnode[%d] setWeakLink\n",getDynNodeIndex(plCurNode));
+            DEBUG_OUT("dynnode[%d] setWeakLink (edge[%d])\n",getDynNodeIndex(plCurNode),this->getEdgeIndex(peCurEdge));
             plCurNode->setWeakLink(0,
                                    *pInDartCap, *pOutDartCap,
                                    pInDartCap == &antiArcCap,

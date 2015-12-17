@@ -27,6 +27,12 @@
  *** PlanarFace ************************************
  ***************************************************/
 
+int getLinkDataIndex(void* pdata)
+{
+    PlanarEdge* edge = (PlanarEdge*)pdata;
+    return edge ? edge->idx : -1;
+}
+
 // empty class
 
 
