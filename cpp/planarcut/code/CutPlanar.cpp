@@ -234,6 +234,7 @@ double CutPlanar::getMaxFlow()
 
         //augmentation step
         CapType augCap = plTailD->getEdgeCost();
+        DEBUG_OUT("tailD[%d] cap %f\n",this->getDynNodeIndex(plTailD),augCap);
         pr->addCost(-augCap);
         maxFlow += augCap;
 

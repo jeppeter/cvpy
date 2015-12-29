@@ -131,8 +131,10 @@ unsigned char *RGBDataToGrey(unsigned char *rgb, int w, int h)
     unsigned char *pic = new unsigned char[w * h];
     int i;
 
-    for (i = 0; i < w * h; i++)
+    for (i = 0; i < w * h; i++){
         pic[i] = rgb[i * 3];
+    }
+
 
     return pic;
 

@@ -256,6 +256,7 @@ class DynLeaf : public DynNode
     static void*    stackDataR[STACKSIZE];     //data fields for temporarily deleted nodes right of split
     static void*    stackDataL[STACKSIZE];     //data fields for temporarily deleted nodes left of split
     static DynNode* stackRPath[STACKSIZE];     //path to the root (used by DynNode::prepareRootPath())
+    static int      initialized ;
 
 protected:
 
@@ -272,6 +273,7 @@ protected:
     //recomposes the subpath from the subtrees on the global stacks
     void reassemble(DynRoot*& pdpl, DynRoot*& pdpr);
     //(used by split() and divide() for convencience)
+    void init_dynleaf();
 
 public:
 
@@ -411,7 +413,10 @@ inline void DynNode::normalizeReverseState()
     DEBUG_OUT("dynnode[%d].Reserved (%s)\n",getDynNodeIdx(this),this->getReversed() ? "True" : "False");
     if (!getReversed()) return; //is normalized already
 
+    DEBUG_OUT("dynnode[%d].Reserved (%s -> %s)\n",getDynNodeIdx(this),this->getReversed() ? "True" : "False","False");
     setReversed(false);
+    DEBUG_OUT("dynnode[%d].Mapping (%s -> %s)\n",getDynNodeIdx(this),this->getMapping() ? "True" : "False",
+        this->getMapping() ? "False" : "True");
     setMapping(!getMapping());
 
     DynNode *pn = bLeft;

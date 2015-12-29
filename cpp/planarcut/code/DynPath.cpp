@@ -54,6 +54,37 @@ DynNode* DynLeaf::stackRPath[STACKSIZE];
 
 BlockAllocator<DynNode> DynRoot::blockAllocator;
 
+int      DynLeaf::initialized=0;
+
+void DynLeaf::init_dynleaf()
+{
+    if (DynLeaf::initialized){
+        return;
+    }
+    idxRightSide = 0;
+    idxLeftSide = 0;
+    idxCostR = 0;
+    idxCostL = 0;
+    idxMappingR = 0;
+    idxMappingL = 0;
+    idxDataL = 0;
+    idxDataR = 0;
+    idxRPath = 0;
+    memset(stackRightSide,0,sizeof(stackRightSide));
+    memset(stackLeftSide,0,sizeof(stackLeftSide));
+    memset(stackCostR,0,sizeof(stackCostR));
+    memset(stackCostL,0,sizeof(stackCostL));
+    memset(stackMappingL,0,sizeof(stackMappingL));
+    memset(stackMappingR,0,sizeof(stackMappingR));
+    memset(stackDataL,0,sizeof(stackDataL));
+    memset(stackDataR,0,sizeof(stackDataR));
+    memset(stackRPath,0,sizeof(stackRPath));
+
+    DynLeaf::initialized = 1;
+    return;
+}
+
+
 
 /***************************************************
  *** DynNode *****************************************
@@ -1028,7 +1059,7 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     CapType minU, minUR;
     int revFac;
 
-    DEBUG_OUT("rightPath 0x%p\n",rightPath);
+    DEBUG_OUT("rightPath dynnode[%d]\n",getDynNodeIdx(rightPath));
     if (!rightPath)
         return 0;
 
@@ -1204,11 +1235,14 @@ DynRoot *DynRoot::construct(DynRoot *rightPath,
     CapType *pLNetMin = &infCap, *pLNetMinR = &infCap;
     CapType *pRNetMin = &infCap, *pRNetMinR = &infCap;
 
+    DEBUG_OUT("dynnode[%d].isLeaf() %s\n",getDynNodeIdx(this),this->isLeaf() ? "True" : "False");
     if (!isLeaf()){
         DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(this));
         getNetMinPtr(&pLNetMin, &pLNetMinR);
     }
 
+    DEBUG_OUT("rightPath (dynnode[%d]) isLeaf() %s\n",getDynNodeIdx(rightPath),
+        rightPath->isLeaf()? "True":"False");
     if (!rightPath->isLeaf()){
         DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(rightPath));
         rightPath->getNetMinPtr(&pRNetMin, &pRNetMinR);
@@ -1530,6 +1564,7 @@ DynLeaf::DynLeaf() : wParent(0), wCost(0), wCostR(0)
 #if defined DYNPATH_DEBUG
     id = 0;
 #endif
+    init_dynleaf();
 
 }
 
@@ -1716,6 +1751,7 @@ void DynLeaf::disassemble()
     }
 
     //the calling node is part of the right subpath
+    DEBUG_OUT("stackRightSide[%d] (dynnode[%d] -> dynnode[%d])\n",idxRightSide,getDynNodeIdx(stackRightSide[idxRightSide]),getDynNodeIdx(this));
     stackRightSide[idxRightSide++] = static_cast<DynRoot*>(static_cast<DynNode*>(this));
 }
 
@@ -1726,13 +1762,16 @@ void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
     bool  mapping=false;               //arc / anti-arc association of costs
     void    *data=NULL;
 
+    DEBUG_OUT("reassemble left(%d) right(%d)\n",getDynNodeIdx(pdpl),getDynNodeIdx(pdpr));
     //reassemble left subpath from inside to outside
     //otherwise no log-runtime is guaranteed
+    DEBUG_OUT("idxLeftSide %d\n",idxLeftSide);
     if (idxLeftSide != 0){
-        DEBUG_OUT("pdpl (0x%p -> stackLeftSide[%d]0x%p)\n",pdpl,idxLeftSide-1,stackLeftSide[idxLeftSide-1]);
+        DEBUG_OUT("pdpl (dynnode[%d] -> stackLeftSide[%d] dynnode[%d])\n",getDynNodeIdx(pdpl),idxLeftSide-1,getDynNodeIdx(stackLeftSide[idxLeftSide-1]));
         pdpl = stackLeftSide[--idxLeftSide];
     }
 
+    DEBUG_OUT("idxLeftSide %d\n",idxLeftSide);
     while (idxLeftSide != 0) {
         DEBUG_OUT("costR (%f -> stackCostL[%d] %f)\n",costR,idxCostL-1,stackCostL[idxCostL-1]);
         costR   = stackCostL[--idxCostL];
@@ -1748,11 +1787,13 @@ void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
 
     //reassemble right subpath from inside to outside
     //otherwise no log-runtime is guaranteed
+    DEBUG_OUT("idxRightSide %d\n",idxRightSide);
     if (idxRightSide != 0){
-        DEBUG_OUT("pdpr (0x%p -> stackRightSide[%d] 0x%p)\n",pdpr,idxRightSide-1,stackRightSide[idxRightSide-1]);
+        DEBUG_OUT("pdpr (dynnode[%d] -> stackRightSide[%d] dynnode[%d])\n",getDynNodeIdx(pdpr),idxRightSide-1,getDynNodeIdx(stackRightSide[idxRightSide-1]));
         pdpr = stackRightSide[--idxRightSide];
     }
 
+    DEBUG_OUT("idxRightSide %d\n",idxRightSide);
     while (idxRightSide != 0) {
         DEBUG_OUT("costR (%f -> stackCostR[%d] %f)\n",costR,idxCostR-1,stackCostR[idxCostR-1]);
         costR   = stackCostR[--idxCostR];
