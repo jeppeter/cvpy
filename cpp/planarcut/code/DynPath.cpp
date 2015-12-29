@@ -54,13 +54,9 @@ DynNode* DynLeaf::stackRPath[STACKSIZE];
 
 BlockAllocator<DynNode> DynRoot::blockAllocator;
 
-int      DynLeaf::initialized=0;
 
 void DynLeaf::init_dynleaf()
 {
-    if (DynLeaf::initialized){
-        return;
-    }
     idxRightSide = 0;
     idxLeftSide = 0;
     idxCostR = 0;
@@ -80,7 +76,6 @@ void DynLeaf::init_dynleaf()
     memset(stackDataR,0,sizeof(stackDataR));
     memset(stackRPath,0,sizeof(stackRPath));
 
-    DynLeaf::initialized = 1;
     return;
 }
 
@@ -1564,7 +1559,6 @@ DynLeaf::DynLeaf() : wParent(0), wCost(0), wCostR(0)
 #if defined DYNPATH_DEBUG
     id = 0;
 #endif
-    init_dynleaf();
 
 }
 
@@ -1692,12 +1686,11 @@ void DynLeaf::disassemble()
     idxMappingL = 0;
     idxDataL = 0;
     idxDataR = 0;
-
+    init_dynleaf();
 
     //compute and save path to root node
     pn = this;
 
-    memset(stackRPath,0,sizeof(stackRPath));
     while (pn->bParent != 0) {
 
         DEBUG_OUT("stackRPath[%d] (%d -> %d)\n",idxRPath,getDynNodeIdx(stackRPath[idxRPath]),getDynNodeIdx(pn));
