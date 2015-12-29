@@ -580,6 +580,8 @@ void CutPlanar::preFlow()
     int infFaceIdx = (infEdge->getTail() - verts == sinkID) ? (infEdge->getHeadDual() - faces) : (infEdge->getTailDual() - faces);
     int i;
 
+    DEBUG_OUT("infEdge %d infFaceIdx %d\n",infEdge->idx,infFaceIdx);
+
     cgNodes = new CGNode*[nFaces];
 
     for (i = 0; i < nFaces; i++)
