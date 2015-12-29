@@ -63,6 +63,9 @@ void PlanarEdge::setEdge(PlanarVertex *tail,     PlanarVertex *head,     \
     this->cap  = cap;
     this->rcap = rcap;
 
+    DEBUG_OUT("edge[%d] tail(vert[%d]) head(vert[%d]) tailDual(face[%d]) headDual(face[%d]) cap %f rcap %f\n",
+        this->idx,tail->idx,head->idx,tailDual->idx,headDual->idx,(float)cap,(float)rcap);
+
     // Depending on the order of the calls setEdgesCCW() and setEdge(),
     // the respective Edge Ids of tail and head still have to be set
     if (tailEdgeID < 0 && tail)

@@ -24,12 +24,15 @@
 #define __PLANAR_H
 
 #include "CutPlanarDefs.h"
-
+#include "outdebug.h"
 
 class PlanarVertex; //forward declaration
 class PlanarEdge; //forward declaration
 class PlanarFace
-{};
+{
+public:
+    int idx;
+};
 
 class PlanarEdge
 {
@@ -79,11 +82,12 @@ class PlanarVertex
 
     int nEdges;             //number of adjacent edges
     PlanarEdge **edgesCCW;  //ccw list of adjacent edges
-    int x,y;
 
 public:
     PlanarVertex();
     ~PlanarVertex();
+    int x,y;
+    int idx;
 
     void        SetXY(int x,int y){this->x = x;this->y = y;};
     int         GetX(){return this->x; };

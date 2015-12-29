@@ -72,9 +72,21 @@ CutGrid::CutGrid(int nRows, int nCols) : idxSource(0), idxSink(0)
     int i, j; //column and row counter
     int v, e; //vertex and edge counter
 
+    for (i=0;i<nEdges;i++){
+        edges[i].idx = i;
+    }
+    for (i=0;i<nFaces;i++){
+        faces[i].idx = i;
+    }
+
+    for (i=0;i<nVerts;i++){
+        verts[i].idx = i;
+    }
+
     for (j = 0, v = 0; j < nRows; j++) {
         for (i = 0; i < nCols; i++, v++) {
 
+            verts[v].SetXY(i,j);
             e = 0;
 
             if (i < nCols - 1)
@@ -91,7 +103,6 @@ CutGrid::CutGrid(int nRows, int nCols) : idxSource(0), idxSink(0)
 
 
             verts[v].setEdgesCCW(edgesCCW, e);
-            verts[v].SetXY(i,j);
         }
     }
 
@@ -175,7 +186,7 @@ double CutGrid::getMaxFlow()
 
     //add horizontal edges
     for (j = 0, e = 0; j < nRows; j++)
-        for (i = 0; i < nHorzEdgesPerRow; i++, e++)
+        for (i = 0; i < nHorzEdgesPerRow; i++, e++){
             edges[e].setEdge(&verts[j * nCols + i],
                              &verts[j * nCols + i + 1],
                              &faces[(e - nFacesPerRow < 0) ? (nFaces - 1) : e - nFacesPerRow],
@@ -183,10 +194,11 @@ double CutGrid::getMaxFlow()
                              edgeCost(j, i, DIR_EAST),
                              edgeCost(j, i + 1, DIR_WEST)
                             );
+        }
 
     //add vertical edges
     for (j = 0, e = nHorzEdges; j < nRows - 1; j++)
-        for (i = 0; i < nVertEdgesPerRow; i++, e++)
+        for (i = 0; i < nVertEdgesPerRow; i++, e++){
             edges[e].setEdge(&verts[j * nCols + i],
                              &verts[(j + 1)*nCols + i],
                              &faces[(i >= nFacesPerRow) ? (nFaces - 1) : (j * nFacesPerRow + i)],
@@ -194,6 +206,7 @@ double CutGrid::getMaxFlow()
                              edgeCost(j, i, DIR_SOUTH),
                              edgeCost(j + 1, i, DIR_NORTH)
                             );
+        }
 
 
     pc.initialize(nVerts, verts, nEdges, edges, nFaces, faces,
