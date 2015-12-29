@@ -28,6 +28,22 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
 {
     int i = row * width + col;
     int j = i + DirToOfs[dir];
+    int jrow=row,jcol=col;
+
+    switch(dir){
+    case DIR_EAST:
+        jcol ++;
+        break;
+    case DIR_WEST:
+        jcol --;
+        break;
+    case DIR_NORTH:
+        jrow --;
+        break;
+    case DIR_SOUTH:
+        jrow ++;
+        break;
+    }
 
     if ((imMask[i] == IDX_SINK) || (imMask[j] == IDX_SOURCE))
         return CAP_INF;
@@ -37,6 +53,7 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
         double col2[3] = { (double) imData[j * 3], (double) imData[j * 3 + 1], (double) imData[j * 3 + 2] };
         return gradient(col1, col2);
     } else {
+        DEBUG_OUT("node[%d][%d] %f node[%d][%d] %f\n",row,col,(float)imData[i],jrow,jcol,(float)imData[j]);
         return gradient(imData[i], imData[j]);
     }
 }

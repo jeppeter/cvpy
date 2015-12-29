@@ -591,11 +591,13 @@ void CutPlanar::preFlow()
 
         srcFaceIdx = getFaceIndex(edges[i].getTailDual());
         dstFaceIdx = getFaceIndex(edges[i].getHeadDual());
+        DEBUG_OUT("srcFaceIdx[%d] -> dstFaceIdx[%d] edges[%d].cap %f\n",srcFaceIdx,dstFaceIdx,i,edges[i].getCapacity());
 
         graph.addEdge(cgNodes[srcFaceIdx],
                       cgNodes[dstFaceIdx],
                       edges[i].getCapacity());
 
+        DEBUG_OUT("dstFaceIdx[%d] -> srcFaceIdx[%d] edges[%d].recap %f\n",dstFaceIdx,srcFaceIdx,i,edges[i].getRevCapacity());
         graph.addEdge(cgNodes[dstFaceIdx],
                       cgNodes[srcFaceIdx],
                       edges[i].getRevCapacity());
