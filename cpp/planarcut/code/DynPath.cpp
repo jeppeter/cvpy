@@ -1726,16 +1726,30 @@ void DynLeaf::disassemble()
         pdp->destroy(&dr);
 
         if (toRPath) { //cut subtree belongs to the right half of the splitted path
+            DEBUG_OUT("stackRightSide[%d] (dynnode[%d] -> dynnode[%d])\n",
+                idxRightSide,getDynNodeIdx(stackRightSide[idxRightSide]),getDynNodeIdx(dr.rightPath));
             stackRightSide[idxRightSide++] = dr.rightPath;
+            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n",idxCostR,(float)stackCostR[idxCostR],(float)cost);
             stackCostR[idxCostR++]         = cost;
+            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n",idxCostR,(float)stackCostR[idxCostR],(float)costR);
             stackCostR[idxCostR++]         = costR;
+            DEBUG_OUT("stackMappingR[%d] ( %s -> %s)\n",idxMappingR,
+                stackMappingR[idxMappingR] ? "True" : "False",mapping ? "True" : "False");
             stackMappingR[idxMappingR++]   = mapping;
+            DEBUG_OUT("stackDataR[%d] ( edge[%d] -> edge[%d])\n",idxDataR,getLinkDataIndex(stackDataR[idxDataR]),getLinkDataIndex(data));
             stackDataR[idxDataR++]         = data;
         } else { //cut subtree belongs to the left half of the splitted path
+            DEBUG_OUT("stackLeftSide[%d] (dynnode[%d] -> dynnode[%d])\n",idxLeftSide,getDynNodeIdx(stackLeftSide[idxLeftSide]),
+                getDynNodeIdx(dr.leftPath));
             stackLeftSide[idxLeftSide++]   = dr.leftPath;
+            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n",idxCostL,(float)stackCostL[idxCostL],(float)cost);
             stackCostL[idxCostL++]         = cost;
+            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n",idxCostL,(float)stackCostL[idxCostL],(float)costR);
             stackCostL[idxCostL++]         = costR;
+            DEBUG_OUT("stackMappingL[%d] (%s -> %s)\n",idxMappingL,stackMappingL[idxMappingL] ? "True": "False",
+                mapping ? "True" : "False");
             stackMappingL[idxMappingL++]   = mapping;
+            DEBUG_OUT("stackDataL[%d] (edge[%d] -> edge[%d])\n",idxDataL,getLinkDataIndex(stackDataL[idxDataL]),getLinkDataIndex(data));
             stackDataL[idxDataL++]         = data;
         }
 
