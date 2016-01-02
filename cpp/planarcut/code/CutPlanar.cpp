@@ -1013,17 +1013,14 @@ void CutPlanar::constructSpanningTrees()
             DEBUG_OUT("maxEdgeIdx[%d] (%d -> %d)\n", curVertIdx, maxEdgeIdx[curVertIdx], curEdgeIdx[curVertIdx] + pvCurVert->getNumEdges());
             maxEdgeIdx[curVertIdx] = curEdgeIdx[curVertIdx] + pvCurVert->getNumEdges();
 
+            DEBUG_OUT("plCurNode (dynnode[%d] -> dynnode[%d])\n",getDynNodeIndex(plCurNode),getDynNodeIndex(primalTreeNodes+curVertIdx));
             plCurNode = primalTreeNodes + curVertIdx;
 
             // plCurNode->id = curVertIdx;
 
             //add the current node to the new branch
-            if (curBranchLeaves[curBranchLength] != NULL) {
-                DEBUG_OUT("curBranchLeaves[%d]  ( %d -> %d)\n", curBranchLength, getDynNodeIndex(curBranchLeaves[curBranchLength]), getDynNodeIndex(plCurNode));
-            } else {
-                DEBUG_OUT("curBranchLeaves[%d]  ( -1 -> %d)\n", curBranchLength, getDynNodeIndex(plCurNode));
-            }
-            DEBUG_OUT("curBranchLength (%d -> %d)\n", curBranchLength, curBranchLength + 1);
+            DEBUG_OUT("curBranchLeaves[%d] (dynnode[%d] -> dynnode[%d])\n",
+                curBranchLength,getDynNodeIndex(curBranchLeaves[curBranchLength]),getDynNodeIndex(plCurNode));
             curBranchLeaves[curBranchLength++] = plCurNode;
             DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
                       getLinkDataIndex(plCurNode),

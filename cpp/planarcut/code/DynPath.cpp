@@ -1577,7 +1577,7 @@ void DynLeaf::setWeakLink(DynLeaf *parent,
     wCostR  = rcap;
     DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(this),getLinkDataIndex(data),getLinkDataIndex(linkData));
     data    = linkData;
-
+    DEBUG_OUT("mapping ( %s -> %s)\n",this->getMapping() ? "True" : "False", mapping ? "True" : "False");
     DynNode::setMapping(mapping);
 
 
