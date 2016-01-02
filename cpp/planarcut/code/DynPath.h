@@ -363,19 +363,25 @@ inline void DynNode::setAsRChild(DynNode *pn, bool rState)
 
 inline void DynNode::setNetMin(CapType netMin, bool rState)
 {
-    if (rState)
+    if (rState){
+        DEBUG_OUT("dynnode[%d].netMinR (%f -> %f)\n",getDynNodeIdx(this),(float)this->netMinR,(float)netMin);
         this->netMinR = netMin;
-    else
+    }else{
+        DEBUG_OUT("dynnode[%d].netMin (%f -> %f)\n",getDynNodeIdx(this),(float)this->netMin,(float)netMin);
         this->netMin = netMin;
+    }
 }
 
 
 inline void DynNode::setNetCost(CapType netCost, bool rState)
 {
-    if (rState)
+    if (rState){
+        DEBUG_OUT("dynnode[%d].netCostR (%f -> %f)\n",getDynNodeIdx(this),(float)this->netCostR,(float)netCost);
         this->netCostR = netCost;
-    else
+    }else{
+        DEBUG_OUT("dynnode[%d].netCost (%f -> %f)\n",getDynNodeIdx(this),(float)this->netCost,(float)netCost);
         this->netCost = netCost;
+    }
 }
 
 
@@ -425,26 +431,41 @@ inline void DynNode::normalizeReverseState()
     bLeft = bRight;
     bRight = pn;
 
-
+    DEBUG_OUT("dynnode[%d].head (dynnode[%d] -> dynnode[%d])\n",
+        getDynNodeIdx(this),getDynNodeIdx(this->bHead),getDynNodeIdx(this->bTail));
+    DEBUG_OUT("dynnode[%d].tail (dynnode[%d] -> dynnode[%d])\n",
+        getDynNodeIdx(this),getDynNodeIdx(this->bTail),getDynNodeIdx(this->bHead));
     pn = bHead;
 
     bHead = bTail;
     bTail = pn;
 
+    DEBUG_OUT("dynnode[%d].netMin (%f -> %f)\n",getDynNodeIdx(this),(float)this->netMin,(float)this->netMinR);
+    DEBUG_OUT("dynnode[%d].netMinR (%f -> %f)\n",getDynNodeIdx(this),(float)this->netMinR,(float)this->netMin);
     CapType c = netMin;
     netMin = netMinR;
     netMinR = c;
 
+    DEBUG_OUT("dynnode[%d].netCost (%f -> %f)\n",getDynNodeIdx(this),(float)this->netCost,(float)this->netCostR);
+    DEBUG_OUT("dynnode[%d].netCostR (%f -> %f)\n",getDynNodeIdx(this),(float)this->netCostR,(float)this->netCost);
     c = netCost;
     netCost = netCostR;
     netCostR = c;
 
     //keep reversed state for children
-    if (bRight && !bRight->isLeaf())
+    if (bRight && !bRight->isLeaf()){
+        DEBUG_OUT("dynnode[%d].right.Reserved( %s -> %s)\n",getDynNodeIdx(this),getDynNodeIdx(this->bRight),
+            this->bRight->getReversed() ? "True": "False",
+            this->bRight->getReversed() ^ 1 ? "True" : "False");
         bRight->setReversed(bRight->getReversed() ^ 1);
+    }
 
-    if (bLeft && !bLeft->isLeaf())
+    if (bLeft && !bLeft->isLeaf()){
+        DEBUG_OUT("dynnode[%d].left.Reserved( %s -> %s)\n",getDynNodeIdx(this),getDynNodeIdx(this->bLeft),
+            this->bLeft->getReversed() ? "True" : "False",
+            this->bLeft->getReversed()^1 ? "True" :"False");
         bLeft->setReversed(bLeft->getReversed() ^ 1);
+    }
 }
 
 /***************************************************
@@ -452,8 +473,9 @@ inline void DynNode::normalizeReverseState()
  ***************************************************/
 inline DynLeaf *DynRoot::getHead()
 {
-    if (isLeaf())
+    if (isLeaf()){
         return static_cast<DynLeaf*>(static_cast<DynNode*>(this));
+    }
 
     if (getReversed())
         return static_cast<DynLeaf*>(bTail);
