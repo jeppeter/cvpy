@@ -1930,23 +1930,32 @@ DynRoot *DynLeaf::expose()
 {
 
     ResultSplit sres;
-    DynRoot *pdp;
+    DynRoot *pdp=NULL;
 
     //make "this" the first node in the path
-    DEBUG_OUT("dynode[%d] expose\n", this->idx);
+    DEBUG_OUT("dynode[%d] expose\n", getDynNodeIdx(this));
     divide(&sres);
 
     if (sres.leftPath) {
 
         DynLeaf *plT = sres.leftPath->getTail();
+        DEBUG_OUT("dynnode[%d].wParent (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(plT),getDynNodeIdx(plT->wParent),
+            getDynNodeIdx(this));
         plT->wParent = this;
+        DEBUG_OUT("dynnode[%d].wCost (%f -> %f)\n",getDynNodeIdx(plT),(float)plT->wCost,(float)sres.costBefore);
         plT->wCost   = sres.costBefore;
+        DEBUG_OUT("dynnode[%d].wCostR (%f -> %f)\n",getDynNodeIdx(plT),(float)plT->wCostR,(float)sres.costBeforeR);
         plT->wCostR  = sres.costBeforeR;
+        DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(plT),plT->getMapping() ? "True" : "False",
+            sres.mappingBefore ? "True" : "False");
         plT->setMapping(sres.mappingBefore);
+        DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(plT),getLinkDataIndex(plT->data),
+            getLinkDataIndex(sres.dataBefore));
         plT->data    = sres.dataBefore;
 
     }
 
+    DEBUG_OUT("pdp (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(pdp),getDynNodeIdx(sres.rightPath));
     pdp = sres.rightPath;
 
     //connect nodes on the root path to one path

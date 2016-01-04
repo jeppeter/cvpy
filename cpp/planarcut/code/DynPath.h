@@ -486,12 +486,17 @@ inline DynLeaf *DynRoot::getHead()
 
 inline DynLeaf *DynRoot::getTail()
 {
-    if (isLeaf())
+    if (isLeaf()){
+        DEBUG_OUT("dynnode[%d].getTail (dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this));
         return static_cast<DynLeaf*>(static_cast<DynNode*>(this));
+    }
 
-    if (getReversed())
+    if (getReversed()){
+        DEBUG_OUT("dynnode[%d].getTail (dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bHead));
         return static_cast<DynLeaf*>(bHead);
+    }
 
+    DEBUG_OUT("dynnode[%d].getTail (dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->bTail));
     return static_cast<DynLeaf*>(bTail);
 }
 

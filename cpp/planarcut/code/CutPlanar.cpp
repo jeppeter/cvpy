@@ -972,7 +972,7 @@ void CutPlanar::constructSpanningTrees()
                     DEBUG_OUT("DynRootFromLeafChain\n");
                     curBranch = DynRoot::DynRootFromLeafChain(curBranchLeaves, curBranchLength);
                     DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
-                              getLinkDataIndex(curBranch->getTail()),
+                              getDynNodeIdx(curBranch->getTail()),
                               linkNode->idx, (float)linkCost, (float)linkCostR, linkMapping ? "True" : "False",
                               getLinkDataIndex(linkData));
                     curBranch->getTail()->setWeakLink(linkNode,
@@ -1037,7 +1037,7 @@ void CutPlanar::constructSpanningTrees()
                       curBranchLength, getDynNodeIdx(curBranchLeaves[curBranchLength]), getDynNodeIdx(plCurNode));
             curBranchLeaves[curBranchLength++] = plCurNode;
             DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
-                      getLinkDataIndex(plCurNode),
+                      getDynNodeIdx(plCurNode),
                       -1, (float)*pInDartCap, (float)*pOutDartCap, pInDartCap == &antiArcCap ? "True" : "False",
                       getLinkDataIndex(peCurEdge));
             plCurNode->setWeakLink(0,
