@@ -66,15 +66,15 @@ void DynLeaf::init_dynleaf()
     idxDataL = 0;
     idxDataR = 0;
     idxRPath = 0;
-    memset(stackRightSide,0,sizeof(stackRightSide));
-    memset(stackLeftSide,0,sizeof(stackLeftSide));
-    memset(stackCostR,0,sizeof(stackCostR));
-    memset(stackCostL,0,sizeof(stackCostL));
-    memset(stackMappingL,0,sizeof(stackMappingL));
-    memset(stackMappingR,0,sizeof(stackMappingR));
-    memset(stackDataL,0,sizeof(stackDataL));
-    memset(stackDataR,0,sizeof(stackDataR));
-    memset(stackRPath,0,sizeof(stackRPath));
+    memset(stackRightSide, 0, sizeof(stackRightSide));
+    memset(stackLeftSide, 0, sizeof(stackLeftSide));
+    memset(stackCostR, 0, sizeof(stackCostR));
+    memset(stackCostL, 0, sizeof(stackCostL));
+    memset(stackMappingL, 0, sizeof(stackMappingL));
+    memset(stackMappingR, 0, sizeof(stackMappingR));
+    memset(stackDataL, 0, sizeof(stackDataL));
+    memset(stackDataR, 0, sizeof(stackDataR));
+    memset(stackRPath, 0, sizeof(stackRPath));
 
     return;
 }
@@ -113,13 +113,19 @@ void DynNode::rotateRight(CapType grossminU, CapType grossminUR)
     CapType *pNetMin, *pNetMinR;
     bool rState;
 
-    if (isLeaf()) return;
+    if (isLeaf()) {
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(this));
+        return;
+    }
     normalizeReverseState();
 
     u = this;
     v = bLeft;
 
-    if (v->isLeaf()) return;
+    if (v->isLeaf()) {
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(v));
+        return;
+    }
     v->normalizeReverseState();
 
     //save original node data of u and v
@@ -180,9 +186,13 @@ void DynNode::rotateRight(CapType grossminU, CapType grossminUR)
     DynNode *unew = v; //let the old DynNode for v be the u after rotation
 
     //restructure tree with u being new root
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(vold.bLeft));
     vnew->setAsLChild(vold.bLeft, false);
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(vold.bRight));
     unew->setAsLChild(vold.bRight, false);
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(uold.bRight));
     unew->setAsRChild(uold.bRight, false);
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(unew));
     vnew->setAsRChild(unew, false);
 
     //update netMin fields of unew, vnew and their respective children
@@ -1054,17 +1064,17 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     CapType minU, minUR;
     int revFac;
 
-    DEBUG_OUT("rightPath dynnode[%d]\n",getDynNodeIdx(rightPath));
+    DEBUG_OUT("rightPath dynnode[%d]\n", getDynNodeIdx(rightPath));
     if (!rightPath)
         return 0;
 
-    //create a new root with left and right part as children    
+    //create a new root with left and right part as children
     pdp = construct(rightPath, cost, costR, revMapping, data);
 
     u = pdp;
     minU  = u->netMin;
     minUR = u->netMinR;
-    DEBUG_OUT("dynnode[%d].netMin (%f) .netMinR(%f)\n",getDynNodeIdx(u),minU,minUR);
+    DEBUG_OUT("dynnode[%d].netMin (%f) .netMinR(%f)\n", getDynNodeIdx(u), minU, minUR);
 
 
     //The constructed tree is in general unbalanced, the left subtree
@@ -1083,11 +1093,11 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     while (u->bLeft->height - u->bRight->height > 1) {
 
         DEBUG_OUT("dynnode[%d].left (dynnode[%d]).height(%f) .right(dynnode[%d]).height(%f)\n",
-            getDynNodeIdx(u),getDynNodeIdx(u->bLeft),u->bLeft->height,
-            getDynNodeIdx(u->bRight),u->bRight->height);
+                  getDynNodeIdx(u), getDynNodeIdx(u->bLeft), u->bLeft->height,
+                  getDynNodeIdx(u->bRight), u->bRight->height);
         v = u->bLeft;
         revFac = (v->getReversed() ? -1 : 1);
-        DEBUG_OUT("dynnode[%d].reversed (%s)\n",getDynNodeIdx(v),v->getReversed() ? "True": "False");
+        DEBUG_OUT("dynnode[%d].reversed (%s)\n", getDynNodeIdx(v), v->getReversed() ? "True" : "False");
 
         if (revFac * (v->bLeft->height - v->bRight->height) >= 0) {
 
@@ -1123,11 +1133,11 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     while (u->bRight->height - u->bLeft->height > 1) {
 
         DEBUG_OUT("dynnode[%d].left (dynnode[%d]).height(%f) .right(dynnode[%d]).height(%f)\n",
-            getDynNodeIdx(u),getDynNodeIdx(u->bLeft),u->bLeft->height,
-            getDynNodeIdx(u->bRight),u->bRight->height);
+                  getDynNodeIdx(u), getDynNodeIdx(u->bLeft), u->bLeft->height,
+                  getDynNodeIdx(u->bRight), u->bRight->height);
         v = u->bRight;
         revFac = (v->getReversed() ? -1 : 1);
-        DEBUG_OUT("dynnode[%d].reversed (%s)\n",getDynNodeIdx(v),v->getReversed() ? "True": "False");
+        DEBUG_OUT("dynnode[%d].reversed (%s)\n", getDynNodeIdx(v), v->getReversed() ? "True" : "False");
 
         if (revFac * (v->bRight->height - v->bLeft->height) >= 0) {
 
@@ -1161,7 +1171,7 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     while (u->bParent) {
 
         u = u->bParent;
-        DEBUG_OUT("dynnode[%d].height (%d -> %d)\n",getDynNodeIdx(u),u->height,max(u->bLeft->height, u->bRight->height) + 1);
+        DEBUG_OUT("dynnode[%d].height (%d -> %d)\n", getDynNodeIdx(u), u->height, max(u->bLeft->height, u->bRight->height) + 1);
         u->height = max(u->bLeft->height, u->bRight->height) + 1;
 
     }
@@ -1230,51 +1240,51 @@ DynRoot *DynRoot::construct(DynRoot *rightPath,
     CapType *pLNetMin = &infCap, *pLNetMinR = &infCap;
     CapType *pRNetMin = &infCap, *pRNetMinR = &infCap;
 
-    DEBUG_OUT("dynnode[%d].isLeaf() %s\n",getDynNodeIdx(this),this->isLeaf() ? "True" : "False");
-    if (!isLeaf()){
-        DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(this));
+    DEBUG_OUT("dynnode[%d].isLeaf() %s\n", getDynNodeIdx(this), this->isLeaf() ? "True" : "False");
+    if (!isLeaf()) {
+        DEBUG_OUT("dynnode[%d] not leaf\n", getDynNodeIdx(this));
         getNetMinPtr(&pLNetMin, &pLNetMinR);
     }
 
-    DEBUG_OUT("rightPath (dynnode[%d]) isLeaf() %s\n",getDynNodeIdx(rightPath),
-        rightPath->isLeaf()? "True":"False");
-    if (!rightPath->isLeaf()){
-        DEBUG_OUT("dynnode[%d] not leaf\n",getDynNodeIdx(rightPath));
+    DEBUG_OUT("rightPath (dynnode[%d]) isLeaf() %s\n", getDynNodeIdx(rightPath),
+              rightPath->isLeaf() ? "True" : "False");
+    if (!rightPath->isLeaf()) {
+        DEBUG_OUT("dynnode[%d] not leaf\n", getDynNodeIdx(rightPath));
         rightPath->getNetMinPtr(&pRNetMin, &pRNetMinR);
     }
 
-    DEBUG_OUT("dynnode[%d].netMin (%f -> %f)\n",getDynNodeIdx(pn),pn->netMin,mmin3(cost,*pLNetMin,*pRNetMin));
+    DEBUG_OUT("dynnode[%d].netMin (%f -> %f)\n", getDynNodeIdx(pn), pn->netMin, mmin3(cost, *pLNetMin, *pRNetMin));
     pn->netMin  = mmin3(cost, *pLNetMin,  *pRNetMin);
-    DEBUG_OUT("dynnode[%d].netMinR (%f -> %f)\n",getDynNodeIdx(pn),pn->netMinR,mmin3(costR,*pLNetMinR,*pRNetMinR));
+    DEBUG_OUT("dynnode[%d].netMinR (%f -> %f)\n", getDynNodeIdx(pn), pn->netMinR, mmin3(costR, *pLNetMinR, *pRNetMinR));
     pn->netMinR = mmin3(costR, *pLNetMinR, *pRNetMinR);
 
-    DEBUG_OUT("dynnode[%d].netCost (%f -> %f)\n",getDynNodeIdx(pn),pn->netCost,cost- pn->netMin);
+    DEBUG_OUT("dynnode[%d].netCost (%f -> %f)\n", getDynNodeIdx(pn), pn->netCost, cost - pn->netMin);
     pn->netCost  = cost  - pn->netMin;
-    DEBUG_OUT("dynnode[%d].netCostR (%f -> %f)\n",getDynNodeIdx(pn),pn->netCostR,costR - pn->netMinR);
+    DEBUG_OUT("dynnode[%d].netCostR (%f -> %f)\n", getDynNodeIdx(pn), pn->netCostR, costR - pn->netMinR);
     pn->netCostR = costR - pn->netMinR;
 
     pn->setAsLChild(this, 0);
     pn->setAsRChild(rightPath, 0);
 
     if (!pn->bRight->isLeaf()) {
-        DEBUG_OUT("infCap(*pRNetMin) (%f -> (-dynnode[%d].netMin %f )%f)\n",*pRNetMin,getDynNodeIdx(pn),pn->netMin,(*pRNetMin - pn->netMin));
+        DEBUG_OUT("infCap(*pRNetMin) (%f -> (-dynnode[%d].netMin %f )%f)\n", *pRNetMin, getDynNodeIdx(pn), pn->netMin, (*pRNetMin - pn->netMin));
         *pRNetMin  -= pn->netMin;
-        DEBUG_OUT("infCap(*pRNetMinR) (%f -> (-dynnode[%d].netMinR %f )%f)\n",*pRNetMinR,getDynNodeIdx(pn),pn->netMinR,(*pRNetMinR - pn->netMinR));
+        DEBUG_OUT("infCap(*pRNetMinR) (%f -> (-dynnode[%d].netMinR %f )%f)\n", *pRNetMinR, getDynNodeIdx(pn), pn->netMinR, (*pRNetMinR - pn->netMinR));
         *pRNetMinR -= pn->netMinR;
     }
 
     if (!pn->bLeft->isLeaf()) {
-        DEBUG_OUT("infCap(*pLNetMin) (%f -> (-dynnode[%d].netMin %f )%f)\n",*pLNetMin,getDynNodeIdx(pn),pn->netMin,(*pLNetMin - pn->netMin));
+        DEBUG_OUT("infCap(*pLNetMin) (%f -> (-dynnode[%d].netMin %f )%f)\n", *pLNetMin, getDynNodeIdx(pn), pn->netMin, (*pLNetMin - pn->netMin));
         *pLNetMin  -= pn->netMin;
         DEBUG_OUT("infCap(*pLNetMinR) (%f -> (-dynnode[%d].netMinR %f )%f)\n",
-            *pLNetMinR,getDynNodeIdx(pn),pn->netMinR,(*pLNetMinR - pn->netMinR));
+                  *pLNetMinR, getDynNodeIdx(pn), pn->netMinR, (*pLNetMinR - pn->netMinR));
         *pLNetMinR -= pn->netMinR;
     }
 
-    DEBUG_OUT("dynnode[%d].height (%d -> %d)\n",getDynNodeIdx(pn),pn->height,max(rightPath->height, this->height) + 1);
+    DEBUG_OUT("dynnode[%d].height (%d -> %d)\n", getDynNodeIdx(pn), pn->height, max(rightPath->height, this->height) + 1);
     pn->height = max(rightPath->height, this->height) + 1;
     pn->setMapping(revMapping);
-    DEBUG_OUT("dynnode[%d] setMapping(%s) result(%s)\n",getDynNodeIdx(pn),revMapping ? "True" : "False",pn->getMapping() ? "True" : "False");
+    DEBUG_OUT("dynnode[%d] setMapping(%s) result(%s)\n", getDynNodeIdx(pn), revMapping ? "True" : "False", pn->getMapping() ? "True" : "False");
     pn->data = data;
 
 
@@ -1569,15 +1579,15 @@ void DynLeaf::setWeakLink(DynLeaf *parent,
                           void *linkData)
 {
 
-    DEBUG_OUT("dynnode[%d].parent (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(this),getDynNodeIdx(this->wParent),getDynNodeIdx(parent));
+    DEBUG_OUT("dynnode[%d].parent (dynnode[%d] -> dynnode[%d])\n", getDynNodeIdx(this), getDynNodeIdx(this->wParent), getDynNodeIdx(parent));
     wParent = parent;
-    DEBUG_OUT("dynnode[%d].cost (%f -> %f)\n",getDynNodeIdx(this),this->wCost,cap);
+    DEBUG_OUT("dynnode[%d].cost (%f -> %f)\n", getDynNodeIdx(this), this->wCost, cap);
     wCost   = cap;
-    DEBUG_OUT("dynnode[%d].costR (%f -> %f)\n",getDynNodeIdx(this),this->wCostR,rcap);
+    DEBUG_OUT("dynnode[%d].costR (%f -> %f)\n", getDynNodeIdx(this), this->wCostR, rcap);
     wCostR  = rcap;
-    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(this),getLinkDataIndex(data),getLinkDataIndex(linkData));
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n", getDynNodeIdx(this), getLinkDataIndex(data), getLinkDataIndex(linkData));
     data    = linkData;
-    DEBUG_OUT("mapping ( %s -> %s)\n",this->getMapping() ? "True" : "False", mapping ? "True" : "False");
+    DEBUG_OUT("mapping ( %s -> %s)\n", this->getMapping() ? "True" : "False", mapping ? "True" : "False");
     DynNode::setMapping(mapping);
 
 
@@ -1666,7 +1676,7 @@ void DynLeaf::prepareRootPathDbl(CapType &grossMin, CapType &grossMinR)
 
 void DynLeaf::disassemble()
 {
-    DynNode *pn=NULL, *pnP=NULL, *pnC=NULL;       //node variables for parent and child
+    DynNode *pn = NULL, *pnP = NULL, *pnC = NULL; //node variables for parent and child
     DynRoot *pdp;
 
     CapType grossMin, grossMinR;   //current grossmin value
@@ -1693,9 +1703,9 @@ void DynLeaf::disassemble()
 
     while (pn->bParent != 0) {
 
-        DEBUG_OUT("stackRPath[%d] (%d -> %d)\n",idxRPath,getDynNodeIdx(stackRPath[idxRPath]),getDynNodeIdx(pn));
+        DEBUG_OUT("stackRPath[%d] (%d -> %d)\n", idxRPath, getDynNodeIdx(stackRPath[idxRPath]), getDynNodeIdx(pn));
         stackRPath[idxRPath++] = pn;
-        DEBUG_OUT("pn (dynnode[%d] -> dynnode[%d].parent dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn),getDynNodeIdx(pn->bParent));
+        DEBUG_OUT("pn (dynnode[%d] -> dynnode[%d].parent dynnode[%d])\n", getDynNodeIdx(pn), getDynNodeIdx(pn), getDynNodeIdx(pn->bParent));
         pn = pn->bParent;
 
     }
@@ -1714,7 +1724,7 @@ void DynLeaf::disassemble()
 
         cost  = grossMin  + pnP->netCost;
         costR = grossMinR + pnP->netCostR;
-        DEBUG_OUT("pnC (%d -> %d)\n",pnC ? pnC->idx : -1 , stackRPath[idxRPath-1] ? stackRPath[idxRPath-1]->idx : -1);
+        DEBUG_OUT("pnC (%d -> %d)\n", getDynNodeIdx(pnC) , getDynNodeIdx(stackRPath[idxRPath - 1]));
         pnC = stackRPath[--idxRPath]; //get next child on path to destination node
 
         bool toRPath = (pnC == pnP->bLeft); //true, if the path continues left
@@ -1727,29 +1737,29 @@ void DynLeaf::disassemble()
 
         if (toRPath) { //cut subtree belongs to the right half of the splitted path
             DEBUG_OUT("stackRightSide[%d] (dynnode[%d] -> dynnode[%d])\n",
-                idxRightSide,getDynNodeIdx(stackRightSide[idxRightSide]),getDynNodeIdx(dr.rightPath));
+                      idxRightSide, getDynNodeIdx(stackRightSide[idxRightSide]), getDynNodeIdx(dr.rightPath));
             stackRightSide[idxRightSide++] = dr.rightPath;
-            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n",idxCostR,(float)stackCostR[idxCostR],(float)cost);
+            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n", idxCostR, (float)stackCostR[idxCostR], (float)cost);
             stackCostR[idxCostR++]         = cost;
-            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n",idxCostR,(float)stackCostR[idxCostR],(float)costR);
+            DEBUG_OUT("stackCostR[%d] ( %f -> %f)\n", idxCostR, (float)stackCostR[idxCostR], (float)costR);
             stackCostR[idxCostR++]         = costR;
-            DEBUG_OUT("stackMappingR[%d] ( %s -> %s)\n",idxMappingR,
-                stackMappingR[idxMappingR] ? "True" : "False",mapping ? "True" : "False");
+            DEBUG_OUT("stackMappingR[%d] ( %s -> %s)\n", idxMappingR,
+                      stackMappingR[idxMappingR] ? "True" : "False", mapping ? "True" : "False");
             stackMappingR[idxMappingR++]   = mapping;
-            DEBUG_OUT("stackDataR[%d] ( edge[%d] -> edge[%d])\n",idxDataR,getLinkDataIndex(stackDataR[idxDataR]),getLinkDataIndex(data));
+            DEBUG_OUT("stackDataR[%d] ( edge[%d] -> edge[%d])\n", idxDataR, getLinkDataIndex(stackDataR[idxDataR]), getLinkDataIndex(data));
             stackDataR[idxDataR++]         = data;
         } else { //cut subtree belongs to the left half of the splitted path
-            DEBUG_OUT("stackLeftSide[%d] (dynnode[%d] -> dynnode[%d])\n",idxLeftSide,getDynNodeIdx(stackLeftSide[idxLeftSide]),
-                getDynNodeIdx(dr.leftPath));
+            DEBUG_OUT("stackLeftSide[%d] (dynnode[%d] -> dynnode[%d])\n", idxLeftSide, getDynNodeIdx(stackLeftSide[idxLeftSide]),
+                      getDynNodeIdx(dr.leftPath));
             stackLeftSide[idxLeftSide++]   = dr.leftPath;
-            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n",idxCostL,(float)stackCostL[idxCostL],(float)cost);
+            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n", idxCostL, (float)stackCostL[idxCostL], (float)cost);
             stackCostL[idxCostL++]         = cost;
-            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n",idxCostL,(float)stackCostL[idxCostL],(float)costR);
+            DEBUG_OUT("stackCostL[%d] ( %f -> %f)\n", idxCostL, (float)stackCostL[idxCostL], (float)costR);
             stackCostL[idxCostL++]         = costR;
-            DEBUG_OUT("stackMappingL[%d] (%s -> %s)\n",idxMappingL,stackMappingL[idxMappingL] ? "True": "False",
-                mapping ? "True" : "False");
+            DEBUG_OUT("stackMappingL[%d] (%s -> %s)\n", idxMappingL, stackMappingL[idxMappingL] ? "True" : "False",
+                      mapping ? "True" : "False");
             stackMappingL[idxMappingL++]   = mapping;
-            DEBUG_OUT("stackDataL[%d] (edge[%d] -> edge[%d])\n",idxDataL,getLinkDataIndex(stackDataL[idxDataL]),getLinkDataIndex(data));
+            DEBUG_OUT("stackDataL[%d] (edge[%d] -> edge[%d])\n", idxDataL, getLinkDataIndex(stackDataL[idxDataL]), getLinkDataIndex(data));
             stackDataL[idxDataL++]         = data;
         }
 
@@ -1758,35 +1768,35 @@ void DynLeaf::disassemble()
     }
 
     //the calling node is part of the right subpath
-    DEBUG_OUT("stackRightSide[%d] (dynnode[%d] -> dynnode[%d])\n",idxRightSide,getDynNodeIdx(stackRightSide[idxRightSide]),getDynNodeIdx(this));
+    DEBUG_OUT("stackRightSide[%d] (dynnode[%d] -> dynnode[%d])\n", idxRightSide, getDynNodeIdx(stackRightSide[idxRightSide]), getDynNodeIdx(this));
     stackRightSide[idxRightSide++] = static_cast<DynRoot*>(static_cast<DynNode*>(this));
 }
 
 
 void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
 {
-    CapType cost=CapType(0), costR=CapType(0);           //cost of recently deleted node
-    bool  mapping=false;               //arc / anti-arc association of costs
-    void    *data=NULL;
+    CapType cost = CapType(0), costR = CapType(0);       //cost of recently deleted node
+    bool  mapping = false;             //arc / anti-arc association of costs
+    void    *data = NULL;
 
-    DEBUG_OUT("reassemble left(%d) right(%d)\n",getDynNodeIdx(pdpl),getDynNodeIdx(pdpr));
+    DEBUG_OUT("reassemble left(%d) right(%d)\n", getDynNodeIdx(pdpl), getDynNodeIdx(pdpr));
     //reassemble left subpath from inside to outside
     //otherwise no log-runtime is guaranteed
-    DEBUG_OUT("idxLeftSide %d\n",idxLeftSide);
-    if (idxLeftSide != 0){
-        DEBUG_OUT("pdpl (dynnode[%d] -> stackLeftSide[%d] dynnode[%d])\n",getDynNodeIdx(pdpl),idxLeftSide-1,getDynNodeIdx(stackLeftSide[idxLeftSide-1]));
+    DEBUG_OUT("idxLeftSide %d\n", idxLeftSide);
+    if (idxLeftSide != 0) {
+        DEBUG_OUT("pdpl (dynnode[%d] -> stackLeftSide[%d] dynnode[%d])\n", getDynNodeIdx(pdpl), idxLeftSide - 1, getDynNodeIdx(stackLeftSide[idxLeftSide - 1]));
         pdpl = stackLeftSide[--idxLeftSide];
     }
 
-    DEBUG_OUT("idxLeftSide %d\n",idxLeftSide);
+    DEBUG_OUT("idxLeftSide %d\n", idxLeftSide);
     while (idxLeftSide != 0) {
-        DEBUG_OUT("costR (%f -> stackCostL[%d] %f)\n",costR,idxCostL-1,stackCostL[idxCostL-1]);
+        DEBUG_OUT("costR (%f -> stackCostL[%d] %f)\n", costR, idxCostL - 1, stackCostL[idxCostL - 1]);
         costR   = stackCostL[--idxCostL];
-        DEBUG_OUT("cost  (%f -> stackCostL[%d] %f)\n",cost,idxCostL-1,stackCostL[idxCostL-1]);
+        DEBUG_OUT("cost  (%f -> stackCostL[%d] %f)\n", cost, idxCostL - 1, stackCostL[idxCostL - 1]);
         cost    = stackCostL[--idxCostL];
-        DEBUG_OUT("mapping (%s -> stackMappingL[%d] %s)\n",mapping ? "True":"False",idxMappingL-1,stackMappingL[idxMappingL-1] ? "True":"False");
+        DEBUG_OUT("mapping (%s -> stackMappingL[%d] %s)\n", mapping ? "True" : "False", idxMappingL - 1, stackMappingL[idxMappingL - 1] ? "True" : "False");
         mapping = stackMappingL[--idxMappingL];
-        DEBUG_OUT("data (0x%p -> stackDataL[%d] 0x%p)\n",data,idxDataL-1,stackDataL[idxDataL-1]);
+        DEBUG_OUT("data (0x%p -> stackDataL[%d] 0x%p)\n", data, idxDataL - 1, stackDataL[idxDataL - 1]);
         data    = stackDataL[--idxDataL];
         pdpl    = stackLeftSide[--idxLeftSide]->concatenate(pdpl, cost, costR, mapping, data);
     }
@@ -1794,22 +1804,22 @@ void DynLeaf::reassemble(DynRoot*& pdpl, DynRoot*& pdpr)
 
     //reassemble right subpath from inside to outside
     //otherwise no log-runtime is guaranteed
-    DEBUG_OUT("idxRightSide %d\n",idxRightSide);
-    if (idxRightSide != 0){
-        DEBUG_OUT("pdpr (dynnode[%d] -> stackRightSide[%d] dynnode[%d])\n",getDynNodeIdx(pdpr),idxRightSide-1,getDynNodeIdx(stackRightSide[idxRightSide-1]));
+    DEBUG_OUT("idxRightSide %d\n", idxRightSide);
+    if (idxRightSide != 0) {
+        DEBUG_OUT("pdpr (dynnode[%d] -> stackRightSide[%d] dynnode[%d])\n", getDynNodeIdx(pdpr), idxRightSide - 1, getDynNodeIdx(stackRightSide[idxRightSide - 1]));
         pdpr = stackRightSide[--idxRightSide];
     }
 
-    DEBUG_OUT("idxRightSide %d\n",idxRightSide);
+    DEBUG_OUT("idxRightSide %d\n", idxRightSide);
     while (idxRightSide != 0) {
-        DEBUG_OUT("costR (%f -> stackCostR[%d] %f)\n",costR,idxCostR-1,stackCostR[idxCostR-1]);
+        DEBUG_OUT("costR (%f -> stackCostR[%d] %f)\n", costR, idxCostR - 1, stackCostR[idxCostR - 1]);
         costR   = stackCostR[--idxCostR];
-        DEBUG_OUT("cost  (%f -> stackCostR[%d] %f)\n",cost,idxCostR-1,stackCostR[idxCostR-1]);
+        DEBUG_OUT("cost  (%f -> stackCostR[%d] %f)\n", cost, idxCostR - 1, stackCostR[idxCostR - 1]);
         cost    = stackCostR[--idxCostR];
-        DEBUG_OUT("mapping (%s -> stackMappingR[%d] %s)\n",mapping ? "True" : "False",
-            idxMappingR-1,stackMappingR[idxMappingR-1] ? "True":"False");
+        DEBUG_OUT("mapping (%s -> stackMappingR[%d] %s)\n", mapping ? "True" : "False",
+                  idxMappingR - 1, stackMappingR[idxMappingR - 1] ? "True" : "False");
         mapping = stackMappingR[--idxMappingR];
-        DEBUG_OUT("data ( edge[%d] -> stackDataR[%d] edge[%d])\n",getLinkDataIndex(data),idxDataR-1,getLinkDataIndex(stackDataR[idxDataR-1]));
+        DEBUG_OUT("data ( edge[%d] -> stackDataR[%d] edge[%d])\n", getLinkDataIndex(data), idxDataR - 1, getLinkDataIndex(stackDataR[idxDataR - 1]));
         data    = stackDataR[--idxDataR];
         pdpr    = pdpr->concatenate(stackRightSide[--idxRightSide],
                                     cost, costR,
@@ -1892,13 +1902,14 @@ void DynLeaf::divide(ResultSplit *psr)
     //save data of the edge where the divide happens and delete from the stack
     if (idxCostL != 0)
         if (psr) {
-            DEBUG_OUT("costBeforeR (%f -> stackCostL[%d]%f)\n",psr->costBeforeR,idxCostL-1,stackCostL[idxCostL-1]);
+            DEBUG_OUT("costBeforeR (%f -> stackCostL[%d]%f)\n", psr->costBeforeR, idxCostL - 1, stackCostL[idxCostL - 1]);
             psr->costBeforeR   = stackCostL[--idxCostL];
-            DEBUG_OUT("costBefore  (%f -> stackCostL[%d]%f)\n",psr->costBefore,idxCostL-1,stackCostL[idxCostL-1]);
+            DEBUG_OUT("costBefore  (%f -> stackCostL[%d]%f)\n", psr->costBefore, idxCostL - 1, stackCostL[idxCostL - 1]);
             psr->costBefore    = stackCostL[--idxCostL];
-            DEBUG_OUT("mappingBefore (%s -> stackMappingL[%d]%s)\n",psr->mappingBefore ? "True":"False",
-                idxMappingL - 1,stackMappingL[idxMappingL-1] ? "True":"False");
-            psr->mappingBefore = stackMappingL[--idxMappingL];            
+            DEBUG_OUT("mappingBefore (%s -> stackMappingL[%d]%s)\n", psr->mappingBefore ? "True" : "False",
+                      idxMappingL - 1, stackMappingL[idxMappingL - 1] ? "True" : "False");
+            psr->mappingBefore = stackMappingL[--idxMappingL];
+            DEBUG_OUT("dataBefore (edge[%d] -> edge[%d])\n", getLinkDataIndex(psr->dataBefore), getLinkDataIndex(stackDataL[idxDataL - 1]));
             psr->dataBefore    = stackDataL[--idxDataL];
         }
 
@@ -1921,7 +1932,7 @@ DynRoot *DynLeaf::expose()
     DynRoot *pdp;
 
     //make "this" the first node in the path
-    DEBUG_OUT("dynode[%d] expose\n",this->idx);
+    DEBUG_OUT("dynode[%d] expose\n", this->idx);
     divide(&sres);
 
     if (sres.leftPath) {
