@@ -115,7 +115,7 @@ void DynNode::rotateRight(CapType grossminU, CapType grossminUR)
     bool rState;
 
     if (isLeaf()) {
-        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(this));
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n", getDynNodeIdx(this));
         return;
     }
     normalizeReverseState();
@@ -124,7 +124,7 @@ void DynNode::rotateRight(CapType grossminU, CapType grossminUR)
     v = bLeft;
 
     if (v->isLeaf()) {
-        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(v));
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n", getDynNodeIdx(v));
         return;
     }
     v->normalizeReverseState();
@@ -187,13 +187,13 @@ void DynNode::rotateRight(CapType grossminU, CapType grossminUR)
     DynNode *unew = v; //let the old DynNode for v be the u after rotation
 
     //restructure tree with u being new root
-    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(vold.bLeft));
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n", getDynNodeIdx(vnew), getDynNodeIdx(vold.bLeft));
     vnew->setAsLChild(vold.bLeft, false);
-    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(vold.bRight));
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n", getDynNodeIdx(unew), getDynNodeIdx(vold.bRight));
     unew->setAsLChild(vold.bRight, false);
-    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(uold.bRight));
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n", getDynNodeIdx(unew), getDynNodeIdx(uold.bRight));
     unew->setAsRChild(uold.bRight, false);
-    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(unew));
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n", getDynNodeIdx(vnew), getDynNodeIdx(unew));
     vnew->setAsRChild(unew, false);
 
     //update netMin fields of unew, vnew and their respective children
@@ -259,13 +259,19 @@ void DynNode::rotateLeft(CapType grossminU, CapType grossminUR)
     bool rState;
 
 
-    if (isLeaf()) return;
+    if (isLeaf()) {
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(this));
+        return;
+    }
     normalizeReverseState();
 
     u = this;
     v = bRight; //u->bRight
 
-    if (v->isLeaf()) return;
+    if (v->isLeaf()) {
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(v));
+        return;
+    }
     v->normalizeReverseState();
 
     //save original node data of u and v
@@ -481,10 +487,13 @@ void DynNode::doubleRotateRight(CapType grossminU, CapType grossminUR)
     DynNode *vnew = v; //let the old DynNode for v be still v after rotation
 
     //restructure tree with u being new root
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(wold.bRight));
     unew->setAsLChild(wold.bRight, false);
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(uold.bRight));
     unew->setAsRChild(uold.bRight, false);
-
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(wold.bLeft));
     vnew->setAsRChild(wold.bLeft, false);
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(wnew),getDynNodeIdx(unew));
     wnew->setAsRChild(unew, false);
 
 
@@ -543,17 +552,29 @@ void DynNode::doubleRotateRight(CapType grossminU, CapType grossminUR)
 
     wnew->setNetCost(costW  - minWNew,  false);
     wnew->setNetCost(costWR - minWNewR, true);
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(wnew),wnew->getMapping() ? "True" : "False",
+        wMapping ? "True" : "False");
     wnew->setMapping(wMapping);
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(wnew),getLinkDataIndex(wnew->data),
+        getLinkDataIndex(wData));
     wnew->data = wData;
 
     vnew->setNetCost(costV  - minVNew,  false);
     vnew->setNetCost(costVR - minVNewR, true);
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(vnew),vnew->getMapping() ? "True" : "False",
+        vMapping ? "True" : "False");
     vnew->setMapping(vMapping);
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(vnew),getLinkDataIndex(vnew->data),
+        getLinkDataIndex(vData));
     vnew->data = vData;
 
     unew->setNetCost(costU  - minUNew,  false);
     unew->setNetCost(costUR - minUNewR, true);
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(unew),unew->getMapping() ? "True" : "False",
+        uMapping ? "True" : "False");
     unew->setMapping(uMapping);
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(unew),getLinkDataIndex(unew->data),
+        getLinkDataIndex(uData));
     unew->data = uData;
 
     //fix height fields while minding the order!
@@ -1066,8 +1087,9 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     int revFac;
 
     DEBUG_OUT("rightPath dynnode[%d]\n", getDynNodeIdx(rightPath));
-    if (!rightPath)
+    if (!rightPath){
         return 0;
+    }
 
     //create a new root with left and right part as children
     pdp = construct(rightPath, cost, costR, revMapping, data);
@@ -1304,15 +1326,21 @@ DynRoot *DynRoot::splice()
 
     //get the "weak" parent node of the last path node within the DynTree
     pl = this->getTail()->getWeakParent();
-
-    if (!pl)
+    DEBUG_OUT("dynnode[%d].getTail.getWeakParent dynnode[%d]\n", getDynNodeIdx(this), getDynNodeIdx(pl));
+    if (!pl) {
         return this;
+    }
 
     //split up the parent nodes path
     pl->divide(&sres);
 
     //and reconnect the left subpath weakly to the parent node
     if (sres.leftPath) {
+        DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
+                  getDynNodeIdx(sres.leftPath->getTail()),
+                  getDynNodeIdx(pl), (float)sres.costBefore, (float)sres.costBeforeR, 
+                  sres.mappingBefore ? "True" : "False",
+                  getLinkDataIndex(sres.dataBefore));
         sres.leftPath->getTail()->setWeakLink(pl,
                                               sres.costBefore,
                                               sres.costBeforeR,
@@ -1702,6 +1730,7 @@ void DynLeaf::disassemble()
     //compute and save path to root node
     pn = this;
 
+    DEBUG_OUT("dynnode[%d].bParent (dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn->bParent));
     while (pn->bParent != 0) {
 
         DEBUG_OUT("stackRPath[%d] (%d -> %d)\n", idxRPath, getDynNodeIdx(stackRPath[idxRPath]), getDynNodeIdx(pn));
@@ -1930,7 +1959,7 @@ DynRoot *DynLeaf::expose()
 {
 
     ResultSplit sres;
-    DynRoot *pdp=NULL;
+    DynRoot *pdp = NULL;
 
     //make "this" the first node in the path
     DEBUG_OUT("dynode[%d] expose\n", getDynNodeIdx(this));
@@ -1939,23 +1968,23 @@ DynRoot *DynLeaf::expose()
     if (sres.leftPath) {
 
         DynLeaf *plT = sres.leftPath->getTail();
-        DEBUG_OUT("dynnode[%d].wParent (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(plT),getDynNodeIdx(plT->wParent),
-            getDynNodeIdx(this));
+        DEBUG_OUT("dynnode[%d].wParent (dynnode[%d] -> dynnode[%d])\n", getDynNodeIdx(plT), getDynNodeIdx(plT->wParent),
+                  getDynNodeIdx(this));
         plT->wParent = this;
-        DEBUG_OUT("dynnode[%d].wCost (%f -> %f)\n",getDynNodeIdx(plT),(float)plT->wCost,(float)sres.costBefore);
+        DEBUG_OUT("dynnode[%d].wCost (%f -> %f)\n", getDynNodeIdx(plT), (float)plT->wCost, (float)sres.costBefore);
         plT->wCost   = sres.costBefore;
-        DEBUG_OUT("dynnode[%d].wCostR (%f -> %f)\n",getDynNodeIdx(plT),(float)plT->wCostR,(float)sres.costBeforeR);
+        DEBUG_OUT("dynnode[%d].wCostR (%f -> %f)\n", getDynNodeIdx(plT), (float)plT->wCostR, (float)sres.costBeforeR);
         plT->wCostR  = sres.costBeforeR;
-        DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(plT),plT->getMapping() ? "True" : "False",
-            sres.mappingBefore ? "True" : "False");
+        DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n", getDynNodeIdx(plT), plT->getMapping() ? "True" : "False",
+                  sres.mappingBefore ? "True" : "False");
         plT->setMapping(sres.mappingBefore);
-        DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(plT),getLinkDataIndex(plT->data),
-            getLinkDataIndex(sres.dataBefore));
+        DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n", getDynNodeIdx(plT), getLinkDataIndex(plT->data),
+                  getLinkDataIndex(sres.dataBefore));
         plT->data    = sres.dataBefore;
 
     }
 
-    DEBUG_OUT("pdp (dynnode[%d] -> dynnode[%d])\n",getDynNodeIdx(pdp),getDynNodeIdx(sres.rightPath));
+    DEBUG_OUT("pdp (dynnode[%d] -> dynnode[%d])\n", getDynNodeIdx(pdp), getDynNodeIdx(sres.rightPath));
     pdp = sres.rightPath;
 
     //connect nodes on the root path to one path
