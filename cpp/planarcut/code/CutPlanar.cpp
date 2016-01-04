@@ -95,7 +95,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     for (i = 0; i < nFaces; i++) {
         faces[i].idx = i;
     }
-    for (i=0;i<nVerts;i++){
+    for (i = 0; i < nVerts; i++) {
         verts[i].idx = i;
     }
 
@@ -854,10 +854,6 @@ void CutPlanar::constructSpanningTrees()
     curBranchLength = 0;
     curBranchLeaves = new DynLeaf*[nVerts];
     memset(curBranchLeaves, 0, sizeof(DynLeaf*)*nVerts);
-    for (i = 0; i < nVerts; i++) {
-        DEBUG_OUT("curBranchLeaves[%d] (dynnode[%d] 0x%p)\n", i, getDynNodeIdx(curBranchLeaves[i]), curBranchLeaves[i]);
-    }
-
 
     while (!(pvCurVert == pvSink && curEdgeIdx[curVertIdx] >= maxEdgeIdx[curVertIdx])) {
 
@@ -878,15 +874,19 @@ void CutPlanar::constructSpanningTrees()
             pInDartCap  = &antiArcCap;
             pOutDartCap = &arcCap;
             pvDartTail  = peCurEdge->getHead();
-            DEBUG_OUT("vert[%d] as tail\n", curVertIdx);
+            DEBUG_OUT("vert[%d] as tail *pInDartCap %f *pOutDartCap %f\n", curVertIdx,
+                      (float)*pInDartCap, (float)*pOutDartCap);
         } else { //edge points to current vertex
             pInDartCap  = &arcCap;
             pOutDartCap = &antiArcCap;
             pvDartTail  = peCurEdge->getTail();
-            DEBUG_OUT("vert[%d] as head\n", curVertIdx);
+            DEBUG_OUT("vert[%d] as head *pInDartCap %f *pOutDartCap %f\n", curVertIdx,
+                      (float)*pInDartCap, (float)*pOutDartCap);
         }
 
-
+        DEBUG_OUT("curEdgeIdx[%d] %d maxEdgeIdx[%d] %d\n", curVertIdx, curEdgeIdx[curVertIdx], curVertIdx, maxEdgeIdx[curVertIdx]);
+        DEBUG_OUT("*pInDartCap %f\n", (float)*pInDartCap);
+        DEBUG_OUT("curEdgeIdx[tailvert(%d)] %d\n", getVertIdx(pvDartTail), curEdgeIdx[getVertIdx(pvDartTail)]);
         //add edges to the dual spanning tree T* as long as...
         while ( (curEdgeIdx[curVertIdx] != maxEdgeIdx[curVertIdx]) &&
                 //...not all edges of the vertex have been visited yet AND...
@@ -924,27 +924,31 @@ void CutPlanar::constructSpanningTrees()
             curEdgeIdx[curVertIdx]++;
 
             peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
-            DEBUG_OUT("vert[%d].edges[%d] (%d)\n", getVertIdx(pvCurVert), curEdgeIdx[curVertIdx], getEdgeIdx(peCurEdge));
+            DEBUG_OUT("vert[%d].edges[%d] (edge[%d])\n", getVertIdx(pvCurVert), curEdgeIdx[curVertIdx], getEdgeIdx(peCurEdge));
 
             pvTail = peCurEdge->getTail();
 
             arcCap     = peCurEdge->getCapacity();
             antiArcCap = peCurEdge->getRevCapacity();
-            DEBUG_OUT("edge[%d].tail (vert[%d]) .cap(%f) .recap(%f)\n", getEdgeIdx(peCurEdge),getVertIdx(pvTail), arcCap, antiArcCap);
+            DEBUG_OUT("edge[%d].tail (vert[%d]) .cap(%f) .rcap(%f)\n", getEdgeIdx(peCurEdge), getVertIdx(pvTail), arcCap, antiArcCap);
 
             //get capacities of the two darts
             if (pvCurVert == pvTail) { //edge points away from current vertex
                 pInDartCap  = &antiArcCap;
                 pOutDartCap = &arcCap;
                 pvDartTail  = peCurEdge->getHead();
-                DEBUG_OUT("vert[%d] as tail\n", getVertIdx(pvCurVert));
+                DEBUG_OUT("vert[%d] as tail *pInDartCap %f *pOutDartCap %f\n", getVertIdx(pvCurVert), (float)*pInDartCap, (float)*pOutDartCap);
             } else { //edge points to current vertex
                 pInDartCap  = &arcCap;
                 pOutDartCap = &antiArcCap;
                 pvDartTail  = peCurEdge->getTail();
-                DEBUG_OUT("vert[%d] as head\n", getVertIdx(pvCurVert));
+                DEBUG_OUT("vert[%d] as head *pInDartCap %f *pOutDartCap %f\n", getVertIdx(pvCurVert),
+                          (float)*pInDartCap, (float)*pOutDartCap);
             }
 
+            DEBUG_OUT("curEdgeIdx[%d] %d maxEdgeIdx[%d] %d\n", curVertIdx, curEdgeIdx[curVertIdx], curVertIdx, maxEdgeIdx[curVertIdx]);
+            DEBUG_OUT("*pInDartCap %f\n", (float)*pInDartCap);
+            DEBUG_OUT("curEdgeIdx[tailvert(%d)] %d\n", getVertIdx(pvDartTail), curEdgeIdx[getVertIdx(pvDartTail)]);
 
         } //finish adding edges to T*
 
