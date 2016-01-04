@@ -140,6 +140,9 @@ extern "C"{
 #endif
 
 int getLinkDataIndex(void* pdata);
+int getEdgeIdx(PlanarEdge*e);
+int getFaceIdx(PlanarFace*f);
+int getVertIdx(PlanarVertex*v);
 
 #ifdef __cplusplus
 };

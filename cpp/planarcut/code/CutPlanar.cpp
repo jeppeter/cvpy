@@ -75,6 +75,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
                            int idxSource, int idxSink, ECheckFlags checkInput)
 {
 
+    int i;
     nVerts = numVerts; verts = vertexList;
     nEdges = numEdges; edges = edgeList;
     nFaces = numFaces; faces = faceList;
@@ -85,11 +86,18 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
 
     CapType capInf = 0, capMin = CAP_INF, cap, rcap;
     PlanarEdge *e;
-    int i;
 
     //reset edge flags
-    for (int i = 0; i < nEdges; i++)
+    for (i = 0; i < nEdges; i++) {
+        edges[i].idx = i;
         edges[i].setFlags(0);
+    }
+    for (i = 0; i < nFaces; i++) {
+        faces[i].idx = i;
+    }
+    for (i=0;i<nVerts;i++){
+        verts[i].idx = i;
+    }
 
     //determine minimum weight that is considered = infinity...
     for (i = 0, e = edges; i < numEdges; i++, e++) {
@@ -230,18 +238,18 @@ double CutPlanar::getMaxFlow()
 
         pr = plSource->expose();
         plTailD = pr->getMinCostLeaf();
-        DEBUG_OUT("srcdynnode[%d] tailD dynnode[%d]\n", this->getDynNodeIndex(plSource), this->getDynNodeIndex(plTailD));
+        DEBUG_OUT("srcdynnode[%d] tailD dynnode[%d]\n", getDynNodeIdx(plSource), getDynNodeIdx(plTailD));
 
         //augmentation step
         CapType augCap = plTailD->getEdgeCost();
-        DEBUG_OUT("tailD[%d] cap %f\n", this->getDynNodeIndex(plTailD), augCap);
+        DEBUG_OUT("tailD[%d] cap %f\n", getDynNodeIdx(plTailD), augCap);
         pr->addCost(-augCap);
         maxFlow += augCap;
 
         //the nodes between plHeadD and plSink lie on the
         //same DynPath due to the call of expose()
         plHeadD = plTailD->getNextDyn();
-        DEBUG_OUT("plTailD[%d] getnextDyn plHeadD[%d]\n", this->getDynNodeIndex(plTailD), this->getDynNodeIndex(plHeadD));
+        DEBUG_OUT("plTailD[%d] getnextDyn plHeadD[%d]\n", getDynNodeIdx(plTailD), getDynNodeIdx(plHeadD));
 
         //find the edge that has is to be saturated
         ResultSplit sres;
@@ -250,7 +258,7 @@ double CutPlanar::getMaxFlow()
         plTailD->setWeakLink(0, 0, 0, false, 0);
 
         peD = static_cast<PlanarEdge*>(sres.dataBefore);
-        DEBUG_OUT("peD[%d]\n", this->getEdgeIndex(peD));
+        DEBUG_OUT("peD[%d]\n", getEdgeIdx(peD));
 
         //update the capacity of peD in the graph as well
         if (!sres.mappingBefore) {
@@ -270,12 +278,12 @@ double CutPlanar::getMaxFlow()
         }
 
         //get the edge that leads to the parent of peD's right face in T*
-        peE = dualTreeEdge[getFaceIndex(pfRight)];
+        peE = dualTreeEdge[getFaceIdx(pfRight)];
 
 
         //update dual spanning tree T*:
         //insert peD into T* ...
-        int fIdx = getFaceIndex(pfRight);
+        int fIdx = getFaceIdx(pfRight);
         dualTreeParent[fIdx] = pfLeft;
         dualTreeEdge[fIdx]   = peD;
 
@@ -294,13 +302,13 @@ double CutPlanar::getMaxFlow()
             //identify arc with positive costs -
             //the costs of the antiarc should be zero
             if (eArcCap) {
-                tailEIdx = getVertIndex(peE->getTail());
-                headEIdx = getVertIndex(peE->getHead());
+                tailEIdx = getVertIdx(peE->getTail());
+                headEIdx = getVertIdx(peE->getHead());
 
                 bMapping = false;
             } else {
-                tailEIdx = getVertIndex(peE->getHead());
-                headEIdx = getVertIndex(peE->getTail());
+                tailEIdx = getVertIdx(peE->getHead());
+                headEIdx = getVertIdx(peE->getTail());
 
                 bMapping = true;
             }
@@ -492,7 +500,7 @@ std::vector<int> CutPlanar::getCutBoundary(ELabel label)
 {
     if (!computedFlow) getMaxFlow();
 
-    int         cutFace  = getFaceIndex(pfStartOfCut);
+    int         cutFace  = getFaceIdx(pfStartOfCut);
     int         currFace = cutFace;
     PlanarEdge *currEdge;
     int         currHead, currTail;
@@ -554,7 +562,7 @@ std::vector<int> CutPlanar::getCircularPath()
 {
     if (!computedFlow) getMaxFlow();
 
-    int         cutFace  = getFaceIndex(pfStartOfCut);
+    int         cutFace  = getFaceIdx(pfStartOfCut);
     int         currFace = cutFace;
     std::vector<int> circel;
     while (true) {
@@ -591,8 +599,8 @@ void CutPlanar::preFlow()
     //insert dual darts of input graph with costs lower than infinity
     for (i = 0; i < nEdges; i++) {
 
-        srcFaceIdx = getFaceIndex(edges[i].getTailDual());
-        dstFaceIdx = getFaceIndex(edges[i].getHeadDual());
+        srcFaceIdx = getFaceIdx(edges[i].getTailDual());
+        dstFaceIdx = getFaceIdx(edges[i].getHeadDual());
         DEBUG_OUT("srcFaceIdx[%d] -> dstFaceIdx[%d] edges[%d].cap %f\n", srcFaceIdx, dstFaceIdx, i, edges[i].getCapacity());
 
         graph.addEdge(cgNodes[srcFaceIdx],
@@ -614,8 +622,8 @@ void CutPlanar::preFlow()
 
     for (i = 0; i < nEdges; i++) {
 
-        faceTIdx = getFaceIndex(edges[i].getTailDual());
-        faceHIdx = getFaceIndex(edges[i].getHeadDual());
+        faceTIdx = getFaceIdx(edges[i].getTailDual());
+        faceHIdx = getFaceIdx(edges[i].getHeadDual());
 
         w  = edges[i].getCapacity();
         rw = edges[i].getRevCapacity();
@@ -797,12 +805,13 @@ void CutPlanar::constructSpanningTrees()
     CapType  linkCost, linkCostR;
     bool     linkMapping;
     void    *linkData;
+    int i;
 
     //state variables
     bool bAddedNewPrimEdge; //true if new edges are being added, false in case of a backtrack
 
     //initialize first bit of edge flag to zero - this indicates whether an edge has been added to T*
-    for (int i = 0; i < nEdges; i++)
+    for (i = 0; i < nEdges; i++)
         edges[i].setFlags(edges[i].getFlags() & 0xfe);
 
     //set the source and sink pointers of the primal spanning tree
@@ -824,12 +833,12 @@ void CutPlanar::constructSpanningTrees()
     curEdgeIdx = new short[nVerts];
     maxEdgeIdx = new short[nVerts];
 
-    for (int i = 0; i < nVerts; i++) {
+    for (i = 0; i < nVerts; i++) {
         curEdgeIdx[i] = -1;
         maxEdgeIdx[i] = 0;
     }
 
-    curVertIdx = getVertIndex(pvCurVert);
+    curVertIdx = getVertIdx(pvCurVert);
     DEBUG_OUT("curVertIdx %d (%d:%d)\n", curVertIdx, pvCurVert->GetX(), pvCurVert->GetY());
     maxEdgeIdx[curVertIdx] = pvSink->getNumEdges();
 
@@ -845,6 +854,9 @@ void CutPlanar::constructSpanningTrees()
     curBranchLength = 0;
     curBranchLeaves = new DynLeaf*[nVerts];
     memset(curBranchLeaves, 0, sizeof(DynLeaf*)*nVerts);
+    for (i = 0; i < nVerts; i++) {
+        DEBUG_OUT("curBranchLeaves[%d] (dynnode[%d] 0x%p)\n", i, getDynNodeIdx(curBranchLeaves[i]), curBranchLeaves[i]);
+    }
 
 
     while (!(pvCurVert == pvSink && curEdgeIdx[curVertIdx] >= maxEdgeIdx[curVertIdx])) {
@@ -852,15 +864,14 @@ void CutPlanar::constructSpanningTrees()
         DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n", curVertIdx, curEdgeIdx[curVertIdx], (curEdgeIdx[curVertIdx] + 1));
         curEdgeIdx[curVertIdx]++;
         peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
-        peCurEdge->idx = this->getEdgeIndex(peCurEdge);
-        DEBUG_OUT("vert[%d].edges[%d] (edge[%d])\n", this->getVertIndex(pvCurVert), curEdgeIdx[curVertIdx], this->getEdgeIndex(peCurEdge));
+        DEBUG_OUT("vert[%d].edges[%d] (edge[%d])\n", getVertIdx(pvCurVert), curEdgeIdx[curVertIdx], getEdgeIdx(peCurEdge));
 
         PlanarVertex *pvTail = peCurEdge->getTail();
         PlanarVertex *pvDartTail;
 
         arcCap     = peCurEdge->getCapacity();
         antiArcCap = peCurEdge->getRevCapacity();
-        DEBUG_OUT("edge[%d].cap (%f) .recap (%f)\n", this->getEdgeIndex(peCurEdge), (float)arcCap, (float)antiArcCap);
+        DEBUG_OUT("edge[%d].cap (%f) .recap (%f)\n", getEdgeIdx(peCurEdge), (float)arcCap, (float)antiArcCap);
 
         //get capacities of the two darts
         if (pvCurVert == pvTail) { //edge points away from current vertex
@@ -881,7 +892,7 @@ void CutPlanar::constructSpanningTrees()
                 //...not all edges of the vertex have been visited yet AND...
                 ((!*pInDartCap) ||
                  //...either the dart pointing to the current vertex has capcity 0...
-                 (curEdgeIdx[getVertIndex(pvDartTail)] != -1)) ) {
+                 (curEdgeIdx[getVertIdx(pvDartTail)] != -1)) ) {
             //...or the vertex at the end of the edge has been visited already (or both).
 
             //check if the edge has not yet been added to T*
@@ -894,15 +905,15 @@ void CutPlanar::constructSpanningTrees()
                 if (arcCap) {
                     pfRight = peCurEdge->getHeadDual();
                     pfLeft = peCurEdge->getTailDual();
-                    DEBUG_OUT("edge[%d].Head (face[%d]) .Tail (face[%d])\n", this->getEdgeIndex(peCurEdge), this->getFaceIndex(pfRight), this->getFaceIndex(pfLeft));
+                    DEBUG_OUT("edge[%d].Head (face[%d]) .Tail (face[%d])\n", getEdgeIdx(peCurEdge), getFaceIdx(pfRight), getFaceIdx(pfLeft));
                 } else {
                     pfRight = peCurEdge->getTailDual();
                     pfLeft = peCurEdge->getHeadDual();
-                    DEBUG_OUT("edge[%d].Tail (face[%d]) .Head (face[%d])\n", this->getEdgeIndex(peCurEdge), this->getFaceIndex(pfRight), this->getFaceIndex(pfLeft));
+                    DEBUG_OUT("edge[%d].Tail (face[%d]) .Head (face[%d])\n", getEdgeIdx(peCurEdge), getFaceIdx(pfRight), getFaceIdx(pfLeft));
                 }
 
-                int fIdx = getFaceIndex(pfLeft);
-                DEBUG_OUT("dual face[%d] Parent face[%d] edge[%d]\n", fIdx, getFaceIndex(pfRight), getEdgeIndex(peCurEdge));
+                int fIdx = getFaceIdx(pfLeft);
+                DEBUG_OUT("dual face[%d] Parent face[%d] edge[%d]\n", fIdx, getFaceIdx(pfRight), getEdgeIdx(peCurEdge));
                 dualTreeParent[fIdx] = pfRight;
                 dualTreeEdge[fIdx]   = peCurEdge;
 
@@ -913,26 +924,25 @@ void CutPlanar::constructSpanningTrees()
             curEdgeIdx[curVertIdx]++;
 
             peCurEdge = pvCurVert->getEdge(curEdgeIdx[curVertIdx]);
-            peCurEdge->idx = this->getEdgeIndex(peCurEdge);
-            DEBUG_OUT("vert[%d].edges[%d] (%d)\n", this->getVertIndex(pvCurVert), curEdgeIdx[curVertIdx], this->getEdgeIndex(peCurEdge));
+            DEBUG_OUT("vert[%d].edges[%d] (%d)\n", getVertIdx(pvCurVert), curEdgeIdx[curVertIdx], getEdgeIdx(peCurEdge));
 
             pvTail = peCurEdge->getTail();
 
             arcCap     = peCurEdge->getCapacity();
             antiArcCap = peCurEdge->getRevCapacity();
-            DEBUG_OUT("edge[%d].tail (vert[%d]) .cap(%f) .recap(%f)\n", this->getEdgeIndex(peCurEdge), this->getVertIndex(pvTail), arcCap, antiArcCap);
+            DEBUG_OUT("edge[%d].tail (vert[%d]) .cap(%f) .recap(%f)\n", getEdgeIdx(peCurEdge),getVertIdx(pvTail), arcCap, antiArcCap);
 
             //get capacities of the two darts
             if (pvCurVert == pvTail) { //edge points away from current vertex
                 pInDartCap  = &antiArcCap;
                 pOutDartCap = &arcCap;
                 pvDartTail  = peCurEdge->getHead();
-                DEBUG_OUT("vert[%d] as tail\n", getVertIndex(pvCurVert));
+                DEBUG_OUT("vert[%d] as tail\n", getVertIdx(pvCurVert));
             } else { //edge points to current vertex
                 pInDartCap  = &arcCap;
                 pOutDartCap = &antiArcCap;
                 pvDartTail  = peCurEdge->getTail();
-                DEBUG_OUT("vert[%d] as head\n", getVertIndex(pvCurVert));
+                DEBUG_OUT("vert[%d] as head\n", getVertIdx(pvCurVert));
             }
 
 
@@ -950,12 +960,12 @@ void CutPlanar::constructSpanningTrees()
                 else
                     pvCurVert = peCurEdge->getHead();
 
-                DEBUG_OUT("curVertIdx (%d -> %d)\n", curVertIdx, getVertIndex(pvCurVert));
-                curVertIdx = getVertIndex(pvCurVert);
+                DEBUG_OUT("curVertIdx (%d -> %d)\n", curVertIdx, getVertIdx(pvCurVert));
+                curVertIdx = getVertIdx(pvCurVert);
 
                 //check if there has been found a new primary spanning tree edge in the last step
                 if (bAddedNewPrimEdge && curBranchLength) {
-
+                    DEBUG_OUT("DynRootFromLeafChain\n");
                     curBranch = DynRoot::DynRootFromLeafChain(curBranchLeaves, curBranchLength);
                     DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
                               getLinkDataIndex(curBranch->getTail()),
@@ -991,7 +1001,7 @@ void CutPlanar::constructSpanningTrees()
 
                 curBranchLength = 0;
                 DEBUG_OUT("dynnode[%d] linkCost(%f) linkCostR(%f) mapping(%s) linkData(edge[%d])\n",
-                          this->getDynNodeIndex(plCurNode), linkCost, linkCostR, linkMapping ? "True" : "False", this->getEdgeIndex(peCurEdge));
+                          getDynNodeIdx(plCurNode), linkCost, linkCostR, linkMapping ? "True" : "False", getEdgeIdx(peCurEdge));
             }
 
             bAddedNewPrimEdge = true;
@@ -1005,22 +1015,22 @@ void CutPlanar::constructSpanningTrees()
             if (pvCurVert == pvSource) {
                 isSourceBlocked = false;
             }
-            DEBUG_OUT("curVertIdx (%d -> %d)\n", curVertIdx, getVertIndex(pvCurVert));
-            curVertIdx = getVertIndex(pvCurVert);
+            DEBUG_OUT("curVertIdx (%d -> %d)\n", curVertIdx, getVertIdx(pvCurVert));
+            curVertIdx = getVertIdx(pvCurVert);
 
             DEBUG_OUT("curEdgeIdx[%d] (%d -> %d)\n", curVertIdx, curEdgeIdx[curVertIdx], pvCurVert->getEdgeID(peCurEdge));
             curEdgeIdx[curVertIdx] = pvCurVert->getEdgeID(peCurEdge);
             DEBUG_OUT("maxEdgeIdx[%d] (%d -> %d)\n", curVertIdx, maxEdgeIdx[curVertIdx], curEdgeIdx[curVertIdx] + pvCurVert->getNumEdges());
             maxEdgeIdx[curVertIdx] = curEdgeIdx[curVertIdx] + pvCurVert->getNumEdges();
 
-            DEBUG_OUT("plCurNode (dynnode[%d] -> dynnode[%d])\n",getDynNodeIndex(plCurNode),getDynNodeIndex(primalTreeNodes+curVertIdx));
+            DEBUG_OUT("plCurNode (dynnode[%d] -> dynnode[%d])\n", getDynNodeIdx(plCurNode), getDynNodeIdx(primalTreeNodes + curVertIdx));
             plCurNode = primalTreeNodes + curVertIdx;
 
             // plCurNode->id = curVertIdx;
 
             //add the current node to the new branch
             DEBUG_OUT("curBranchLeaves[%d] (dynnode[%d] -> dynnode[%d])\n",
-                curBranchLength,getDynNodeIndex(curBranchLeaves[curBranchLength]),getDynNodeIndex(plCurNode));
+                      curBranchLength, getDynNodeIdx(curBranchLeaves[curBranchLength]), getDynNodeIdx(plCurNode));
             curBranchLeaves[curBranchLength++] = plCurNode;
             DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
                       getLinkDataIndex(plCurNode),

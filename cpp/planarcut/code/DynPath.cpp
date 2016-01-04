@@ -100,6 +100,7 @@ DynNode::DynNode()
     netMinR  = CapType(0);
 
     data = 0;
+    idx = 0;
 
     height  = 0;
 }

@@ -33,6 +33,21 @@ int getLinkDataIndex(void* pdata)
     return edge ? edge->idx : -1;
 }
 
+int getEdgeIdx(PlanarEdge*e)
+{
+    return e ? e->idx : -1;
+}
+
+int getFaceIdx(PlanarFace*f)
+{
+    return f ? f->idx : -1;
+}
+
+int getVertIdx(PlanarVertex*v)
+{
+    return v ? v->idx : -1;
+}
+
 // empty class
 
 

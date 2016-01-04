@@ -145,7 +145,7 @@ public:
 
 inline int getDynNodeIdx(DynNode* pNode)
 {
-    return pNode ? pNode->idx:-1;
+    return pNode != NULL ? pNode->idx:-1;
 }
 
 
