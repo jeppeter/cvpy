@@ -1,15 +1,13 @@
 package main
 
 type Edge struct {
-	caps       float64
-	revcap     float64
-	tail       *Vertice
-	head       *Vertice
-	taildual   *Face
-	headdual   *Face
-	tailedgeid int
-	headedgeid int
-	flags      uint8
+	caps     float64
+	revcap   float64
+	tail     *Vertice
+	head     *Vertice
+	taildual *Face
+	headdual *Face
+	flag     uint32
 }
 
 func NewEdge() *Edge {
@@ -20,9 +18,7 @@ func NewEdge() *Edge {
 	p.head = nil
 	p.taildual = nil
 	p.headdual = nil
-	p.tailedgeid = -1
-	p.headedgeid = -1
-	p.flags = 0
+	p.flag = 0
 	return p
 }
 

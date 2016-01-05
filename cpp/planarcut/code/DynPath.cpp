@@ -260,7 +260,7 @@ void DynNode::rotateLeft(CapType grossminU, CapType grossminUR)
 
 
     if (isLeaf()) {
-        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(this));
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n", getDynNodeIdx(this));
         return;
     }
     normalizeReverseState();
@@ -269,7 +269,7 @@ void DynNode::rotateLeft(CapType grossminU, CapType grossminUR)
     v = bRight; //u->bRight
 
     if (v->isLeaf()) {
-        DEBUG_OUT("dynnode[%d].isLeaf (True)\n",getDynNodeIdx(v));
+        DEBUG_OUT("dynnode[%d].isLeaf (True)\n", getDynNodeIdx(v));
         return;
     }
     v->normalizeReverseState();
@@ -487,13 +487,13 @@ void DynNode::doubleRotateRight(CapType grossminU, CapType grossminUR)
     DynNode *vnew = v; //let the old DynNode for v be still v after rotation
 
     //restructure tree with u being new root
-    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(wold.bRight));
+    DEBUG_OUT("dynnode[%d].setAsLChild(dynnode[%d],false)\n", getDynNodeIdx(unew), getDynNodeIdx(wold.bRight));
     unew->setAsLChild(wold.bRight, false);
-    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(unew),getDynNodeIdx(uold.bRight));
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n", getDynNodeIdx(unew), getDynNodeIdx(uold.bRight));
     unew->setAsRChild(uold.bRight, false);
-    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(vnew),getDynNodeIdx(wold.bLeft));
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n", getDynNodeIdx(vnew), getDynNodeIdx(wold.bLeft));
     vnew->setAsRChild(wold.bLeft, false);
-    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n",getDynNodeIdx(wnew),getDynNodeIdx(unew));
+    DEBUG_OUT("dynnode[%d].setAsRChild(dynnode[%d],false)\n", getDynNodeIdx(wnew), getDynNodeIdx(unew));
     wnew->setAsRChild(unew, false);
 
 
@@ -552,29 +552,29 @@ void DynNode::doubleRotateRight(CapType grossminU, CapType grossminUR)
 
     wnew->setNetCost(costW  - minWNew,  false);
     wnew->setNetCost(costWR - minWNewR, true);
-    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(wnew),wnew->getMapping() ? "True" : "False",
-        wMapping ? "True" : "False");
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n", getDynNodeIdx(wnew), wnew->getMapping() ? "True" : "False",
+              wMapping ? "True" : "False");
     wnew->setMapping(wMapping);
-    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(wnew),getLinkDataIndex(wnew->data),
-        getLinkDataIndex(wData));
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n", getDynNodeIdx(wnew), getLinkDataIndex(wnew->data),
+              getLinkDataIndex(wData));
     wnew->data = wData;
 
     vnew->setNetCost(costV  - minVNew,  false);
     vnew->setNetCost(costVR - minVNewR, true);
-    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(vnew),vnew->getMapping() ? "True" : "False",
-        vMapping ? "True" : "False");
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n", getDynNodeIdx(vnew), vnew->getMapping() ? "True" : "False",
+              vMapping ? "True" : "False");
     vnew->setMapping(vMapping);
-    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(vnew),getLinkDataIndex(vnew->data),
-        getLinkDataIndex(vData));
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n", getDynNodeIdx(vnew), getLinkDataIndex(vnew->data),
+              getLinkDataIndex(vData));
     vnew->data = vData;
 
     unew->setNetCost(costU  - minUNew,  false);
     unew->setNetCost(costUR - minUNewR, true);
-    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n",getDynNodeIdx(unew),unew->getMapping() ? "True" : "False",
-        uMapping ? "True" : "False");
+    DEBUG_OUT("dynnode[%d].mapping (%s -> %s)\n", getDynNodeIdx(unew), unew->getMapping() ? "True" : "False",
+              uMapping ? "True" : "False");
     unew->setMapping(uMapping);
-    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n",getDynNodeIdx(unew),getLinkDataIndex(unew->data),
-        getLinkDataIndex(uData));
+    DEBUG_OUT("dynnode[%d].data (edge[%d] -> edge[%d])\n", getDynNodeIdx(unew), getLinkDataIndex(unew->data),
+              getLinkDataIndex(uData));
     unew->data = uData;
 
     //fix height fields while minding the order!
@@ -591,13 +591,19 @@ void DynNode::doubleRotateLeft(CapType grossminU, CapType grossminUR)
     bool rState;
 
 
-    if (isLeaf()) return;
+    if (isLeaf()) {
+        DEBUG_OUT("dynnode[%d] isLeaf (True)\n", getDynNodeIdx(this));
+        return;
+    }
     normalizeReverseState();
 
     u = this;
     v = bRight; //u->bRight
 
-    if (v->isLeaf()) return;
+    if (v->isLeaf()) {
+        DEBUG_OUT("dynnode[%d] isLeaf (True)\n",getDynNodeIdx(v));
+        return;
+    }
     v->normalizeReverseState();
 
     w = v->bLeft;
@@ -1087,7 +1093,7 @@ DynRoot *DynRoot::concatenate(DynRoot *rightPath,
     int revFac;
 
     DEBUG_OUT("rightPath dynnode[%d]\n", getDynNodeIdx(rightPath));
-    if (!rightPath){
+    if (!rightPath) {
         return 0;
     }
 
@@ -1338,7 +1344,7 @@ DynRoot *DynRoot::splice()
     if (sres.leftPath) {
         DEBUG_OUT("set weaklink dynnode[%d] node(%d) cost(%f) costR(%f) mapping(%s) edge[%d]\n",
                   getDynNodeIdx(sres.leftPath->getTail()),
-                  getDynNodeIdx(pl), (float)sres.costBefore, (float)sres.costBeforeR, 
+                  getDynNodeIdx(pl), (float)sres.costBefore, (float)sres.costBeforeR,
                   sres.mappingBefore ? "True" : "False",
                   getLinkDataIndex(sres.dataBefore));
         sres.leftPath->getTail()->setWeakLink(pl,
@@ -1730,7 +1736,7 @@ void DynLeaf::disassemble()
     //compute and save path to root node
     pn = this;
 
-    DEBUG_OUT("dynnode[%d].bParent (dynnode[%d])\n",getDynNodeIdx(pn),getDynNodeIdx(pn->bParent));
+    DEBUG_OUT("dynnode[%d].bParent (dynnode[%d])\n", getDynNodeIdx(pn), getDynNodeIdx(pn->bParent));
     while (pn->bParent != 0) {
 
         DEBUG_OUT("stackRPath[%d] (%d -> %d)\n", idxRPath, getDynNodeIdx(stackRPath[idxRPath]), getDynNodeIdx(pn));

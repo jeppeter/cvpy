@@ -237,6 +237,7 @@ double CutPlanar::getMaxFlow()
     while (true) {
 
         pr = plSource->expose();
+        DEBUG_OUT("dynnode[%d].expose (dynnode[%d])\n",getDynNodeIdx(plSource),getDynNodeIdx(pr));
         plTailD = pr->getMinCostLeaf();
         DEBUG_OUT("srcdynnode[%d] tailD dynnode[%d]\n", getDynNodeIdx(plSource), getDynNodeIdx(plTailD));
 
