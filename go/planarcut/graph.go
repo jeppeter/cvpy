@@ -239,15 +239,15 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 		return err
 	}
 	if eh.is_upsidedown(fromv, tov) {
-		log.Printf("[%d][%d] -> [%d][%d] upsidedown Head %d Tail %d",
-			fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
-			retfaces[1].GetIdx(), retfaces[0].GetIdx())
+		//log.Printf("[%d][%d] -> [%d][%d] upsidedown Head %d Tail %d",
+		//	fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
+		//	retfaces[1].GetIdx(), retfaces[0].GetIdx())
 		ed.SetHeadDual(retfaces[1])
 		ed.SetTailDual(retfaces[0])
 	} else {
-		log.Printf("[%d][%d] -> [%d][%d] not upsidedown Head %d Tail %d",
-			fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
-			retfaces[0].GetIdx(), retfaces[1].GetIdx())
+		//log.Printf("[%d][%d] -> [%d][%d] not upsidedown Head %d Tail %d",
+		//	fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
+		//	retfaces[0].GetIdx(), retfaces[1].GetIdx())
 		ed.SetHeadDual(retfaces[0])
 		ed.SetTailDual(retfaces[1])
 	}
