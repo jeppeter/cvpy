@@ -75,7 +75,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
                            int idxSource, int idxSink, ECheckFlags checkInput)
 {
 
-    int i;
+    int i,j;
     nVerts = numVerts; verts = vertexList;
     nEdges = numEdges; edges = edgeList;
     nFaces = numFaces; faces = faceList;
@@ -90,6 +90,9 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     //reset edge flags
     for (i = 0; i < nVerts; i++) {
         verts[i].idx = i;
+        for (j=0;j<verts[i].getNumEdges();j++){
+            DEBUG_OUT("[%d].edge[%d] %d\n",i,j,verts[i].getEdge(j)->idx);
+        }
     }
     for (i = 0; i < nFaces; i++) {
         faces[i].idx = i;

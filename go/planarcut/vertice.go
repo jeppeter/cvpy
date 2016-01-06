@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	//"log"
+)
+
 type Vertice struct {
 	edgesccw []*Edge
 	faces    []*Face
@@ -91,4 +96,130 @@ func (vert *Vertice) GetEdgeId(e *Edge) int {
 	} else {
 		return -1
 	}
+}
+
+func (vert *Vertice) PushEdge(e *Edge) error {
+	var err error
+	if e == nil {
+		err = fmt.Errorf("nil edge error")
+		return err
+	}
+
+	for _, ce := range vert.edgesccw {
+		if ce == e {
+			return nil
+		}
+	}
+
+	vert.edgesccw = append(vert.edgesccw, e)
+	vert.numedges++
+	return nil
+}
+
+func (vert *Vertice) get_east_edge() *Edge {
+	var overt *Vertice
+	var e *Edge
+
+	for i := 0; i < vert.numedges; i++ {
+		e = vert.edgesccw[i]
+		if vert == e.GetTail() {
+			overt = e.GetHead()
+		} else {
+			overt = e.GetTail()
+		}
+
+		if vert.GetX() < overt.GetX() {
+			return e
+		}
+	}
+	return nil
+}
+
+func (vert *Vertice) get_west_edge() *Edge {
+	var overt *Vertice
+	var e *Edge
+
+	for i := 0; i < vert.numedges; i++ {
+		e = vert.edgesccw[i]
+		if vert == e.GetTail() {
+			overt = e.GetHead()
+		} else {
+			overt = e.GetTail()
+		}
+
+		if vert.GetX() > overt.GetX() {
+			return e
+		}
+	}
+	return nil
+}
+
+func (vert *Vertice) get_south_edge() *Edge {
+	var overt *Vertice
+	var e *Edge
+
+	for i := 0; i < vert.numedges; i++ {
+		e = vert.edgesccw[i]
+		if vert == e.GetTail() {
+			overt = e.GetHead()
+		} else {
+			overt = e.GetTail()
+		}
+
+		if vert.GetY() < overt.GetY() {
+			return e
+		}
+	}
+	return nil
+}
+
+func (vert *Vertice) get_north_edge() *Edge {
+	var overt *Vertice
+	var e *Edge
+
+	for i := 0; i < vert.numedges; i++ {
+		e = vert.edgesccw[i]
+		if vert == e.GetTail() {
+			overt = e.GetHead()
+		} else {
+			overt = e.GetTail()
+		}
+
+		if vert.GetY() > overt.GetY() {
+			return e
+		}
+	}
+	return nil
+}
+
+func (vert *Vertice) CounterClockWise() {
+	var ccw []*Edge
+	var e *Edge
+	if vert.numedges == 0 || vert.numedges == 1 {
+		return
+	}
+
+	ccw = []*Edge{}
+	e = vert.get_east_edge()
+	if e != nil {
+		ccw = append(ccw, e)
+	}
+
+	e = vert.get_north_edge()
+	if e != nil {
+		ccw = append(ccw, e)
+	}
+
+	e = vert.get_west_edge()
+	if e != nil {
+		ccw = append(ccw, e)
+	}
+
+	e = vert.get_south_edge()
+	if e != nil {
+		ccw = append(ccw, e)
+	}
+
+	vert.edgesccw = ccw
+	return
 }

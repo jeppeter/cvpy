@@ -207,6 +207,7 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	ed = eh.get_edge(tov.GetName(), fromv.GetName())
 	if ed != nil {
 		ed.SetCap(caps)
+		fromv.PushEdge(ed)
 		return nil
 	}
 
@@ -245,6 +246,8 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 		ed.SetHeadDual(retfaces[0])
 		ed.SetTailDual(retfaces[1])
 	}
+
+	fromv.PushEdge(ed)
 	eh.edgearr = append(eh.edgearr, ed)
 	return nil
 }
@@ -271,6 +274,11 @@ func NewPlanarGraph() *PlanarGraph {
 }
 
 func (planar *PlanarGraph) DebugGraph() {
+	for i, v := range planar.verts {
+		for j := 0; j < v.GetEdgeNum(); j++ {
+			fmt.Fprintf(os.Stdout, "[%d].edge[%d] %d\n", i, j, v.GetEdge(j).GetIdx())
+		}
+	}
 	fmt.Fprintf(os.Stdout, "sourceid %d sinkid %d\n", planar.sourceid, planar.sinkid)
 	for _, e := range planar.edges {
 		scap := fmt.Sprintf("%f", e.GetCap())
@@ -426,7 +434,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 		}
 	}
 
-	if sourceid < 0 || sinkid < 0 {
+	if sourceid < 0 || sinkid < 0 || sinkid == sourceid {
 		err = fmt.Errorf("can not find source id and sink id")
 		log.Print(err.Error())
 		return
@@ -434,6 +442,10 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	planar = NewPlanarGraph()
 	planar.edges = edgehash.edgearr
 	planar.verts = vertshash.vertarr
+	for _, v := range planar.verts {
+		v.CounterClockWise()
+	}
+
 	planar.faces = facearr.faces
 	planar.sourceid = sourceid
 	planar.sinkid = sinkid
