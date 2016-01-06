@@ -53,10 +53,10 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
 
     if ((imMask[i] == IDX_SINK) || (imMask[j] == IDX_SOURCE)){
         if (imMask[i] == IDX_SINK){
-            DEBUG_OUT("[%d][%d] %s SINK CAP_INF\n",row,col,dirstr);
+            DEBUG_OUT("[%d][%d] ->[%d][%d] %s SINK CAP_INF\n",row,col,jrow,jcol,dirstr);
         }
         if (imMask[j] == IDX_SOURCE){
-            DEBUG_OUT("[%d][%d] %s SOURCES CAP_INF\n",row,col,dirstr);
+            DEBUG_OUT("[%d][%d] ->[%d][%d] %s SOURCES CAP_INF\n",row,col,jrow,jcol,dirstr);
         }
         return CAP_INF;
     }

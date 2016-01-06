@@ -13,6 +13,8 @@ class CONSTANT(object):
 	DIR_NORTH=2
 	DIR_SOUTH=3
 	EPSILON=1e-6
+	STR_EPSILON='0.000001'
+	STR_CAP_INF='1.#INF00'
 	def __setattr__(self,*_):
 		pass
 
@@ -41,12 +43,12 @@ class EdgeOut(object):
 		return
 
 	def __is_source(self,fromi,fromj):
-		if self.__maskimg[fromi][fromj][0] <= 10 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] >= 240:
+		if self.__maskimg[fromi][fromj][0] >= 240 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] <= 10:
 			return True
 		return False
 
 	def __is_sink(self,fromi,fromj):
-		if self.__maskimg[fromi][fromj][0] >= 240 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] <= 10:
+		if self.__maskimg[fromi][fromj][0] <= 10 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] >= 240:
 			return True
 		return False
 
@@ -85,15 +87,26 @@ class EdgeOut(object):
 
 		if self.__is_source(fromi,fromj):
 			logging.info('from[%d][%d] mask'%(fromi,fromj))
-			rcap = '1.#INF00'
+			cap = CONSTANT.STR_CAP_INF
+			rcap = CONSTANT.STR_EPSILON
+		elif self.__is_source(toi,toj):
+			logging.info('to[%d][%d] mask'%(toi,toj))
+			rcap = CONSTANT.STR_CAP_INF
+			cap = CONSTANT.STR_EPSILON
 
 		if self.__is_sink(toi,toj):
 			logging.info('to[%d][%d] mask'%(toi,toj))
-			cap = '1.#INF00'
+			cap = CONSTANT.STR_CAP_INF
+			rcap = CONSTANT.STR_EPSILON
+		elif self.__is_sink(fromi,fromj):
+			logging.info('from[%d][%d] mask'%(fromi,fromj))
+			cap = CONSTANT.STR_EPSILON
+			rcap = CONSTANT.STR_CAP_INF
 
-		if self.__is_source(fromi,fromj) and self.__is_sink(toi,toj):
-			rcap = '1.#INF00'
-			cap = '0.000001'
+		if self.__is_sink(toi,toj) and self.__is_source(fromi,fromj):
+			logging.info('from[%d][%d] to[%d][%d] mask'%(fromi,fromj,toi,toj))
+			cap = CONSTANT.STR_CAP_INF
+			rcap = CONSTANT.STR_EPSILON
 
 		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%s) .rcap(%s)\n'%(\
 			self.__edgeidx,toi,toj,fromi,fromj,cap,rcap))
@@ -170,7 +183,7 @@ def main():
 	outfile = None
 	maskfile = sys.argv[2]
 	infile = sys.argv[1]
-	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(lineno)d\t%(message)s')
+	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(lineno)d %(message)s')
 	if len(sys.argv) > 3:
 		outfile = sys.argv[3]
 	outgraph(infile,maskfile,outfile)
