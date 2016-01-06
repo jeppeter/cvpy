@@ -1,14 +1,17 @@
 package main
 
 type Edge struct {
-	caps     float64
-	revcap   float64
-	tail     *Vertice
-	head     *Vertice
-	taildual *Face
-	headdual *Face
-	flag     uint32
-	name     string
+	caps       float64
+	revcap     float64
+	tail       *Vertice
+	head       *Vertice
+	taildual   *Face
+	headdual   *Face
+	tailedgeid int
+	headedgeid int
+	flags      uint32
+	idx        int
+	name       string
 }
 
 func NewEdge() *Edge {
@@ -19,7 +22,11 @@ func NewEdge() *Edge {
 	p.head = nil
 	p.taildual = nil
 	p.headdual = nil
-	p.flag = 0
+	p.tailedgeid = -1
+	p.headedgeid = -1
+	p.flags = uint32(0)
+	p.idx = 0
+	p.name = ""
 	return p
 }
 
@@ -40,6 +47,44 @@ func (e *Edge) SetRevCap(revcap float64) {
 func (e *Edge) GetRevCap() float64 {
 	return e.revcap
 }
+
+func (e *Edge) SetTail(tail *Vertice) {
+	e.tail = tail
+	return
+}
+
+func (e *Edge) SetHead(head *Vertice) {
+	e.head = head
+	return
+}
+func (e *Edge) SetHeadDual(headdual *Face) {
+	e.headdual = headdual
+	return
+}
+
+func (e *Edge) SetTailDual(taildual *Face) {
+	e.taildual = taildual
+	return
+}
+
+func (e *Edge) SetName(name string) {
+	e.name = name
+	return
+}
+
+func (e *Edge) GetName() string {
+	return e.name
+}
+
+func (e *Edge) SetIdx(idx int) {
+	e.idx = idx
+	return
+}
+
+func (e *Edge) GetIdx() int {
+	return e.idx
+}
+
 func (e *Edge) SetEdge(tail, head *Vertice, taildual, headdual *Face, caps, rcaps float64) {
 	e.head = head
 	e.tail = tail
@@ -48,32 +93,14 @@ func (e *Edge) SetEdge(tail, head *Vertice, taildual, headdual *Face, caps, rcap
 	e.caps = caps
 	e.revcap = rcaps
 
-	if e.tailedgeid < 0 {
-		for i := 0; i < tail.GetEdgeNum(); i++ {
-			if tail.GetEdge(i) == e {
-				e.tailedgeid = i
-				break
-			}
-		}
-	}
-
-	if e.headedgeid < 0 {
-		for i := 0; i < head.GetEdgeNum(); i++ {
-			if head.GetEdge(i) == e {
-				e.headedgeid = i
-				break
-			}
-		}
-	}
-
 	return
 }
 
-func (e *Edge) SetFlags(flag uint8) {
+func (e *Edge) SetFlags(flag uint32) {
 	e.flags = flag
 }
 
-func (e *Edge) GetFlags() uint8 {
+func (e *Edge) GetFlags() uint32 {
 	return e.flags
 }
 
@@ -93,19 +120,19 @@ func (e *Edge) GetTailDaul() *Face {
 	return e.taildual
 }
 
+func (e *Edge) GetTailEdgeId() int {
+	return e.tailedgeid
+}
+func (e *Edge) GetHeadEdgeId() int {
+	return e.headedgeid
+}
+
 func (e *Edge) SetTailEdgeId(id int) {
 	e.tailedgeid = id
 	return
 }
+
 func (e *Edge) SetHeadEdgeId(id int) {
 	e.headedgeid = id
 	return
-}
-
-func (e *Edge) GetTailEdgeId() int {
-	return e.tailedgeid
-}
-
-func (e *Edge) GetHeadEdgeId() int {
-	return e.headedgeid
 }
