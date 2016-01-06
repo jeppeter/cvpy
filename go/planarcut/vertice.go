@@ -5,13 +5,15 @@ type Vertice struct {
 	edgesccw []*Edge
 	numedges int
 	x, y     int
+	name     string
 }
 
-func NewVertice() *Vertice {
+func NewVertice(name string) *Vertice {
 	p := &Vertice{}
 	p.edgesccw = []*Edge{}
 	p.numedges = 0
 	p.x = p.y = 0
+	p.name = name
 	return p
 }
 
@@ -46,6 +48,10 @@ func (vert *Vertice)SetXY( x, y int) {
 
 func (vert *Vertice)GetX() int {
 	return vert.x
+}
+
+func (vert *Vertice)GetName()string {
+	return vert.name
 }
 
 func (vert *Vertice)GetY() int{

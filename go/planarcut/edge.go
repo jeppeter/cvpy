@@ -8,6 +8,7 @@ type Edge struct {
 	taildual *Face
 	headdual *Face
 	flag     uint32
+	name     string
 }
 
 func NewEdge() *Edge {
