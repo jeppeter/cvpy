@@ -97,25 +97,15 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     for (i = 0; i < nEdges; i++) {
         edges[i].idx = i;
         edges[i].setFlags(0);
-        CapType cap,rcap;
+        CapType cap, rcap;
         cap = edges[i].getCapacity();
         rcap = edges[i].getRevCapacity();
-        if (abs(cap) <= EPSILON || abs(rcap) <= EPSILON) {
-            DEBUG_OUT("edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n", edges[i].idx, edges[i].getHead()->GetY(),
-                      edges[i].getHead()->GetX(),
-                      edges[i].getTail()->GetY(),
-                      edges[i].getTail()->GetX(),
-                      (float)cap,
-                      (float)rcap);
-        } else {
-            DEBUG_OUT("edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n", edges[i].idx, edges[i].getHead()->GetY(),
-                      edges[i].getHead()->GetX(),
-                      edges[i].getTail()->GetY(),
-                      edges[i].getTail()->GetX(),
-                      (float)cap,
-                      (float)rcap);
-
-        }
+        DEBUG_OUT("[%d] .cap %f .rcap %f head %d tail %d headdual %d taildual %d\n", edges[i].idx, 
+            (float)cap,(float)rcap,
+            edges[i].getHead()->idx,
+            edges[i].getTail()->idx,
+            edges[i].getHeadDual()->idx,
+            edges[i].getTailDual()->idx);
 
     }
 

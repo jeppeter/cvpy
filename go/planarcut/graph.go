@@ -194,8 +194,8 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	}
 
 	ed = NewEdge()
-	ed.SetHead(fromv)
-	ed.SetTail(tov)
+	ed.SetHead(tov)
+	ed.SetTail(fromv)
 	ed.SetCap(caps)
 	eh.edgemap[eh.get_name(fromv.GetName(), tov.GetName())] = ed
 	ed.SetName(eh.get_name(fromv.GetName(), tov.GetName()))
