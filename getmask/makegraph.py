@@ -36,8 +36,8 @@ class EdgeOut(object):
 		self.__h = simg.shape[1]
 		self.__simg = simg
 		self.__maskimg = maskimg
-		self.__fp.write('height=%d\n'%(self.__h))
-		self.__fp.write('width=%d\n'%(self.__w))
+		self.__fp.write('width=%d\n'%(self.__h))
+		self.__fp.write('height=%d\n'%(self.__w))
 		self.__refered = np.zeros((self.__w,self.__h,4),np.uint8)
 		self.__edgeidx= 0
 		return

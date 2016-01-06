@@ -45,13 +45,17 @@ func (fa *FaceArr) GetFaces(x, y int) (retfaces []*Face, err error) {
 
 	if x < 0 || x > fa.ncols {
 		err = fmt.Errorf("x(%d) not valid", x)
+		log.Print(err.Error())
 		return
 	}
 
 	if y < 0 || y > fa.nrows {
 		err = fmt.Errorf("y(%d) not valid", y)
+		log.Print(err.Error())
 		return
 	}
+
+	//log.Printf("y:%d,x:%d", y, x)
 
 	if x == 0 && y == 0 {
 		retfaces = append(retfaces, fa.faces[0])
@@ -177,15 +181,22 @@ func (eh *EdgeHash) compare_get_face(fromfaces []*Face, tofaces []*Face) []*Face
 }
 
 func (eh *EdgeHash) is_upsidedown(fromv, tov *Vertice) bool {
-	if fromv.GetY() != tov.GetY() {
+	if fromv.GetX() != tov.GetX() {
 		/*if we from the vertical mode return false*/
-		return false
-	}
-
-	if fromv.GetX() == 0 {
+		if fromv.GetY() == 0 {
+			return false
+		}
 		return true
 	}
 
+	if fromv.GetY() != tov.GetY() {
+		if fromv.GetX() == 0 {
+			return true
+		}
+		return false
+	}
+
+	log.Fatalf("can not reach here")
 	return false
 }
 
@@ -195,6 +206,7 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	ed = eh.get_edge(fromv.GetName(), tov.GetName())
 	if ed != nil {
 		err := fmt.Errorf("set (%s) twice", eh.get_name(fromv.GetName(), tov.GetName()))
+		log.Print(err.Error())
 		return err
 	}
 
@@ -213,7 +225,17 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	ed.SetIdx(len(eh.edgearr))
 	retfaces := eh.compare_get_face(fromv.GetFaces(), tov.GetFaces())
 	if len(retfaces) != 2 {
+		log.Printf("vert[%s] faces", fromv.GetName())
+		for i, face := range fromv.GetFaces() {
+			log.Printf("[%d].face %d", i, face.GetIdx())
+		}
+
+		log.Printf("vert[%s] faces", tov.GetName())
+		for i, face := range tov.GetFaces() {
+			log.Printf("[%d].face %d", i, face.GetIdx())
+		}
 		err := fmt.Errorf("%s not valid faces", ed.GetName())
+		log.Print(err.Error())
 		return err
 	}
 	if eh.is_upsidedown(fromv, tov) {
@@ -300,6 +322,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			h, err = strconv.Atoi(sarr[1])
 			if err != nil {
 				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				log.Print(err.Error())
 				return
 			}
 			if w > 0 && facearr == nil {
@@ -316,6 +339,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			w, err = strconv.Atoi(sarr[1])
 			if err != nil {
 				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				log.Print(err.Error())
 				return
 			}
 			if h > 0 && facearr == nil {
@@ -331,6 +355,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 
 		if w < 0 || h < 0 {
 			err = fmt.Errorf("not specified width or height")
+			log.Print(err.Error())
 			return
 		}
 
@@ -340,6 +365,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			caps, e = strconv.ParseFloat(sarr[2], 64)
 			if e != nil {
 				err = fmt.Errorf("can not parse %d error %s", linenum, e.Error())
+				log.Print(err.Error())
 				return
 			}
 		}
@@ -357,6 +383,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 		verr = edgehash.AddEdge(fromvert, tovert, caps)
 		if verr != nil {
 			err = fmt.Errorf("line(%d) %s", linenum, verr.Error())
+			log.Print(err.Error())
 			return
 		}
 	}
