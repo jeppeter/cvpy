@@ -112,11 +112,11 @@ func (e *Edge) GetTail() *Vertice {
 	return e.tail
 }
 
-func (e *Edge) GetHeadDaul() *Face {
+func (e *Edge) GetHeadDual() *Face {
 	return e.headdual
 }
 
-func (e *Edge) GetTailDaul() *Face {
+func (e *Edge) GetTailDual() *Face {
 	return e.taildual
 }
 

@@ -43,8 +43,13 @@ func (vert *Vertice) SetCCWEdges(num int, edges []*Edge) {
 	return
 }
 
-func (vert *Vertice) SetFaces(num int, faces []*Face) {
+func (vert *Vertice) SetFaces(faces []*Face) {
+	vert.faces = faces
+	return
+}
 
+func (vert *Vertice) GetFaces() []*Face {
+	return vert.faces
 }
 
 func (vert *Vertice) SetXY(x, y int) {
@@ -56,6 +61,10 @@ func (vert *Vertice) SetXY(x, y int) {
 func (vert *Vertice) SetIdx(idx int) {
 	vert.idx = idx
 	return
+}
+
+func (vert *Vertice) GetIdx() int {
+	return vert.idx
 }
 
 func (vert *Vertice) GetX() int {

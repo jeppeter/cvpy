@@ -19,94 +19,6 @@ type PlanarGraph struct {
 	faces []*Face
 }
 
-type VertsHash struct {
-	verts   map[string]*Vertice
-	vertarr []*Vertice
-}
-
-func NewVertsHash() *VertsHash {
-	p := &VertsHash{}
-	p.verts = make(map[string]*Vertice)
-	p.vertarr = []*Vertice{}
-	return p
-}
-
-func (p *VertsHash) AddVerts(name string, w, h int) int {
-	_, ok := p.verts[name]
-	if ok {
-		return 0
-	}
-
-	p.verts[name] = NewVertice(name)
-	idx, err := strconv.Atoi(name)
-	if err != nil {
-		log.Fatalf("can not accept name(%s)", name)
-	}
-	vert := p.verts[name]
-	x := idx % w
-	y := idx / w
-	vert.SetXY(x, y)
-	vert.SetIdx(idx)
-	p.vertarr = append(p.vertarr, p.verts[name])
-	return 1
-}
-
-func (p *VertsHash) GetVert(name string, w, h int) *Vertice {
-	p.AddVerts(name, w, h)
-	return p.verts[name]
-}
-
-type EdgeHash struct {
-	edgemap map[string]*Edge
-	edgearr []*Edge
-}
-
-func NewEdgeHash() *EdgeHash {
-	p := &EdgeHash{}
-	p.edgemap = make(map[string]*Edge)
-	p.edgearr = []*Edge{}
-	return p
-}
-
-func (eh *EdgeHash) get_name(from, to string) string {
-	return fmt.Sprintf("%s -> %s", from, to)
-}
-
-func (eh *EdgeHash) get_edge(from, to string) *Edge {
-	name := eh.get_name(from, to)
-	e, ok := eh.edgemap[name]
-	if ok {
-		return e
-	}
-	return nil
-}
-
-func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) int {
-	var ed *Edge
-
-	ed = eh.get_edge(fromv.GetName(), tov.GetName())
-	if ed != nil {
-		log.Fatalf("set (%s) twice", eh.get_name(fromv.GetName(), tov.GetName()))
-		return -1
-	}
-
-	ed = eh.get_edge(tov.GetName(), fromv.GetName())
-	if ed != nil {
-		ed.SetRevCap(caps)
-		return 0
-	}
-
-	ed = NewEdge()
-	ed.SetHead(fromv)
-	ed.SetTail(tov)
-	ed.SetCap(caps)
-	eh.edgemap[eh.get_name(fromv.GetName(), tov.GetName())] = ed
-	ed.SetName(eh.get_name(fromv.GetName(), tov.GetName()))
-	ed.SetIdx(len(eh.edgearr))
-	eh.edgearr = append(eh.edgearr, ed)
-	return 1
-}
-
 type FaceArr struct {
 	faces    []*Face
 	ncols    int
@@ -176,6 +88,113 @@ func (fa *FaceArr) GetFaces(x, y int) []*Face {
 
 }
 
+type VertsHash struct {
+	verts   map[string]*Vertice
+	vertarr []*Vertice
+}
+
+func NewVertsHash() *VertsHash {
+	p := &VertsHash{}
+	p.verts = make(map[string]*Vertice)
+	p.vertarr = []*Vertice{}
+	return p
+}
+
+func (p *VertsHash) AddVerts(name string, w, h int, fa *FaceArr) int {
+	_, ok := p.verts[name]
+	if ok {
+		return 0
+	}
+
+	p.verts[name] = NewVertice(name)
+	idx, err := strconv.Atoi(name)
+	if err != nil {
+		log.Fatalf("can not accept name(%s)", name)
+	}
+	vert := p.verts[name]
+	x := idx % w
+	y := idx / w
+	vert.SetXY(x, y)
+	vert.SetIdx(idx)
+	vert.SetFaces(fa.GetFaces(x, y))
+	p.vertarr = append(p.vertarr, p.verts[name])
+	return 1
+}
+
+func (p *VertsHash) GetVert(name string, w, h int, fa *FaceArr) *Vertice {
+	p.AddVerts(name, w, h, fa)
+	return p.verts[name]
+}
+
+type EdgeHash struct {
+	edgemap map[string]*Edge
+	edgearr []*Edge
+}
+
+func NewEdgeHash() *EdgeHash {
+	p := &EdgeHash{}
+	p.edgemap = make(map[string]*Edge)
+	p.edgearr = []*Edge{}
+	return p
+}
+
+func (eh *EdgeHash) get_name(from, to string) string {
+	return fmt.Sprintf("%s -> %s", from, to)
+}
+
+func (eh *EdgeHash) get_edge(from, to string) *Edge {
+	name := eh.get_name(from, to)
+	e, ok := eh.edgemap[name]
+	if ok {
+		return e
+	}
+	return nil
+}
+
+func (eh *EdgeHash) compare_get_face(fromfaces []*Face, tofaces []*Face) []*Face {
+	retfaces := []*Face{}
+	for i := 0; i < len(fromfaces); i++ {
+		for j := 0; j < len(tofaces); j++ {
+			if fromfaces[i] == tofaces[j] {
+				retfaces = append(retfaces, fromfaces[i])
+			}
+		}
+	}
+	return retfaces
+}
+
+func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) int {
+	var ed *Edge
+
+	ed = eh.get_edge(fromv.GetName(), tov.GetName())
+	if ed != nil {
+		log.Fatalf("set (%s) twice", eh.get_name(fromv.GetName(), tov.GetName()))
+		return -1
+	}
+
+	ed = eh.get_edge(tov.GetName(), fromv.GetName())
+	if ed != nil {
+		ed.SetRevCap(caps)
+		return 0
+	}
+
+	ed = NewEdge()
+	ed.SetHead(fromv)
+	ed.SetTail(tov)
+	ed.SetCap(caps)
+	eh.edgemap[eh.get_name(fromv.GetName(), tov.GetName())] = ed
+	ed.SetName(eh.get_name(fromv.GetName(), tov.GetName()))
+	ed.SetIdx(len(eh.edgearr))
+	retfaces := eh.compare_get_face(fromv.GetFaces(), tov.GetFaces())
+	if len(retfaces) != 2 {
+		log.Fatalf("%s not valid faces", ed.GetName())
+	}
+	ed.SetHeadDual(retfaces[0])
+	ed.SetTailDual(retfaces[1])
+	eh.edgearr = append(eh.edgearr, ed)
+	return 1
+}
+
 /*we get the */
 func NewPlanarGraph() *PlanarGraph {
 	p := &PlanarGraph{}
@@ -183,6 +202,15 @@ func NewPlanarGraph() *PlanarGraph {
 	p.edges = []*Edge{}
 	p.faces = []*Face{}
 	return p
+}
+
+func (planar *PlanarGraph) DebugGraph() {
+	for _, e := range planar.edges {
+		fmt.Fprintf(os.Stdout, "%d .cap %f .rcap %f head %d tail %d headdual %d taildual %d\n",
+			e.GetIdx(), e.GetCap(), e.GetRevCap(), e.GetHead().GetIdx(),
+			e.GetTail().GetIdx(), e.GetHeadDual().GetIdx(),
+			e.GetTailDual().GetIdx())
+	}
 }
 func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	var sarr []string
@@ -266,14 +294,15 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			}
 		}
 
-		fromvert := vertshash.GetVert(sarr[0], w, h)
-		tovert := vertshash.GetVert(sarr[1], w, h)
+		fromvert := vertshash.GetVert(sarr[0], w, h, facearr)
+		tovert := vertshash.GetVert(sarr[1], w, h, facearr)
 		edgehash.AddEdge(fromvert, tovert, caps)
 	}
 	planar = NewPlanarGraph()
 	planar.edges = edgehash.edgearr
 	planar.verts = vertshash.vertarr
 	planar.faces = facearr.faces
+
 	err = nil
 	return
 }
