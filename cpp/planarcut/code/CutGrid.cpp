@@ -194,6 +194,9 @@ double CutGrid::getMaxFlow()
                              edgeCost(j, i, DIR_EAST),
                              edgeCost(j, i + 1, DIR_WEST)
                             );
+            DEBUG_OUT("fromvert[%d][%d] (y:%d,x:%d)\n",j,i,verts[j*nCols+i].GetY(),verts[j*nCols+i].GetX());
+            DEBUG_OUT("tovert[%d][%d] (y:%d,x:%d)\n",j,i+1,verts[j*nCols+i+1].GetY(),verts[j*nCols+i+1].GetX());
+            DEBUG_OUT("edges[%d] vert[%d][%d] -> vert[%d][%d] cap %f rcap %f\n",e,j,i,j,i+1,(float)edges[e].getCapacity(),(float)edges[e].getRevCapacity());
         }
 
     //add vertical edges
@@ -206,6 +209,9 @@ double CutGrid::getMaxFlow()
                              edgeCost(j, i, DIR_SOUTH),
                              edgeCost(j + 1, i, DIR_NORTH)
                             );
+            DEBUG_OUT("fromvert[%d][%d] (y:%d,x:%d)\n",j,i,verts[j*nCols+i].GetY(),verts[j*nCols+i].GetX());
+            DEBUG_OUT("tovert[%d][%d] (y:%d,x:%d)\n",j+1,i,verts[(j+1)*nCols+i].GetY(),verts[(j+1)*nCols+i].GetX());
+            DEBUG_OUT("edges[%d] vert[%d][%d] -> vert[%d][%d] cap %f rcap %f\n",e,j,i,j+1,i,(float)edges[e].getCapacity(),(float)edges[e].getRevCapacity());
         }
 
 

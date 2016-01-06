@@ -53,7 +53,7 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
         double col2[3] = { (double) imData[j * 3], (double) imData[j * 3 + 1], (double) imData[j * 3 + 2] };
         return gradient(col1, col2);
     } else {
-        DEBUG_OUT("node[%d][%d] %f node[%d][%d] %f\n",row,col,(float)imData[i],jrow,jcol,(float)imData[j]);
+        //DEBUG_OUT("node[%d][%d] %f node[%d][%d] %f\n",row,col,(float)imData[i],jrow,jcol,(float)imData[j]);
         return gradient(imData[i], imData[j]);
     }
 }
@@ -121,8 +121,10 @@ void CutSegment::setSourceSink(const uchar *stMask, uchar source, uchar sink)
     for (idx = 0; idx < width * height; idx++)
         if (stMask[idx] == source)
             break;
-    if (idx >= width * height)
+    if (idx >= width * height){
+        DEBUG_OUT("idx = %d\n",idx);
         throw ExceptionSourceNotDefined();
+    }
     imMask[idx] = IDX_SOURCE;
     setSource(idx / width, idx % width);
 

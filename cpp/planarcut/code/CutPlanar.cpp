@@ -88,15 +88,18 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     PlanarEdge *e;
 
     //reset edge flags
-    for (i = 0; i < nEdges; i++) {
-        edges[i].idx = i;
-        edges[i].setFlags(0);
+    for (i = 0; i < nVerts; i++) {
+        verts[i].idx = i;
     }
     for (i = 0; i < nFaces; i++) {
         faces[i].idx = i;
     }
-    for (i = 0; i < nVerts; i++) {
-        verts[i].idx = i;
+    for (i = 0; i < nEdges; i++) {
+        edges[i].idx = i;
+        edges[i].setFlags(0);
+        DEBUG_OUT("edge[%d] vertfrom[%d] -> vertto[%d] .cap(%f) .rcap(%f)\n",edges[i].idx,edges[i].getHead()->idx,
+            edges[i].getTail()->idx,(float)edges[i].getCapacity(),
+            (float)edges[i].getRevCapacity());
     }
 
     //determine minimum weight that is considered = infinity...
