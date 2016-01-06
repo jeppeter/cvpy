@@ -28,14 +28,16 @@ def calc_edge(fromval ,toval):
 
 
 class EdgeOut(object):
-	def __init__(self,fp,simg):
+	def __init__(self,fp,simg,maskimg):
 		self.__fp = fp
 		self.__w = simg.shape[0]
 		self.__h = simg.shape[1]
 		self.__simg = simg
+		self.__maskimg = maskimg
 		self.__fp.write('height=%d\n'%(self.__h))
 		self.__fp.write('width=%d\n'%(self.__w))
 		self.__refered = np.zeros((self.__w,self.__h,4),np.uint8)
+		self.__edgeidx= 0
 		return
 
 	def __out_edges(self,fromi,fromj,toi,toj):
@@ -68,8 +70,11 @@ class EdgeOut(object):
 
 		#logging.info('[%d][%d][2] = %d [%d][%d][2] = %d'%(fromi,fromj,self.__simg[fromi][fromj][2],toi,toj,self.__simg[toi][toj][2]))
 		val = calc_edge(self.__simg[fromi][fromj][2],self.__simg[toi][toj][2])
-		self.__fp.write('# [%d][%d][2] %d [%d][%d][2] %d\n'%(fromi,fromj,self.__simg[fromi][fromj][2],toi,toj,self.__simg[toi][toj][2]))
+
+		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n'%(\
+			self.__edgeidx,toi,toj,fromi,fromj,val,val))
 		self.__fp.write('%d,%d,%f\n'%((fromi*self.__h + fromj),(toi*self.__h+toj),val))
+		self.__edgeidx += 1
 
 		if fromi > toi :
 			self.__refered[fromi][fromj][CONSTANT.DIR_WEST] = 1
@@ -97,25 +102,35 @@ class EdgeOut(object):
 		self.__out_edges(fromi,fromj,fromi,fromj+1)
 		return
 
+	def out_all_edges(self):
+		for i in range(self.__w):
+			for j in range(self.__h):
+				self.__out_edges(i,j,i,j+1)
+		for i in range(self.__w):
+			for j in range(self.__h):
+				self.__out_edges(i,j,i+1,j)
 
 
-def outgraph(infile,outfile=None):
+
+def outgraph(infile,maskfile,outfile=None):
 	fp = sys.stdout
 	if outfile is not None:
 		fp = open(outfile,'w')
 	try:
 		simg = cv2.imread(infile)
+		maskimg = cv2.imread(maskfile)
 		assert(len(simg.shape) >= 2)
+		assert(len(maskimg.shape) >= 2)
+		assert(simg.shape[0] == maskimg.shape[0])
+		assert(simg.shape[1] == maskimg.shape[1])
 	except:
-		sys.stderr.write('can not load(%s) error\n'%(infile))
+		sys.stderr.write('can not load(%s) or (%s) error\n'%(infile,maskfile))
 		return
 
 	w = simg.shape[0]
 	h = simg.shape[1]
 	eo = EdgeOut(fp,simg)
-	for i in range(w):
-		for j in range(h):
-			eo.out_edges(i,j)
+	eo.out_all_edges()
 	if fp != sys.stdout:
 		fp.close()
 	eo = None
@@ -124,15 +139,16 @@ def outgraph(infile,outfile=None):
 	return
 
 def main():
-	if len(sys.argv) < 2:
-		sys.stderr.write('%s infile [outfile]\n'%(sys.argv[0]))
+	if len(sys.argv) < 3:
+		sys.stderr.write('%s infile maskfile [outfile]\n'%(sys.argv[0]))
 		sys.exit(4)
 	outfile = None
+	maskfile = sys.argv[2]
 	infile = sys.argv[1]
 	logging.basicConfig(level=logging.DEBUG,format='%(filename)s:%(lineno)d\t%(message)s')
-	if len(sys.argv) > 2:
-		outfile = sys.argv[2]
-	outgraph(infile,outfile)
+	if len(sys.argv) > 3:
+		outfile = sys.argv[3]
+	outgraph(infile,maskfile,outfile)
 	return
 
 if __name__ == '__main__':

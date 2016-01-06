@@ -22,7 +22,7 @@ def DisplayMatrix(infile):
 		for j in range(w):
 			if cnt != 0 :
 				s += ','
-			s += '%s'%(simg[i][j][2])
+			s += '%s'%(simg[i][j][1])
 			cnt += 1
 		s += ']\n'
 		sys.stdout.write(s)

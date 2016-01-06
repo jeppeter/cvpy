@@ -29,6 +29,7 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
     int i = row * width + col;
     int j = i + DirToOfs[dir];
     int jrow=row,jcol=col;
+    CapType retval;
 
     switch(dir){
     case DIR_EAST:
@@ -45,16 +46,19 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
         break;
     }
 
-    if ((imMask[i] == IDX_SINK) || (imMask[j] == IDX_SOURCE))
+    if ((imMask[i] == IDX_SINK) || (imMask[j] == IDX_SOURCE)){
+        DEBUG_OUT("[%d][%d] CAP_INF\n",row,col);
         return CAP_INF;
+    }
 
     if (bFormatRGB) {
         double col1[3] = { (double) imData[i * 3], (double) imData[i * 3 + 1], (double) imData[i * 3 + 2] };
         double col2[3] = { (double) imData[j * 3], (double) imData[j * 3 + 1], (double) imData[j * 3 + 2] };
         return gradient(col1, col2);
     } else {
-        //DEBUG_OUT("node[%d][%d] %f node[%d][%d] %f\n",row,col,(float)imData[i],jrow,jcol,(float)imData[j]);
-        return gradient(imData[i], imData[j]);
+        retval = gradient(imData[i], imData[j]);
+        //DEBUG_OUT("node[%d][%d] %f node[%d][%d] %f retval(%f)\n",row,col,(float)imData[i],jrow,jcol,(float)imData[j],(float)retval);
+        return retval;
     }
 }
 

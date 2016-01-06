@@ -97,9 +97,26 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     for (i = 0; i < nEdges; i++) {
         edges[i].idx = i;
         edges[i].setFlags(0);
-        DEBUG_OUT("edge[%d] vertfrom[%d] -> vertto[%d] .cap(%f) .rcap(%f)\n",edges[i].idx,edges[i].getHead()->idx,
-            edges[i].getTail()->idx,(float)edges[i].getCapacity(),
-            (float)edges[i].getRevCapacity());
+        CapType cap,rcap;
+        cap = edges[i].getCapacity();
+        rcap = edges[i].getRevCapacity();
+        if (abs(cap) <= EPSILON || abs(rcap) <= EPSILON) {
+            DEBUG_OUT("edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n", edges[i].idx, edges[i].getHead()->GetY(),
+                      edges[i].getHead()->GetX(),
+                      edges[i].getTail()->GetY(),
+                      edges[i].getTail()->GetX(),
+                      (float)cap,
+                      (float)rcap);
+        } else {
+            DEBUG_OUT("edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n", edges[i].idx, edges[i].getHead()->GetY(),
+                      edges[i].getHead()->GetX(),
+                      edges[i].getTail()->GetY(),
+                      edges[i].getTail()->GetX(),
+                      (float)cap,
+                      (float)rcap);
+
+        }
+
     }
 
     //determine minimum weight that is considered = infinity...
@@ -240,7 +257,7 @@ double CutPlanar::getMaxFlow()
     while (true) {
 
         pr = plSource->expose();
-        DEBUG_OUT("dynnode[%d].expose (dynnode[%d])\n",getDynNodeIdx(plSource),getDynNodeIdx(pr));
+        DEBUG_OUT("dynnode[%d].expose (dynnode[%d])\n", getDynNodeIdx(plSource), getDynNodeIdx(pr));
         plTailD = pr->getMinCostLeaf();
         DEBUG_OUT("srcdynnode[%d] tailD dynnode[%d]\n", getDynNodeIdx(plSource), getDynNodeIdx(plTailD));
 
