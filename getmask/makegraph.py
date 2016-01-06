@@ -40,15 +40,41 @@ class EdgeOut(object):
 		self.__fp.write('height=%d\n'%(self.__w))
 		self.__refered = np.zeros((self.__w,self.__h,4),np.uint8)
 		self.__edgeidx= 0
+		sidx = 0
+		brkone = 0
+		for i in range(self.__h):
+			for j in range(self.__w):
+				if self.__is_source(i,j):
+					brkone = 1
+					break
+				sidx += 1
+			if brkone :
+				break
+		if brkone == 0 :
+			raise Exception('can not find source idx')
+		self.__fp.write('source=%d\n'%(sidx))
+		eidx=0
+		brkone = 0
+		for i in range(self.__h):
+			for j in range(self.__w):
+				if self.__is_sink(i,j):
+					brkone = 1
+					break
+				eidx += 1
+			if brkone :
+				break
+		if brkone == 0 :
+			raise Exception('can not find sink idx')
+		self.__fp.write('sink=%d\n'%(eidx))
 		return
 
 	def __is_source(self,fromi,fromj):
-		if self.__maskimg[fromi][fromj][0] >= 240 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] <= 10:
+		if self.__maskimg[fromi][fromj][0] <= 10 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] >= 240:
 			return True
 		return False
 
 	def __is_sink(self,fromi,fromj):
-		if self.__maskimg[fromi][fromj][0] <= 10 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] >= 240:
+		if self.__maskimg[fromi][fromj][0] >= 240 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] <= 10:
 			return True
 		return False
 
@@ -87,30 +113,30 @@ class EdgeOut(object):
 
 		if self.__is_source(fromi,fromj):
 			logging.info('from[%d][%d] mask'%(fromi,fromj))
-			cap = CONSTANT.STR_CAP_INF
-			rcap = '%f'%(val)
-		elif self.__is_source(toi,toj):
-			logging.info('to[%d][%d] mask'%(toi,toj))
 			rcap = CONSTANT.STR_CAP_INF
 			cap = '%f'%(val)
+		elif self.__is_source(toi,toj):
+			logging.info('to[%d][%d] mask'%(toi,toj))
+			cap = CONSTANT.STR_CAP_INF
+			rcap = '%f'%(val)
 
 		if self.__is_sink(toi,toj):
 			logging.info('to[%d][%d] mask'%(toi,toj))
-			cap = CONSTANT.STR_CAP_INF
-			rcap = '%f'%(val)
+			rcap = CONSTANT.STR_CAP_INF
+			cap = '%f'%(val)
 		elif self.__is_sink(fromi,fromj):
 			logging.info('from[%d][%d] mask'%(fromi,fromj))
-			cap = '%f'%(val)
-			rcap = CONSTANT.STR_CAP_INF
+			rcap = '%f'%(val)
+			cap = CONSTANT.STR_CAP_INF
 
 		if self.__is_sink(toi,toj) and self.__is_source(fromi,fromj):
 			logging.info('from[%d][%d] to[%d][%d] mask'%(fromi,fromj,toi,toj))
-			cap = CONSTANT.STR_CAP_INF
-			rcap = '%f'%(val)
+			rcap = CONSTANT.STR_CAP_INF
+			cap = '%f'%(val)
 
 		if self.__is_source(toi,toj) and self.__is_sink(fromi,fromj):
-			cap = '%f'%(val)
-			rcap = CONSTANT.STR_CAP_INF
+			rcap = '%f'%(val)
+			cap = CONSTANT.STR_CAP_INF
 
 		if self.__is_sink(toi,toj) and self.__is_sink(fromi,fromj):
 			cap = CONSTANT.STR_CAP_INF

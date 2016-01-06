@@ -13,12 +13,6 @@ const (
 	CAP_INF = float64(1.79769313e308)
 )
 
-type PlanarGraph struct {
-	verts []*Vertice
-	edges []*Edge
-	faces []*Face
-}
-
 type FaceArr struct {
 	faces    []*Face
 	ncols    int
@@ -255,16 +249,29 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	return nil
 }
 
+type PlanarGraph struct {
+	verts     []*Vertice
+	edges     []*Edge
+	faces     []*Face
+	sinkid    int
+	sourceid  int
+	preflowed int
+}
+
 /*we get the */
 func NewPlanarGraph() *PlanarGraph {
 	p := &PlanarGraph{}
 	p.verts = []*Vertice{}
 	p.edges = []*Edge{}
 	p.faces = []*Face{}
+	p.sinkid = -1
+	p.sourceid = -1
+	p.preflowed = 0
 	return p
 }
 
 func (planar *PlanarGraph) DebugGraph() {
+	fmt.Fprintf(os.Stdout, "sourceid %d sinkid %d\n", planar.sourceid, planar.sinkid)
 	for _, e := range planar.edges {
 		scap := fmt.Sprintf("%f", e.GetCap())
 		srcap := fmt.Sprintf("%f", e.GetRevCap())
@@ -276,8 +283,8 @@ func (planar *PlanarGraph) DebugGraph() {
 			srcap = "1.#INF00"
 		}
 
-		fmt.Fprintf(os.Stdout, "[%d] .cap %s .rcap %s head %d tail %d headdual %d taildual %d\n",
-			e.GetIdx(), scap, srcap, e.GetHead().GetIdx(),
+		fmt.Fprintf(os.Stdout, "[%d] flags(0x%08x) .cap %s .rcap %s head %d tail %d headdual %d taildual %d\n",
+			e.GetIdx(), e.GetFlags(), scap, srcap, e.GetHead().GetIdx(),
 			e.GetTail().GetIdx(), e.GetHeadDual().GetIdx(),
 			e.GetTailDual().GetIdx())
 	}
@@ -287,12 +294,15 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	var caps float64
 	var linenum int
 	var facearr *FaceArr
+	var sinkid, sourceid int
 
 	/*open file*/
 	planar = nil
 	err = nil
 	w := -1
 	h := -1
+	sinkid = -1
+	sourceid = -1
 	file, e := os.Open(infile)
 	if e != nil {
 		err = e
@@ -348,6 +358,34 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			continue
 		}
 
+		if strings.HasPrefix(l, "source=") {
+			sarr = strings.Split(l, "=")
+			if len(sarr) < 2 {
+				continue
+			}
+			sourceid, err = strconv.Atoi(sarr[1])
+			if err != nil {
+				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				log.Print(err.Error())
+				return
+			}
+			continue
+		}
+
+		if strings.HasPrefix(l, "sink=") {
+			sarr = strings.Split(l, "=")
+			if len(sarr) < 2 {
+				continue
+			}
+			sinkid, err = strconv.Atoi(sarr[1])
+			if err != nil {
+				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				log.Print(err.Error())
+				return
+			}
+			continue
+		}
+
 		sarr = strings.Split(l, ",")
 		if len(sarr) < 3 {
 			continue
@@ -387,11 +425,28 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			return
 		}
 	}
+
+	if sourceid < 0 || sinkid < 0 {
+		err = fmt.Errorf("can not find source id and sink id")
+		log.Print(err.Error())
+		return
+	}
 	planar = NewPlanarGraph()
 	planar.edges = edgehash.edgearr
 	planar.verts = vertshash.vertarr
 	planar.faces = facearr.faces
+	planar.sourceid = sourceid
+	planar.sinkid = sinkid
 
 	err = nil
 	return
+}
+
+func (planar *PlanarGraph) preflow() {
+	if planar.preflowed > 0 {
+		return
+	}
+
+	/*we now preflowed the */
+
 }
