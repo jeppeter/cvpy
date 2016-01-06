@@ -88,25 +88,38 @@ class EdgeOut(object):
 		if self.__is_source(fromi,fromj):
 			logging.info('from[%d][%d] mask'%(fromi,fromj))
 			cap = CONSTANT.STR_CAP_INF
-			rcap = CONSTANT.STR_EPSILON
+			rcap = '%f'%(val)
 		elif self.__is_source(toi,toj):
 			logging.info('to[%d][%d] mask'%(toi,toj))
 			rcap = CONSTANT.STR_CAP_INF
-			cap = CONSTANT.STR_EPSILON
+			cap = '%f'%(val)
 
 		if self.__is_sink(toi,toj):
 			logging.info('to[%d][%d] mask'%(toi,toj))
 			cap = CONSTANT.STR_CAP_INF
-			rcap = CONSTANT.STR_EPSILON
+			rcap = '%f'%(val)
 		elif self.__is_sink(fromi,fromj):
 			logging.info('from[%d][%d] mask'%(fromi,fromj))
-			cap = CONSTANT.STR_EPSILON
+			cap = '%f'%(val)
 			rcap = CONSTANT.STR_CAP_INF
 
 		if self.__is_sink(toi,toj) and self.__is_source(fromi,fromj):
 			logging.info('from[%d][%d] to[%d][%d] mask'%(fromi,fromj,toi,toj))
 			cap = CONSTANT.STR_CAP_INF
-			rcap = CONSTANT.STR_EPSILON
+			rcap = '%f'%(val)
+
+		if self.__is_source(toi,toj) and self.__is_sink(fromi,fromj):
+			cap = '%f'%(val)
+			rcap = CONSTANT.STR_CAP_INF
+
+		if self.__is_sink(toi,toj) and self.__is_sink(fromi,fromj):
+			cap = CONSTANT.STR_CAP_INF
+			rcap = CONSTANT.STR_CAP_INF
+
+		if self.__is_source(toi,toj) and self.__is_source(fromi,fromj):
+			cap = CONSTANT.STR_CAP_INF
+			rcap = CONSTANT.STR_CAP_INF
+
 
 		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%s) .rcap(%s)\n'%(\
 			self.__edgeidx,toi,toj,fromi,fromj,cap,rcap))

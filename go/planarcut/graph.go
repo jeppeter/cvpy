@@ -53,8 +53,6 @@ func (fa *FaceArr) GetFaces(x, y int) (retfaces []*Face, err error) {
 		return
 	}
 
-	log.Printf("x = %d y = %d", x, y)
-
 	if x == 0 && y == 0 {
 		retfaces = append(retfaces, fa.faces[0])
 	} else if x == fa.ncols && y == fa.nrows {
@@ -178,6 +176,19 @@ func (eh *EdgeHash) compare_get_face(fromfaces []*Face, tofaces []*Face) []*Face
 	return retfaces
 }
 
+func (eh *EdgeHash) is_upsidedown(fromv, tov *Vertice) bool {
+	if fromv.GetY() != tov.GetY() {
+		/*if we from the vertical mode return false*/
+		return false
+	}
+
+	if fromv.GetX() == 0 {
+		return true
+	}
+
+	return false
+}
+
 func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	var ed *Edge
 
@@ -189,35 +200,35 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 
 	ed = eh.get_edge(tov.GetName(), fromv.GetName())
 	if ed != nil {
-		ed.SetRevCap(caps)
+		ed.SetCap(caps)
 		return nil
 	}
 
 	ed = NewEdge()
 	ed.SetHead(tov)
 	ed.SetTail(fromv)
-	ed.SetCap(caps)
+	ed.SetRevCap(caps)
 	eh.edgemap[eh.get_name(fromv.GetName(), tov.GetName())] = ed
 	ed.SetName(eh.get_name(fromv.GetName(), tov.GetName()))
 	ed.SetIdx(len(eh.edgearr))
 	retfaces := eh.compare_get_face(fromv.GetFaces(), tov.GetFaces())
 	if len(retfaces) != 2 {
-		log.Printf("fromv (%s)", fromv.GetName())
-		for i, face := range fromv.GetFaces() {
-			log.Printf("[%d].face %d", i, face.GetIdx())
-		}
-		log.Printf("tov (%s)", tov.GetName())
-		for i, face := range tov.GetFaces() {
-			log.Printf("[%d].face %d", i, face.GetIdx())
-		}
-		for i, face := range retfaces {
-			log.Printf("[%d].face %d", i, face.GetIdx())
-		}
 		err := fmt.Errorf("%s not valid faces", ed.GetName())
 		return err
 	}
-	ed.SetHeadDual(retfaces[0])
-	ed.SetTailDual(retfaces[1])
+	if eh.is_upsidedown(fromv, tov) {
+		log.Printf("[%d][%d] -> [%d][%d] upsidedown Head %d Tail %d",
+			fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
+			retfaces[1].GetIdx(), retfaces[0].GetIdx())
+		ed.SetHeadDual(retfaces[1])
+		ed.SetTailDual(retfaces[0])
+	} else {
+		log.Printf("[%d][%d] -> [%d][%d] not upsidedown Head %d Tail %d",
+			fromv.GetY(), fromv.GetX(), tov.GetY(), tov.GetX(),
+			retfaces[0].GetIdx(), retfaces[1].GetIdx())
+		ed.SetHeadDual(retfaces[0])
+		ed.SetTailDual(retfaces[1])
+	}
 	eh.edgearr = append(eh.edgearr, ed)
 	return nil
 }
