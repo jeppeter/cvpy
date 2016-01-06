@@ -100,10 +100,14 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
         CapType cap, rcap;
         cap = edges[i].getCapacity();
         rcap = edges[i].getRevCapacity();
-        DEBUG_OUT("[%d] .cap %f .rcap %f head %d tail %d headdual %d taildual %d\n", edges[i].idx, 
+        DEBUG_OUT("[%d] .cap %f .rcap %f head %d([%d][%d]) tail %d([%d][%d]) headdual %d taildual %d\n", edges[i].idx, 
             (float)cap,(float)rcap,
             edges[i].getHead()->idx,
+            edges[i].getHead()->GetY(),
+            edges[i].getHead()->GetX(),
             edges[i].getTail()->idx,
+            edges[i].getTail()->GetY(),
+            edges[i].getTail()->GetX(),
             edges[i].getHeadDual()->idx,
             edges[i].getTailDual()->idx);
 

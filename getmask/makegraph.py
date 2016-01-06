@@ -40,6 +40,16 @@ class EdgeOut(object):
 		self.__edgeidx= 0
 		return
 
+	def __is_source(self,fromi,fromj):
+		if self.__maskimg[fromi][fromj][0] <= 10 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] >= 240:
+			return True
+		return False
+
+	def __is_sink(self,fromi,fromj):
+		if self.__maskimg[fromi][fromj][0] >= 240 and self.__maskimg[fromi][fromj][1] <= 10 and self.__maskimg[fromi][fromj][2] <= 10:
+			return True
+		return False
+
 	def __out_edges(self,fromi,fromj,toi,toj):
 		if toi < 0 or toi >= self.__w:
 			return 0
@@ -73,13 +83,17 @@ class EdgeOut(object):
 		cap = '%f'%(val)
 		rcap = '%f'%(val)
 
-		if self.__maskimg[fromi][fromj][1] == 1:
-			#logging.info('from[%d][%d] mask'%(fromi,fromj))
+		if self.__is_source(fromi,fromj):
+			logging.info('from[%d][%d] mask'%(fromi,fromj))
 			rcap = '1.#INF00'
 
-		if self.__maskimg[toi][toj][1] == 1:
-			#logging.info('to[%d][%d] mask'%(toi,toj))
+		if self.__is_sink(toi,toj):
+			logging.info('to[%d][%d] mask'%(toi,toj))
 			cap = '1.#INF00'
+
+		if self.__is_source(fromi,fromj) and self.__is_sink(toi,toj):
+			rcap = '1.#INF00'
+			cap = '0.000001'
 
 		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%s) .rcap(%s)\n'%(\
 			self.__edgeidx,toi,toj,fromi,fromj,cap,rcap))

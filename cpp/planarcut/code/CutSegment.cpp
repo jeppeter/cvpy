@@ -30,24 +30,34 @@ CapType CutSegment::edgeCost(int row, int col, EDir dir)
     int j = i + DirToOfs[dir];
     int jrow=row,jcol=col;
     CapType retval;
+    const char* dirstr=NULL;
 
     switch(dir){
     case DIR_EAST:
         jcol ++;
+        dirstr = "EAST";
         break;
     case DIR_WEST:
         jcol --;
+        dirstr = "WEST";
         break;
     case DIR_NORTH:
         jrow --;
+        dirstr = "NORTH";
         break;
     case DIR_SOUTH:
         jrow ++;
+        dirstr = "SOUTH";
         break;
     }
 
     if ((imMask[i] == IDX_SINK) || (imMask[j] == IDX_SOURCE)){
-        DEBUG_OUT("[%d][%d] CAP_INF\n",row,col);
+        if (imMask[i] == IDX_SINK){
+            DEBUG_OUT("[%d][%d] %s SINK CAP_INF\n",row,col,dirstr);
+        }
+        if (imMask[j] == IDX_SOURCE){
+            DEBUG_OUT("[%d][%d] %s SOURCES CAP_INF\n",row,col,dirstr);
+        }
         return CAP_INF;
     }
 
