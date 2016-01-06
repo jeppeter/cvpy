@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -25,6 +26,7 @@ func main() {
 	if len(os.Args) < 2 {
 		Usage(3, "need one arg")
 	}
+	log.SetFlags(log.Lshortfile)
 	planar, err := MakePlanarGraph(os.Args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "can not parse %s error(%s)\n", os.Args[1], err.Error())

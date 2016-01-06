@@ -74,11 +74,11 @@ class EdgeOut(object):
 		rcap = '%f'%(val)
 
 		if self.__maskimg[fromi][fromj][1] == 1:
-			logging.info('from[%d][%d] mask'%(fromi,fromj))
+			#logging.info('from[%d][%d] mask'%(fromi,fromj))
 			rcap = '1.#INF00'
 
 		if self.__maskimg[toi][toj][1] == 1:
-			logging.info('to[%d][%d] mask'%(toi,toj))
+			#logging.info('to[%d][%d] mask'%(toi,toj))
 			cap = '1.#INF00'
 
 		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%s) .rcap(%s)\n'%(\

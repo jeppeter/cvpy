@@ -40,21 +40,20 @@ func NewFaceArr(w, h int) *FaceArr {
 	return p
 }
 
-func (fa *FaceArr) GetFaces(x, y int) []*Face {
-	var retfaces []*Face
+func (fa *FaceArr) GetFaces(x, y int) (retfaces []*Face, err error) {
 	retfaces = []*Face{}
 
 	if x < 0 || x > fa.ncols {
-		log.Fatalf("x(%d) not valid", x)
+		err = fmt.Errorf("x(%d) not valid", x)
+		return
 	}
 
 	if y < 0 || y > fa.nrows {
-		log.Fatalf("y(%d) not valid", y)
+		err = fmt.Errorf("y(%d) not valid", y)
+		return
 	}
-	if x == 0 || y == 0 || x == fa.ncols || y == fa.nrows {
-		/*put the infinite into the faces*/
-		retfaces = append(retfaces, fa.faces[fa.totalnum-1])
-	}
+
+	log.Printf("x = %d y = %d", x, y)
 
 	if x == 0 && y == 0 {
 		retfaces = append(retfaces, fa.faces[0])
@@ -65,8 +64,8 @@ func (fa *FaceArr) GetFaces(x, y int) []*Face {
 	} else if x == fa.ncols && y == 0 {
 		retfaces = append(retfaces, fa.faces[fa.ncols-1])
 	} else if x == 0 {
-		retfaces = append(retfaces, fa.faces[fa.ncols*(y-1)-1])
-		retfaces = append(retfaces, fa.faces[fa.ncols*y-1])
+		retfaces = append(retfaces, fa.faces[fa.ncols*(y-1)])
+		retfaces = append(retfaces, fa.faces[fa.ncols*(y)])
 	} else if y == 0 {
 		retfaces = append(retfaces, fa.faces[x-1])
 		retfaces = append(retfaces, fa.faces[x])
@@ -83,8 +82,13 @@ func (fa *FaceArr) GetFaces(x, y int) []*Face {
 		retfaces = append(retfaces, fa.faces[fa.ncols*y+x-1])
 		retfaces = append(retfaces, fa.faces[fa.ncols*y+x])
 	}
+	if x == 0 || y == 0 || x == fa.ncols || y == fa.nrows {
+		/*put the infinite into the faces*/
+		retfaces = append(retfaces, fa.faces[fa.totalnum-1])
+	}
 
-	return retfaces
+	err = nil
+	return
 
 }
 
@@ -100,30 +104,41 @@ func NewVertsHash() *VertsHash {
 	return p
 }
 
-func (p *VertsHash) AddVerts(name string, w, h int, fa *FaceArr) int {
+func (p *VertsHash) AddVerts(name string, w, h int, fa *FaceArr) error {
 	_, ok := p.verts[name]
 	if ok {
-		return 0
+		return nil
 	}
 
 	p.verts[name] = NewVertice(name)
 	idx, err := strconv.Atoi(name)
 	if err != nil {
-		log.Fatalf("can not accept name(%s)", name)
+		return err
 	}
+	/*to increase the vertex*/
 	vert := p.verts[name]
 	x := idx % w
 	y := idx / w
 	vert.SetXY(x, y)
 	vert.SetIdx(idx)
-	vert.SetFaces(fa.GetFaces(x, y))
+	faces, err := fa.GetFaces(x, y)
+	if err != nil {
+		return err
+	}
+	vert.SetFaces(faces)
 	p.vertarr = append(p.vertarr, p.verts[name])
-	return 1
+	return nil
 }
 
-func (p *VertsHash) GetVert(name string, w, h int, fa *FaceArr) *Vertice {
-	p.AddVerts(name, w, h, fa)
-	return p.verts[name]
+func (p *VertsHash) GetVert(name string, w, h int, fa *FaceArr) (vert *Vertice, err error) {
+	err = p.AddVerts(name, w, h, fa)
+	if err != nil {
+
+		return
+	}
+	vert = p.verts[name]
+	err = nil
+	return
 }
 
 type EdgeHash struct {
@@ -163,19 +178,19 @@ func (eh *EdgeHash) compare_get_face(fromfaces []*Face, tofaces []*Face) []*Face
 	return retfaces
 }
 
-func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) int {
+func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) error {
 	var ed *Edge
 
 	ed = eh.get_edge(fromv.GetName(), tov.GetName())
 	if ed != nil {
-		log.Fatalf("set (%s) twice", eh.get_name(fromv.GetName(), tov.GetName()))
-		return -1
+		err := fmt.Errorf("set (%s) twice", eh.get_name(fromv.GetName(), tov.GetName()))
+		return err
 	}
 
 	ed = eh.get_edge(tov.GetName(), fromv.GetName())
 	if ed != nil {
 		ed.SetRevCap(caps)
-		return 0
+		return nil
 	}
 
 	ed = NewEdge()
@@ -187,12 +202,24 @@ func (eh *EdgeHash) AddEdge(fromv, tov *Vertice, caps float64) int {
 	ed.SetIdx(len(eh.edgearr))
 	retfaces := eh.compare_get_face(fromv.GetFaces(), tov.GetFaces())
 	if len(retfaces) != 2 {
-		log.Fatalf("%s not valid faces", ed.GetName())
+		log.Printf("fromv (%s)", fromv.GetName())
+		for i, face := range fromv.GetFaces() {
+			log.Printf("[%d].face %d", i, face.GetIdx())
+		}
+		log.Printf("tov (%s)", tov.GetName())
+		for i, face := range tov.GetFaces() {
+			log.Printf("[%d].face %d", i, face.GetIdx())
+		}
+		for i, face := range retfaces {
+			log.Printf("[%d].face %d", i, face.GetIdx())
+		}
+		err := fmt.Errorf("%s not valid faces", ed.GetName())
+		return err
 	}
 	ed.SetHeadDual(retfaces[0])
 	ed.SetTailDual(retfaces[1])
 	eh.edgearr = append(eh.edgearr, ed)
-	return 1
+	return nil
 }
 
 /*we get the */
@@ -206,8 +233,18 @@ func NewPlanarGraph() *PlanarGraph {
 
 func (planar *PlanarGraph) DebugGraph() {
 	for _, e := range planar.edges {
-		fmt.Fprintf(os.Stdout, "%d .cap %f .rcap %f head %d tail %d headdual %d taildual %d\n",
-			e.GetIdx(), e.GetCap(), e.GetRevCap(), e.GetHead().GetIdx(),
+		scap := fmt.Sprintf("%f", e.GetCap())
+		srcap := fmt.Sprintf("%f", e.GetRevCap())
+		if e.GetCap() == CAP_INF {
+			scap = "1.#INF00"
+		}
+
+		if e.GetRevCap() == CAP_INF {
+			srcap = "1.#INF00"
+		}
+
+		fmt.Fprintf(os.Stdout, "[%d] .cap %s .rcap %s head %d tail %d headdual %d taildual %d\n",
+			e.GetIdx(), scap, srcap, e.GetHead().GetIdx(),
 			e.GetTail().GetIdx(), e.GetHeadDual().GetIdx(),
 			e.GetTailDual().GetIdx())
 	}
@@ -251,7 +288,8 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			}
 			h, err = strconv.Atoi(sarr[1])
 			if err != nil {
-				log.Fatalf("can not parse(%d) %s", linenum, l)
+				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				return
 			}
 			if w > 0 && facearr == nil {
 				facearr = NewFaceArr(w, h)
@@ -266,7 +304,8 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 			}
 			w, err = strconv.Atoi(sarr[1])
 			if err != nil {
-				log.Fatalf("can not parse(%d) %s", linenum, l)
+				err = fmt.Errorf("can not parse (%d) (%s)", linenum, l)
+				return
 			}
 			if h > 0 && facearr == nil {
 				facearr = NewFaceArr(w, h)
@@ -280,7 +319,8 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 		}
 
 		if w < 0 || h < 0 {
-			log.Fatalf("not specified width or height")
+			err = fmt.Errorf("not specified width or height")
+			return
 		}
 
 		if sarr[2] == "1.#INF00" {
@@ -288,15 +328,26 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 		} else {
 			caps, e = strconv.ParseFloat(sarr[2], 64)
 			if e != nil {
-				log.Fatalf("can not parse %d error %s", linenum, e.Error())
-				err = e
+				err = fmt.Errorf("can not parse %d error %s", linenum, e.Error())
 				return
 			}
 		}
 
-		fromvert := vertshash.GetVert(sarr[0], w, h, facearr)
-		tovert := vertshash.GetVert(sarr[1], w, h, facearr)
-		edgehash.AddEdge(fromvert, tovert, caps)
+		fromvert, verr := vertshash.GetVert(sarr[0], w, h, facearr)
+		if verr != nil {
+			err = verr
+			return
+		}
+		tovert, verr := vertshash.GetVert(sarr[1], w, h, facearr)
+		if verr != nil {
+			err = verr
+			return
+		}
+		verr = edgehash.AddEdge(fromvert, tovert, caps)
+		if verr != nil {
+			err = fmt.Errorf("line(%d) %s", linenum, verr.Error())
+			return
+		}
 	}
 	planar = NewPlanarGraph()
 	planar.edges = edgehash.edgearr
