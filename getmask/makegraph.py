@@ -70,10 +70,21 @@ class EdgeOut(object):
 
 		#logging.info('[%d][%d][2] = %d [%d][%d][2] = %d'%(fromi,fromj,self.__simg[fromi][fromj][2],toi,toj,self.__simg[toi][toj][2]))
 		val = calc_edge(self.__simg[fromi][fromj][2],self.__simg[toi][toj][2])
+		cap = '%f'%(val)
+		rcap = '%f'%(val)
 
-		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%f) .rcap(%f)\n'%(\
-			self.__edgeidx,toi,toj,fromi,fromj,val,val))
-		self.__fp.write('%d,%d,%f\n'%((fromi*self.__h + fromj),(toi*self.__h+toj),val))
+		if self.__maskimg[fromi][fromj][1] == 1:
+			logging.info('from[%d][%d] mask'%(fromi,fromj))
+			rcap = '1.#INF00'
+
+		if self.__maskimg[toi][toj][1] == 1:
+			logging.info('to[%d][%d] mask'%(toi,toj))
+			cap = '1.#INF00'
+
+		self.__fp.write('# edge[%d] vert[%d][%d] -> vert[%d][%d] .cap(%s) .rcap(%s)\n'%(\
+			self.__edgeidx,toi,toj,fromi,fromj,cap,rcap))
+		self.__fp.write('%d,%d,%s\n'%((fromi*self.__h + fromj),(toi*self.__h+toj),rcap))
+		self.__fp.write('%d,%d,%s\n'%((toi*self.__h+toj),(fromi*self.__h+fromj),cap))
 		self.__edgeidx += 1
 
 		if fromi > toi :
@@ -129,7 +140,7 @@ def outgraph(infile,maskfile,outfile=None):
 
 	w = simg.shape[0]
 	h = simg.shape[1]
-	eo = EdgeOut(fp,simg)
+	eo = EdgeOut(fp,simg,maskimg)
 	eo.out_all_edges()
 	if fp != sys.stdout:
 		fp.close()
