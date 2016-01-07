@@ -90,32 +90,13 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     //reset edge flags
     for (i = 0; i < nVerts; i++) {
         verts[i].idx = i;
-        for (j=0;j<verts[i].getNumEdges();j++){
-            DEBUG_OUT("[%d].edge[%d] %d\n",i,j,verts[i].getEdge(j)->idx);
-        }
     }
     for (i = 0; i < nFaces; i++) {
         faces[i].idx = i;
     }
-    DEBUG_OUT("sourceID %d sinkID %d\n",sourceID,sinkID);
     for (i = 0; i < nEdges; i++) {
         edges[i].idx = i;
         edges[i].setFlags(0);
-        CapType cap, rcap;
-        cap = edges[i].getCapacity();
-        rcap = edges[i].getRevCapacity();
-        DEBUG_OUT("[%d] flags(0x%08x) .cap %f .rcap %f head %d([%d][%d]) tail %d([%d][%d]) headdual %d taildual %d\n", edges[i].idx,
-            (int) edges[i].getFlags(), 
-            (float)cap,(float)rcap,
-            edges[i].getHead()->idx,
-            edges[i].getHead()->GetY(),
-            edges[i].getHead()->GetX(),
-            edges[i].getTail()->idx,
-            edges[i].getTail()->GetY(),
-            edges[i].getTail()->GetX(),
-            edges[i].getHeadDual()->idx,
-            edges[i].getTailDual()->idx);
-
     }
 
     //determine minimum weight that is considered = infinity...
@@ -160,7 +141,9 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
 
     }
 
+    DEBUG_OUT("capEps %f\n",(float)capEps);
     capEps = capMin / (capEps * 2);
+    DEBUG_OUT("capEps %f\n",(float)capEps);
 
     if (capEps == 0)   //the graph completely consists of zero edges
         capEps = 0.1;
@@ -177,6 +160,30 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
             e->setFlags(e->getFlags() | 4);
         }
 
+    }
+
+    for (i=0;i<nVerts;i++){
+        for (j=0;j<verts[i].getNumEdges();j++){
+            DEBUG_OUT("[%d].edge[%d] %d\n",i,j,verts[i].getEdge(j)->idx);
+        }        
+    }
+
+    DEBUG_OUT("sourceID %d sinkID %d\n",sourceID,sinkID);
+    for (i=0;i<nEdges;i++){
+        CapType cap, rcap;
+        cap = edges[i].getCapacity();
+        rcap = edges[i].getRevCapacity();
+        DEBUG_OUT("[%d] flags(0x%08x) .cap %f .rcap %f head %d([%d][%d]) tail %d([%d][%d]) headdual %d taildual %d\n", edges[i].idx,
+            (int) edges[i].getFlags(), 
+            (float)cap,(float)rcap,
+            edges[i].getHead()->idx,
+            edges[i].getHead()->GetY(),
+            edges[i].getHead()->GetX(),
+            edges[i].getTail()->idx,
+            edges[i].getTail()->GetY(),
+            edges[i].getTail()->GetX(),
+            edges[i].getHeadDual()->idx,
+            edges[i].getTailDual()->idx);        
     }
 
 }

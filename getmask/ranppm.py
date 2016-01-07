@@ -20,8 +20,8 @@ def MakeRandomPPM(fname,height,width):
 	sourceid = 0
 	sinkid = 0
 	while sourceid == sinkid:
-		sourceid = random.randint(0,height*width)
-		sinkid = random.randint(0,height*width)
+		sourceid = random.randint(0,height*width-1)
+		sinkid = random.randint(0,height*width-1)
 
 	# now set the source
 	j = sourceid / width

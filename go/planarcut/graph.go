@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	CAP_INF = float64(1.79769313e308)
+	CAP_INF     = float64(1.79769313e308)
+	CAP_ZERO    = float64(0.0)
+	CAP_EPSILON = float64(0.000001)
 )
 
 type FaceArr struct {
@@ -297,6 +299,87 @@ func (planar *PlanarGraph) DebugGraph() {
 			e.GetTailDual().GetIdx())
 	}
 }
+
+func (planar *PlanarGraph) SetCapNormalize() {
+	var capInf, capmin, capeps, curcap float64
+	var capzeronum int
+
+	capInf = CAP_ZERO
+	capmin = CAP_INF
+
+	for _, e := range planar.edges {
+		curcap = e.GetCap()
+		if curcap != CAP_INF {
+			capInf += curcap
+		}
+
+		curcap = e.GetRevCap()
+		if curcap != CAP_INF {
+			capInf += curcap
+		}
+	}
+
+	capInf += float64(1.0)
+
+	for _, e := range planar.edges {
+		curcap = e.GetCap()
+		if curcap == CAP_INF {
+			e.SetCap(capInf)
+		}
+
+		curcap = e.GetRevCap()
+		if curcap == CAP_INF {
+			e.SetRevCap(capInf)
+		}
+	}
+	capzeronum = 0
+	for _, e := range planar.edges {
+		curcap = e.GetCap()
+		if curcap == CAP_ZERO {
+			capzeronum++
+		} else if curcap < capmin {
+			capmin = curcap
+		}
+
+		curcap = e.GetRevCap()
+		if curcap == CAP_ZERO {
+			capzeronum++
+		} else if curcap < capmin {
+			capmin = curcap
+		}
+	}
+
+	if capzeronum == 0 {
+		capeps = CAP_INF
+	} else {
+		capeps = capmin / float64(capzeronum*2)
+	}
+
+	if capeps == CAP_ZERO {
+		capeps = CAP_EPSILON
+	}
+
+	for _, e := range planar.edges {
+		curcap = e.GetCap()
+		if curcap == CAP_ZERO {
+			e.SetCap(capeps)
+			e.SetFlags(e.GetFlags() | EDGE_CAP_EPSILON)
+		}
+
+		curcap = e.GetRevCap()
+		if curcap == CAP_ZERO {
+			e.SetRevCap(capeps)
+			e.SetFlags(e.GetFlags() | EDGE_RCAP_EPSILON)
+		}
+	}
+}
+
+func (planar *PlanarGraph) SetCounterClockWise() {
+	for _, v := range planar.verts {
+		v.CounterClockWise()
+	}
+}
+
 func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	var sarr []string
 	var caps float64
@@ -442,14 +525,11 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	planar = NewPlanarGraph()
 	planar.edges = edgehash.edgearr
 	planar.verts = vertshash.vertarr
-	for _, v := range planar.verts {
-		v.CounterClockWise()
-	}
-
 	planar.faces = facearr.faces
 	planar.sourceid = sourceid
 	planar.sinkid = sinkid
-
+	planar.SetCounterClockWise()
+	planar.SetCapNormalize()
 	err = nil
 	return
 }

@@ -1,5 +1,11 @@
 package main
 
+const (
+	EDGE_VISITED      = uint32(1)
+	EDGE_CAP_EPSILON  = uint32(2)
+	EDGE_RCAP_EPSILON = uint32(4)
+)
+
 type Edge struct {
 	caps       float64
 	revcap     float64
