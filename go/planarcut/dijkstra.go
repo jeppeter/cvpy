@@ -228,6 +228,8 @@ func (g *Graph) ReinsertQueue(vert *Vertice) {
 		_, err := g.queue.Delete(vert)
 		if err == nil {
 			g.queue.Insert(vert)
+		} else {
+			log.Printf("not delete (%s) ", vert.GetName())
 		}
 	}
 }

@@ -413,7 +413,7 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 		pred := rb.__max_elem(elem.GetLeft())
 		elem.Data = pred.Data
 		deleteone = pred
-		log.Printf("change dete to (%s)", deleteone.Data.Stringer())
+		//log.Printf("change dete to (%s)", deleteone.Data.Stringer())
 	}
 
 	if deleteone.GetRight() != nil && deleteone.GetLeft() != nil {
