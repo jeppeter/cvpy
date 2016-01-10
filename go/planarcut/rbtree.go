@@ -461,6 +461,9 @@ func (rb *RBTree) Delete(data RBTreeData) (cnt int, err error) {
 }
 
 func (rb *RBTree) GetMin() RBTreeData {
+	if rb.root == nil {
+		return nil
+	}
 	elem := rb.__min_elem(rb.root)
 	if elem == nil {
 		return nil
@@ -474,6 +477,9 @@ func (rb *RBTree) GetMin() RBTreeData {
 }
 
 func (rb *RBTree) GetMax() RBTreeData {
+	if rb.root == nil {
+		return nil
+	}
 	elem := rb.__max_elem(rb.root)
 	if elem == nil {
 		return nil

@@ -93,6 +93,11 @@ func (vert *Vertice) Visit() {
 	return
 }
 
+func (vert *Vertice) UnVisit() {
+	vert.visited = false
+	return
+}
+
 func (vert *Vertice) AddEdge(pe *Edge) {
 	vert.edges = append(vert.edges, pe)
 	vert.nedges++
@@ -279,7 +284,7 @@ func (g *Graph) Dijkstra1() (dist int, err error) {
 	return dstvert.GetDist(), nil
 }
 
-func (g *Graph) Dijkstra() (dist int, err error) {
+func (g *Graph) Dijkstra2() (dist int, err error) {
 	var tvert, cvert, svert, dstvert *Vertice
 
 	svert, ok := g.verts[g.source]
@@ -317,6 +322,55 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 				tvert.SetDist(alt)
 				//log.Printf("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
 				tvert.SetPrev(cvert)
+			}
+		}
+	}
+
+	if dstvert.GetPrev() == nil {
+		return 0, fmt.Errorf("(%s->%s) not connected", g.source, g.sink)
+	}
+
+	return dstvert.GetDist(), nil
+}
+
+func (g *Graph) Dijkstra() (dist int, err error) {
+	var cvert, svert, dstvert *Vertice
+
+	svert, ok := g.verts[g.source]
+	if !ok {
+		return 0, fmt.Errorf("source (%s) not found", g.source)
+	}
+	dstvert, ok = g.verts[g.sink]
+	if !ok {
+		return 0, fmt.Errorf("sink (%s) not found", g.sink)
+	}
+
+	/*init for the */
+	for _, cvert = range g.verts {
+		cvert.SetDist(MAXINT)
+		cvert.UnVisit()
+	}
+	svert.SetDist(0)
+	cvert = svert
+	svert.Visit()
+	g.InsertQueue(cvert)
+
+	for {
+		cvert = g.GetQueue()
+		if cvert == nil {
+			break
+		}
+
+		for _, e := range cvert.GetEdges() {
+			tvert := e.GetTo()
+			alt := cvert.GetDist() + e.GetLength()
+			if alt < tvert.GetDist() {
+				tvert.SetDist(alt)
+				tvert.SetPrev(cvert)
+			}
+			if !tvert.IsVisited() {
+				tvert.Visit()
+				g.InsertQueue(tvert)
 			}
 		}
 	}
