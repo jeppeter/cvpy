@@ -48,7 +48,7 @@ func (vert *Vertice) Equal(j RBTreeData) bool {
 		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
 	}
 	jv = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
-	if jv.dist == vert.dist {
+	if jv == vert {
 		return true
 	}
 	return false
@@ -223,6 +223,15 @@ func (g *Graph) InsertQueue(vert *Vertice) {
 	return
 }
 
+func (g *Graph) ReinsertQueue(vert *Vertice) {
+	if vert.IsVisited() {
+		_, err := g.queue.Delete(vert)
+		if err == nil {
+			g.queue.Insert(vert)
+		}
+	}
+}
+
 func (g *Graph) GetQueue() *Vertice {
 	var rbdata RBTreeData
 	var pvert *Vertice
@@ -357,18 +366,21 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 
 	for {
 		cvert = g.GetQueue()
+		//if cvert == nil || cvert == dstvert {
 		if cvert == nil {
 			break
 		}
-
+		//log.Printf("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
 		for _, e := range cvert.GetEdges() {
 			tvert := e.GetTo()
 			alt := cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
+				//log.Printf("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
 				tvert.SetDist(alt)
 				tvert.SetPrev(cvert)
 			}
 			if !tvert.IsVisited() {
+				//log.Printf("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
 				tvert.Visit()
 				g.InsertQueue(tvert)
 			}
