@@ -157,20 +157,29 @@ func (e *Edge) GetName() string {
 }
 
 type Graph struct {
-	edges  map[string]*Edge
-	verts  map[string]*Vertice
-	source string
-	sink   string
-	queue  *RBTree
+	edges      map[string]*Edge
+	verts      map[string]*Vertice
+	vertnum    int
+	source     string
+	sink       string
+	queue2     *RBTree
+	queue      []*Vertice
+	queuestart int
+	queueend   int
 }
 
 func NewGraph() *Graph {
 	p := &Graph{}
 	p.edges = make(map[string]*Edge)
 	p.verts = make(map[string]*Vertice)
+	p.vertnum = 0
 	p.source = ""
 	p.sink = ""
-	p.queue = NewRBTree()
+	p.queue2 = NewRBTree()
+	p.queue = nil
+	p.queuestart = -1
+	p.queueend = -1
+
 	return p
 }
 
@@ -190,11 +199,13 @@ func (g *Graph) AddEdge(from, to string, caps int) error {
 	if !fok {
 		fvert = NewVertice(from)
 		g.verts[from] = fvert
+		g.vertnum++
 	}
 
 	if !tok {
 		tvert = NewVertice(to)
 		g.verts[to] = tvert
+		g.vertnum++
 	}
 
 	e, eok := g.edges[FormEdgeName(fvert, tvert)]
@@ -218,32 +229,61 @@ func (g *Graph) AddEdge(from, to string, caps int) error {
 	return nil
 }
 
-func (g *Graph) InsertQueue(vert *Vertice) {
-	g.queue.Insert(vert)
+func (g *Graph) InsertQueue2(vert *Vertice) {
+	g.queue2.Insert(vert)
 	return
 }
 
-func (g *Graph) ReinsertQueue(vert *Vertice) {
+func (g *Graph) InsertQueue(vert *Vertice) {
+	if g.queue == nil {
+		g.queue = make([]*Vertice, g.vertnum)
+		g.queuestart = 0
+		g.queueend = 0
+		for i := 0; i < g.vertnum; i++ {
+			g.queue[i] = nil
+		}
+	}
+	if g.queueend >= g.vertnum {
+		log.Fatalf("can not insert %s for num (%d)", vert.GetName(), g.vertnum)
+	}
+
+	g.queue[g.queueend] = vert
+	g.queueend++
+
+	return
+}
+
+func (g *Graph) ReinsertQueue2(vert *Vertice) {
 	if vert.IsVisited() {
-		_, err := g.queue.Delete(vert)
+		_, err := g.queue2.Delete(vert)
 		if err == nil {
-			g.queue.Insert(vert)
+			g.queue2.Insert(vert)
 		} else {
-			log.Printf("not delete (%s) ", vert.GetName())
+			//log.Printf("not delete (%s) ", vert.GetName())
 		}
 	}
 }
 
-func (g *Graph) GetQueue() *Vertice {
+func (g *Graph) GetQueue2() *Vertice {
 	var rbdata RBTreeData
 	var pvert *Vertice
-	rbdata = g.queue.GetMin()
+	rbdata = g.queue2.GetMin()
 	if rbdata == nil {
 		return nil
 	}
 
 	pvert = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(rbdata).Pointer()))))
 	return pvert
+}
+
+func (g *Graph) GetQueue() *Vertice {
+	var retvert *Vertice
+	retvert = nil
+	if g.queue != nil && g.queuestart < g.queueend {
+		retvert = g.queue[g.queuestart]
+		g.queuestart++
+	}
+	return retvert
 }
 
 func (g *Graph) Dijkstra1() (dist int, err error) {
@@ -364,10 +404,10 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 	svert.SetDist(0)
 	cvert = svert
 	svert.Visit()
-	g.InsertQueue(cvert)
+	g.InsertQueue2(svert)
 
 	for {
-		cvert = g.GetQueue()
+		cvert = g.GetQueue2()
 		//if cvert == nil || cvert == dstvert {
 		if cvert == nil {
 			break
@@ -378,13 +418,18 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 			alt := cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
 				//log.Printf("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
+				/*we delete it and reinsert it into */
+				_, err := g.queue2.Delete(tvert)
 				tvert.SetDist(alt)
 				tvert.SetPrev(cvert)
+				if err == nil {
+					g.queue2.Insert(tvert)
+				}
 			}
 			if !tvert.IsVisited() {
 				//log.Printf("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
 				tvert.Visit()
-				g.InsertQueue(tvert)
+				g.InsertQueue2(tvert)
 			}
 		}
 	}
