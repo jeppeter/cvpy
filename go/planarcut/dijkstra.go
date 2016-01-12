@@ -408,8 +408,8 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 
 	for {
 		cvert = g.GetQueue2()
-		//if cvert == nil || cvert == dstvert {
-		if cvert == nil {
+		if cvert == nil || cvert == dstvert {
+			//if cvert == nil {
 			break
 		}
 		//log.Printf("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
