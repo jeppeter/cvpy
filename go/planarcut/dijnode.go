@@ -19,9 +19,16 @@ type DijVertice struct {
 	dist      int
 	prev      *DijVertice
 	visited   bool
-	edges     []*Edge
+	edges     []*DijEdge
 	nedges    int
 	link_next *DijVertice
+}
+
+type DijEdge struct {
+	from   *DijVertice
+	to     *DijVertice
+	length int
+	name   string
 }
 
 func NewDijVertice(name string) *DijVertice {
@@ -82,4 +89,53 @@ func (vert *DijVertice) SetPrev(p *DijVertice) {
 
 func (vert *DijVertice) GetPrev() *DijVertice {
 	return vert.prev
+}
+
+func (vert *DijVertice) IsVisited() bool {
+	return vert.visited
+}
+
+func (vert *DijVertice) Visit() {
+	vert.visited = true
+	return
+}
+
+func (vert *DijVertice) UnVisit() {
+	vert.visited = false
+	return
+}
+
+func (vert *DijVertice) AddEdge(pe *DijEdge) {
+	vert.edges = append(vert.edges, pe)
+	vert.nedges++
+	return
+}
+
+func (vert *DijVertice) GetEdges() []*DijEdge {
+	return vert.edges
+}
+
+func (vert *DijVertice) GetName() string {
+	return vert.name
+}
+
+func (vert *DijVertice) GetNext() *DijVertice {
+	return vert.link_next
+}
+
+func (vert *DijVertice) SetNext(pnext *DijVertice) {
+	vert.link_next = pnext
+}
+
+func FormEdgeName(from, to *DijVertice) string {
+	return fmt.Sprint("%s->%s", from.GetName(), to.GetName())
+}
+
+func NewDijEdge(from, to *DijVertice, length int) *DijEdge {
+	p := &DijEdge{}
+	p.from = from
+	p.to = to
+	p.length = length
+	p.name = FormEdgeName(from, to)
+	return p
 }
