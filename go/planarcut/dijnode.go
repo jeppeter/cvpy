@@ -139,3 +139,55 @@ func NewDijEdge(from, to *DijVertice, length int) *DijEdge {
 	p.name = FormEdgeName(from, to)
 	return p
 }
+
+func (e *DijEdge) GetFrom() *DijVertice {
+	return e.from
+}
+
+func (e *DijEdge) GetTo() *DijVertice {
+	return e.to
+}
+
+func (e *DijEdge) GetLength() int {
+	return e.length
+}
+
+func (e *DijEdge) GetName() string {
+	return e.name
+}
+
+type DijGraph struct {
+	edges      map[string]*DijEdge
+	verts      map[string]*DijVertice
+	vertnum    int
+	source     string
+	sink       string
+	queue2     *RBTree
+	queue      []*DijVertice
+	queuestart int
+	queueend   int
+}
+
+func NewDijGraph() *DijGraph {
+	p := &DijGraph{}
+	p.edges = make(map[string]*DijEdge)
+	p.verts = make(map[string]*DijVertice)
+	p.vertnum = 0
+	p.source = ""
+	p.sink = ""
+	p.queue2 = NewRBTree()
+	p.queue = nil
+	p.queuestart = -1
+	p.queueend = -1
+	return p
+}
+
+func (g *DijGraph) SetSource(source string) {
+	g.source = source
+	return
+}
+
+func (g *DijGraph) SetSink(sink string) {
+	g.sink = sink
+	return
+}
