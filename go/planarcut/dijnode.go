@@ -127,7 +127,7 @@ func (vert *DijVertice) SetNext(pnext *DijVertice) {
 	vert.link_next = pnext
 }
 
-func FormEdgeName(from, to *DijVertice) string {
+func DijFormEdgeName(from, to *DijVertice) string {
 	return fmt.Sprint("%s->%s", from.GetName(), to.GetName())
 }
 
@@ -136,7 +136,7 @@ func NewDijEdge(from, to *DijVertice, length int) *DijEdge {
 	p.from = from
 	p.to = to
 	p.length = length
-	p.name = FormEdgeName(from, to)
+	p.name = DijFormEdgeName(from, to)
 	return p
 }
 
@@ -189,5 +189,46 @@ func (g *DijGraph) SetSource(source string) {
 
 func (g *DijGraph) SetSink(sink string) {
 	g.sink = sink
+	return
+}
+
+func (g *DijGraph) AddEdge(from, to string, caps int) error {
+	fvert, fok := g.verts[from]
+	tvert, tok := g.verts[to]
+	if !fok {
+		fvert = NewDijVertice(from)
+		g.verts[from] = fvert
+		g.vertnum++
+	}
+
+	if !tok {
+		tvert = NewDijVertice(to)
+		g.verts[to] = tvert
+		g.vertnum++
+	}
+
+	e, eok := g.edges[DijFormEdgeName(fvert, tvert)]
+	re, reok := g.edges[DijFormEdgeName(tvert, fvert)]
+	if eok {
+		return fmt.Errorf("%s has already in", DijFormEdgeName(fvert, tvert))
+	}
+
+	if reok {
+		return fmt.Errorf("%s has already in", DijFormEdgeName(tvert, fvert))
+	}
+
+	e = NewDijEdge(fvert, tvert, caps)
+	re = NewDijEdge(tvert, fvert, caps)
+	g.edges[DijFormEdgeName(fvert, tvert)] = e
+	g.edges[DijFormEdgeName(tvert, fvert)] = re
+
+	/*now we should add edge for the */
+	fvert.AddEdge(e)
+	tvert.AddEdge(re)
+	return nil
+}
+
+func (g *Graph) InsertQueue2(vert *Vertice) {
+	g.queue2.Insert(vert)
 	return
 }
