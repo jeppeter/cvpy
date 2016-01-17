@@ -192,7 +192,7 @@ func (g *DijGraph) SetSink(sink string) {
 	return
 }
 
-func (g *DijGraph) AddEdge(from, to string, caps int) error {
+func (g *DijGraph) AddEdge(from, to string, caps,rcaps int) error {
 	fvert, fok := g.verts[from]
 	tvert, tok := g.verts[to]
 	if !fok {
@@ -218,7 +218,7 @@ func (g *DijGraph) AddEdge(from, to string, caps int) error {
 	}
 
 	e = NewDijEdge(fvert, tvert, caps)
-	re = NewDijEdge(tvert, fvert, caps)
+	re = NewDijEdge(tvert, fvert, rcaps)
 	g.edges[DijFormEdgeName(fvert, tvert)] = e
 	g.edges[DijFormEdgeName(tvert, fvert)] = re
 
@@ -285,103 +285,6 @@ func (g *DijGraph) GetQueue() *DijVertice {
 	return retvert
 }
 
-func (g *DijGraph) Dijkstra1() (dist int, err error) {
-	var tvert, cvert, svert, dstvert *DijVertice
-
-	svert, ok := g.verts[g.source]
-	if !ok {
-		return 0, fmt.Errorf("source (%s) not found", g.source)
-	}
-	dstvert, ok = g.verts[g.sink]
-	if !ok {
-		return 0, fmt.Errorf("sink (%s) not found", g.sink)
-	}
-
-	/*init for the */
-	svert.SetDist(0)
-
-	for _, tvert = range g.verts {
-		g.InsertQueue(tvert)
-	}
-	cvert = svert
-
-	for {
-		cvert = g.GetQueue()
-		if cvert == nil {
-			break
-		}
-		log.Printf("get (%s)", cvert.GetName())
-
-		alt := MAXINT
-		for _, e := range cvert.GetEdges() {
-			tvert := e.GetTo()
-			if tvert.IsVisited() {
-				continue
-			}
-			alt = cvert.GetDist() + e.GetLength()
-			if alt < tvert.GetDist() {
-				tvert.SetDist(alt)
-				log.Printf("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
-				tvert.SetPrev(cvert)
-			}
-		}
-	}
-
-	if dstvert.GetPrev() == nil {
-		return 0, fmt.Errorf("(%s->%s) not connected", g.source, g.sink)
-	}
-
-	return dstvert.GetDist(), nil
-}
-
-func (g *DijGraph) Dijkstra2() (dist int, err error) {
-	var tvert, cvert, svert, dstvert *DijVertice
-
-	svert, ok := g.verts[g.source]
-	if !ok {
-		return 0, fmt.Errorf("source (%s) not found", g.source)
-	}
-	dstvert, ok = g.verts[g.sink]
-	if !ok {
-		return 0, fmt.Errorf("sink (%s) not found", g.sink)
-	}
-
-	/*init for the */
-	svert.SetDist(0)
-
-	for _, tvert = range g.verts {
-		g.InsertQueue(tvert)
-	}
-	cvert = svert
-
-	for {
-		cvert = g.GetQueue()
-		if cvert == nil || cvert == dstvert {
-			break
-		}
-		//log.Printf("get (%s)", cvert.GetName())
-
-		alt := MAXINT
-		for _, e := range cvert.GetEdges() {
-			tvert := e.GetTo()
-			if tvert.IsVisited() {
-				continue
-			}
-			alt = cvert.GetDist() + e.GetLength()
-			if alt < tvert.GetDist() {
-				tvert.SetDist(alt)
-				//log.Printf("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
-				tvert.SetPrev(cvert)
-			}
-		}
-	}
-
-	if dstvert.GetPrev() == nil {
-		return 0, fmt.Errorf("(%s->%s) not connected", g.source, g.sink)
-	}
-
-	return dstvert.GetDist(), nil
-}
 
 func (g *DijGraph) Dijkstra() (dist int, err error) {
 	var cvert, svert, dstvert *DijVertice
