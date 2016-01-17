@@ -67,5 +67,7 @@ func (planar *PlanarGraph) preflow() {
 		e.SetCap(w)
 		e.SetRevCap(rw)
 	}
+
+	planar.preflowed = 1
 	return
 }

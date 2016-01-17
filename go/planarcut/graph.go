@@ -533,3 +533,8 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	err = nil
 	return
 }
+
+func (planar *PlanarGraph) GetMaxFlow() (flow int, err error) {
+	planar.preflow()
+
+}
