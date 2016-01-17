@@ -192,7 +192,7 @@ func (g *DijGraph) SetSink(sink string) {
 	return
 }
 
-func (g *DijGraph) AddEdge(from, to string, caps,rcaps int) error {
+func (g *DijGraph) AddEdge(from, to string, caps, rcaps int) error {
 	fvert, fok := g.verts[from]
 	tvert, tok := g.verts[to]
 	if !fok {
@@ -285,7 +285,6 @@ func (g *DijGraph) GetQueue() *DijVertice {
 	return retvert
 }
 
-
 func (g *DijGraph) Dijkstra() (dist int, err error) {
 	var cvert, svert, dstvert *DijVertice
 
@@ -365,5 +364,15 @@ func (g *DijGraph) GetPath() []string {
 		s = append(s, rs[i])
 	}
 	return s
+}
+
+func (g *DijGraph) GetWeigth(name string) int {
+	v, ok := g.verts[name]
+	if !ok {
+		log.Fatalf("can not find %s verts", name)
+		return -1
+	}
+
+	return v.GetDist()
 
 }

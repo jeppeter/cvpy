@@ -13,23 +13,59 @@ func (planar *PlanarGraph) preflow() {
 
 	dijgraph := NewDijGraph()
 
-	for _,e := range planar.edges {
+	for _, e := range planar.edges {
 		/**/
 		srcfidx := e.GetHeadDual().GetIdx()
 		dstfidx := e.GetTailDual().GetIdx()
 
-		dijgraph.AddEdge(fmt.Sprint("%d",srcfidx),fmt.Sprint("%d",dstfidx),e.GetCap(),
+		dijgraph.AddEdge(fmt.Sprint("%d", srcfidx), fmt.Sprint("%d", dstfidx), e.GetCap(),
 			e.GetRevCap())
 	}
+	srcidx := -1
+	sinkidx := -1
 
-	dijgraph.SetSource(fmt.Sprint("%d",planar.sourceid))
-	dijgraph.SetSink(fmt.Sprint("%d",planar.sinkid))
+	infedge = planar.verts[planar.sourceid].GetEdge(0)
+	if infedge.GetTail().GetIdx() == planar.sourceid {
+		srcidx = infedge.GetHeadDual().GetIdx()
+	} else {
+		srcidx = infedge.GetTailDaul().GetIdx()
+	}
+
+	infedge = planar.verts[planar.sinkid].GetEdge(0)
+	if infedge.GetTail().GetIdx() == planar.sinkid {
+		sinkidx = infedge.GetHeadDual().GetIdx()
+	} else {
+		sinkidx = infedge.GetTailDual().GetIdx()
+	}
+
+	dijgraph.SetSource(fmt.Sprint("%d", srcidx))
+	dijgraph.SetSink(fmt.Sprint("%d", sinkidx))
 
 	dijgraph.Dijkstra()
-	
-
 
 	/*we now preflowed the */
-	infedge = planar.edges[planar.sinkid]
+	for _, e := range planar.edges {
+		tailfidx := e.GetTailDual().GetIdx()
+		headfidx := e.GetHeadDual().GetIdx()
 
+		w := e.GetCap()
+		rw := e.GetRevCap()
+
+		ew := dijgraph.GetWeigth(fmt.Sprintf("%d", headfidx)) - dijgraph.GetWeigth(fmt.Sprintf("%d", tailfidx))
+
+		w = w - ew
+		rw = rw + ew
+
+		if w < CAP_EPSILON {
+			w = float64(0.0)
+		}
+
+		if rw < CAP_EPSILON {
+			rw = float64(0.0)
+		}
+
+		e.SetCap(w)
+		e.SetRevCap(rw)
+	}
+	return
 }
