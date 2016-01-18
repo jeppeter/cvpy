@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+//"fmt"
 )
 
 func (planar *PlanarGraph) constructDualTree() {
-
+	return
 }

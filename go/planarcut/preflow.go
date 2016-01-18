@@ -6,7 +6,6 @@ import (
 
 func (planar *PlanarGraph) preflow() {
 	var infedge *Edge
-	var infvert *Vertice
 	if planar.preflowed > 0 {
 		return
 	}
@@ -28,7 +27,7 @@ func (planar *PlanarGraph) preflow() {
 	if infedge.GetTail().GetIdx() == planar.sourceid {
 		srcidx = infedge.GetHeadDual().GetIdx()
 	} else {
-		srcidx = infedge.GetTailDaul().GetIdx()
+		srcidx = infedge.GetTailDual().GetIdx()
 	}
 
 	infedge = planar.verts[planar.sinkid].GetEdge(0)

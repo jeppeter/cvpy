@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func Usage(ec int, format string, a ...interface{}) {
@@ -32,5 +33,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "can not parse %s error(%s)\n", os.Args[1], err.Error())
 		os.Exit(5)
 	}
-	planar.DebugGraph()
+	stime := time.Now()
+	maxflow, err := planar.GetMaxFlow()
+	etime := time.Now()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "can not get maxflow err (%s)\n", err.Error())
+		os.Exit(6)
+	}
+	fmt.Fprintf(os.Stdout, "maxflow %f (%s)\n", maxflow, etime.Sub(stime))
+	return
 }

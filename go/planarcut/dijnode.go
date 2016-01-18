@@ -1,22 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 	"reflect"
-	"strconv"
-	"strings"
-	"time"
 	"unsafe"
 )
 
-const MAXINT int = (1 << 31)
-
 type DijVertice struct {
 	name      string
-	dist      int
+	dist      float64
 	prev      *DijVertice
 	visited   bool
 	edges     []*DijEdge
@@ -27,14 +20,14 @@ type DijVertice struct {
 type DijEdge struct {
 	from   *DijVertice
 	to     *DijVertice
-	length int
+	length float64
 	name   string
 }
 
 func NewDijVertice(name string) *DijVertice {
 	p := &DijVertice{}
 	p.name = name
-	p.dist = MAXINT
+	p.dist = CAP_INF
 	p.prev = nil
 	p.visited = false
 	p.edges = []*DijEdge{}
@@ -73,11 +66,11 @@ func (vert *DijVertice) Less(j RBTreeData) bool {
 	return false
 }
 
-func (vert *DijVertice) GetDist() int {
+func (vert *DijVertice) GetDist() float64 {
 	return vert.dist
 }
 
-func (vert *DijVertice) SetDist(dist int) {
+func (vert *DijVertice) SetDist(dist float64) {
 	vert.dist = dist
 	return
 }
@@ -131,7 +124,7 @@ func DijFormEdgeName(from, to *DijVertice) string {
 	return fmt.Sprint("%s->%s", from.GetName(), to.GetName())
 }
 
-func NewDijEdge(from, to *DijVertice, length int) *DijEdge {
+func NewDijEdge(from, to *DijVertice, length float64) *DijEdge {
 	p := &DijEdge{}
 	p.from = from
 	p.to = to
@@ -148,7 +141,7 @@ func (e *DijEdge) GetTo() *DijVertice {
 	return e.to
 }
 
-func (e *DijEdge) GetLength() int {
+func (e *DijEdge) GetLength() float64 {
 	return e.length
 }
 
@@ -157,15 +150,12 @@ func (e *DijEdge) GetName() string {
 }
 
 type DijGraph struct {
-	edges      map[string]*DijEdge
-	verts      map[string]*DijVertice
-	vertnum    int
-	source     string
-	sink       string
-	queue2     *RBTree
-	queue      []*DijVertice
-	queuestart int
-	queueend   int
+	edges   map[string]*DijEdge
+	verts   map[string]*DijVertice
+	vertnum int
+	source  string
+	sink    string
+	queue2  *RBTree
 }
 
 func NewDijGraph() *DijGraph {
@@ -176,9 +166,6 @@ func NewDijGraph() *DijGraph {
 	p.source = ""
 	p.sink = ""
 	p.queue2 = NewRBTree()
-	p.queue = nil
-	p.queuestart = -1
-	p.queueend = -1
 	return p
 }
 
@@ -192,7 +179,7 @@ func (g *DijGraph) SetSink(sink string) {
 	return
 }
 
-func (g *DijGraph) AddEdge(from, to string, caps, rcaps int) error {
+func (g *DijGraph) AddEdge(from, to string, caps, rcaps float64) error {
 	fvert, fok := g.verts[from]
 	tvert, tok := g.verts[to]
 	if !fok {
@@ -233,36 +220,6 @@ func (g *DijGraph) InsertQueue2(vert *DijVertice) {
 	return
 }
 
-func (g *DijGraph) InsertQueue(vert *DijVertice) {
-	if g.queue == nil {
-		g.queue = make([]*DijVertice, g.vertnum)
-		g.queuestart = 0
-		g.queueend = 0
-		for i := 0; i < g.vertnum; i++ {
-			g.queue[i] = nil
-		}
-	}
-	if g.queueend >= g.vertnum {
-		log.Fatalf("can not insert %s for num (%d)", vert.GetName(), g.vertnum)
-	}
-
-	g.queue[g.queueend] = vert
-	g.queueend++
-
-	return
-}
-
-func (g *DijGraph) ReinsertQueue2(vert *DijVertice) {
-	if vert.IsVisited() {
-		_, err := g.queue2.Delete(vert)
-		if err == nil {
-			g.queue2.Insert(vert)
-		} else {
-			//log.Printf("not delete (%s) ", vert.GetName())
-		}
-	}
-}
-
 func (g *DijGraph) GetQueue2() *DijVertice {
 	var rbdata RBTreeData
 	var pvert *DijVertice
@@ -275,17 +232,7 @@ func (g *DijGraph) GetQueue2() *DijVertice {
 	return pvert
 }
 
-func (g *DijGraph) GetQueue() *DijVertice {
-	var retvert *DijVertice
-	retvert = nil
-	if g.queue != nil && g.queuestart < g.queueend {
-		retvert = g.queue[g.queuestart]
-		g.queuestart++
-	}
-	return retvert
-}
-
-func (g *DijGraph) Dijkstra() (dist int, err error) {
+func (g *DijGraph) Dijkstra() (dist float64, err error) {
 	var cvert, svert, dstvert *DijVertice
 
 	svert, ok := g.verts[g.source]
@@ -299,10 +246,10 @@ func (g *DijGraph) Dijkstra() (dist int, err error) {
 
 	/*init for the */
 	for _, cvert = range g.verts {
-		cvert.SetDist(MAXINT)
+		cvert.SetDist(CAP_INF)
 		cvert.UnVisit()
 	}
-	svert.SetDist(0)
+	svert.SetDist(CAP_ZERO)
 	cvert = svert
 	svert.Visit()
 	g.InsertQueue2(svert)
@@ -366,7 +313,7 @@ func (g *DijGraph) GetPath() []string {
 	return s
 }
 
-func (g *DijGraph) GetWeigth(name string) int {
+func (g *DijGraph) GetWeigth(name string) float64 {
 	v, ok := g.verts[name]
 	if !ok {
 		log.Fatalf("can not find %s verts", name)
