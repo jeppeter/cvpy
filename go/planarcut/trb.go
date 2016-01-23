@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"reflect"
@@ -60,7 +59,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s num\n", os.Args[0])
 		os.Exit(4)
 	}
-	log.SetFlags(log.Lshortfile)
 
 	num, _ := strconv.Atoi(os.Args[1])
 	nums := []*IntData{}

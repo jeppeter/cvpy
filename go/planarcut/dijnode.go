@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"reflect"
 	"unsafe"
 )
@@ -45,7 +45,8 @@ func (vert *DijVertice) TypeName() string {
 func (vert *DijVertice) Equal(j RBTreeData) bool {
 	var jv *DijVertice
 	if vert.TypeName() != j.TypeName() {
-		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		Error("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		os.Exit(5)
 	}
 	jv = ((*DijVertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
 	if jv == vert {
@@ -57,7 +58,8 @@ func (vert *DijVertice) Equal(j RBTreeData) bool {
 func (vert *DijVertice) Less(j RBTreeData) bool {
 	var jv *DijVertice
 	if vert.TypeName() != j.TypeName() {
-		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		Error("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		os.Exit(5)
 	}
 	jv = ((*DijVertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
 	if vert.dist < jv.dist {
@@ -260,12 +262,12 @@ func (g *DijGraph) Dijkstra() (dist float64, err error) {
 			//if cvert == nil {
 			break
 		}
-		//log.Printf("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
+		//Debug("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
 		for _, e := range cvert.GetEdges() {
 			tvert := e.GetTo()
 			alt := cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
-				//log.Printf("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
+				//Debug("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
 				/*we delete it and reinsert it into */
 				_, err := g.queue2.Delete(tvert)
 				tvert.SetDist(alt)
@@ -275,7 +277,7 @@ func (g *DijGraph) Dijkstra() (dist float64, err error) {
 				}
 			}
 			if !tvert.IsVisited() {
-				//log.Printf("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
+				//Debug("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
 				tvert.Visit()
 				g.InsertQueue2(tvert)
 			}
@@ -316,7 +318,8 @@ func (g *DijGraph) GetPath() []string {
 func (g *DijGraph) GetWeigth(name string) float64 {
 	v, ok := g.verts[name]
 	if !ok {
-		log.Fatalf("can not find %s verts", name)
+		Error("can not find %s verts", name)
+		os.Exit(5)
 		return -1
 	}
 

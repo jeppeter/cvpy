@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 )
 
 const RB_BLACK int = 1
@@ -308,13 +308,15 @@ func (rb *RBTree) __delete_elem_case6(elem *RBTreeElem) {
 	parent.SetColor(RB_BLACK)
 	if elem == parent.GetLeft() {
 		if sibling.GetRight().GetColor() != RB_RED {
-			log.Fatalf("(%s) not red", sibling.GetRight().Data.Stringer())
+			Error("(%s) not red", sibling.GetRight().Data.Stringer())
+			os.Exit(5)
 		}
 		sibling.GetRight().SetColor(RB_BLACK)
 		rb.__rotate_left(parent)
 	} else {
 		if sibling.GetLeft().GetColor() != RB_RED {
-			log.Fatalf("(%s) not red", sibling.GetLeft().Data.Stringer())
+			Error("(%s) not red", sibling.GetLeft().Data.Stringer())
+			os.Exit(5)
 		}
 		sibling.GetLeft().SetColor(RB_BLACK)
 		rb.__rotate_right(parent)
@@ -413,11 +415,12 @@ func (rb *RBTree) __delete_one(elem *RBTreeElem) (cnt int, err error) {
 		pred := rb.__max_elem(elem.GetLeft())
 		elem.Data = pred.Data
 		deleteone = pred
-		//log.Printf("change dete to (%s)", deleteone.Data.Stringer())
+		//Debug("change dete to (%s)", deleteone.Data.Stringer())
 	}
 
 	if deleteone.GetRight() != nil && deleteone.GetLeft() != nil {
-		log.Fatalf("not set (%s) has both left and right", deleteone.Data.Stringer())
+		Error("not set (%s) has both left and right", deleteone.Data.Stringer())
+		os.Exit(5)
 	}
 
 	if deleteone.GetRight() == nil {
@@ -471,7 +474,8 @@ func (rb *RBTree) GetMin() RBTreeData {
 
 	_, err := rb.__delete_one(elem)
 	if err != nil {
-		log.Fatal("%s", err.Error())
+		Error("%s", err.Error())
+		os.Exit(5)
 	}
 	return elem.Data
 }
@@ -486,7 +490,8 @@ func (rb *RBTree) GetMax() RBTreeData {
 	}
 	_, err := rb.__delete_one(elem)
 	if err != nil {
-		log.Fatal("%s", err.Error())
+		Error("%s", err.Error())
+		os.Exit(5)
 	}
 	return elem.Data
 }
@@ -505,7 +510,8 @@ func (rb *RBTree) __verify_property1(elem *RBTreeElem) error {
 
 		return rb.__verify_property1(elem.GetRight())
 	}
-	log.Fatalf("(%s) color is (%d)", elem.Data.Stringer(), elem.GetColor())
+	Error("(%s) color is (%d)", elem.Data.Stringer(), elem.GetColor())
+	os.Exit(5)
 	return fmt.Errorf("(%s) color is (%d)", elem.Data.Stringer(), elem.GetColor())
 }
 
@@ -515,7 +521,8 @@ func (rb *RBTree) __verify_property2(elem *RBTreeElem) error {
 	}
 
 	if elem.GetColor() != RB_BLACK {
-		log.Fatalf("(%s) color not black (%d)", elem.Data.Stringer(), elem.GetColor())
+		Error("(%s) color not black (%d)", elem.Data.Stringer(), elem.GetColor())
+		os.Exit(5)
 		return fmt.Errorf("(%s) color not black (%d)", elem.Data.Stringer(), elem.GetColor())
 	}
 	return nil
@@ -528,12 +535,14 @@ func (rb *RBTree) __verify_property4(elem *RBTreeElem) error {
 
 	if elem.GetColor() == RB_RED {
 		if rb.__get_color(elem.GetLeft()) != RB_BLACK {
-			log.Fatalf("(%s).left(%s) = (%d) not black", elem.Data.Stringer(), elem.GetLeft().Data.Stringer(), elem.GetLeft().GetColor())
+			Error("(%s).left(%s) = (%d) not black", elem.Data.Stringer(), elem.GetLeft().Data.Stringer(), elem.GetLeft().GetColor())
+			os.Exit(5)
 			return fmt.Errorf("(%s).left(%s) = (%d) not black", elem.Data.Stringer(), elem.GetLeft().Data.Stringer(), elem.GetLeft().GetColor())
 		}
 
 		if rb.__get_color(elem.GetRight()) != RB_BLACK {
-			log.Fatalf("(%s).right(%s) = (%d) not black", elem.Data.Stringer(), elem.GetRight().Data.Stringer(), elem.GetRight().GetColor())
+			Error("(%s).right(%s) = (%d) not black", elem.Data.Stringer(), elem.GetRight().Data.Stringer(), elem.GetRight().GetColor())
+			os.Exit(5)
 			return fmt.Errorf("(%s).right(%s) = (%d) not black", elem.Data.Stringer(), elem.GetRight().Data.Stringer(), elem.GetRight().GetColor())
 		}
 
@@ -551,7 +560,8 @@ func (rb *RBTree) __verify_property5_recursive(elem *RBTreeElem, cnt int, setcnt
 			*setcnt = cnt
 		}
 		if *setcnt != cnt {
-			log.Fatalf("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
+			Error("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
+			os.Exit(5)
 			return fmt.Errorf("(%s) black count (%d) != setcnt (%d)", elem.Data.Stringer(), cnt, *setcnt)
 		}
 		return nil

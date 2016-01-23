@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -45,7 +44,8 @@ func (vert *Vertice) TypeName() string {
 func (vert *Vertice) Equal(j RBTreeData) bool {
 	var jv *Vertice
 	if vert.TypeName() != j.TypeName() {
-		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		Error("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		os.Exit(5)
 	}
 	jv = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
 	if jv == vert {
@@ -57,7 +57,8 @@ func (vert *Vertice) Equal(j RBTreeData) bool {
 func (vert *Vertice) Less(j RBTreeData) bool {
 	var jv *Vertice
 	if vert.TypeName() != j.TypeName() {
-		log.Fatalf("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		Error("vert (%s) != j (%s)", vert.TypeName(), j.TypeName())
+		os.Exit(5)
 	}
 	jv = ((*Vertice)(unsafe.Pointer((reflect.ValueOf(j).Pointer()))))
 	if vert.dist < jv.dist {
@@ -244,7 +245,8 @@ func (g *Graph) InsertQueue(vert *Vertice) {
 		}
 	}
 	if g.queueend >= g.vertnum {
-		log.Fatalf("can not insert %s for num (%d)", vert.GetName(), g.vertnum)
+		Error("can not insert %s for num (%d)", vert.GetName(), g.vertnum)
+		os.Exit(5)
 	}
 
 	g.queue[g.queueend] = vert
@@ -259,7 +261,7 @@ func (g *Graph) ReinsertQueue2(vert *Vertice) {
 		if err == nil {
 			g.queue2.Insert(vert)
 		} else {
-			//log.Printf("not delete (%s) ", vert.GetName())
+			//Debug("not delete (%s) ", vert.GetName())
 		}
 	}
 }
@@ -311,7 +313,7 @@ func (g *Graph) Dijkstra1() (dist int, err error) {
 		if cvert == nil {
 			break
 		}
-		log.Printf("get (%s)", cvert.GetName())
+		Debug("get (%s)", cvert.GetName())
 
 		alt := MAXINT
 		for _, e := range cvert.GetEdges() {
@@ -322,7 +324,7 @@ func (g *Graph) Dijkstra1() (dist int, err error) {
 			alt = cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
 				tvert.SetDist(alt)
-				log.Printf("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
+				Debug("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
 				tvert.SetPrev(cvert)
 			}
 		}
@@ -360,7 +362,7 @@ func (g *Graph) Dijkstra2() (dist int, err error) {
 		if cvert == nil || cvert == dstvert {
 			break
 		}
-		//log.Printf("get (%s)", cvert.GetName())
+		//Debug("get (%s)", cvert.GetName())
 
 		alt := MAXINT
 		for _, e := range cvert.GetEdges() {
@@ -371,7 +373,7 @@ func (g *Graph) Dijkstra2() (dist int, err error) {
 			alt = cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
 				tvert.SetDist(alt)
-				//log.Printf("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
+				//Debug("set (%s) parent (%s)", tvert.GetName(), cvert.GetName())
 				tvert.SetPrev(cvert)
 			}
 		}
@@ -412,12 +414,12 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 			//if cvert == nil {
 			break
 		}
-		//log.Printf("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
+		//Debug("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
 		for _, e := range cvert.GetEdges() {
 			tvert := e.GetTo()
 			alt := cvert.GetDist() + e.GetLength()
 			if alt < tvert.GetDist() {
-				//log.Printf("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
+				//Debug("set (%s) (%d -> %d)", tvert.GetName(), tvert.GetDist(), alt)
 				/*we delete it and reinsert it into */
 				_, err := g.queue2.Delete(tvert)
 				tvert.SetDist(alt)
@@ -427,7 +429,7 @@ func (g *Graph) Dijkstra() (dist int, err error) {
 				}
 			}
 			if !tvert.IsVisited() {
-				//log.Printf("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
+				//Debug("push into (%s) dist(%d)", tvert.GetName(), tvert.GetDist())
 				tvert.Visit()
 				g.InsertQueue2(tvert)
 			}
@@ -513,7 +515,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s infile\n", os.Args[0])
 		os.Exit(4)
 	}
-	log.SetFlags(log.Lshortfile)
 
 	g := ParseFile(os.Args[1])
 	stime := time.Now()

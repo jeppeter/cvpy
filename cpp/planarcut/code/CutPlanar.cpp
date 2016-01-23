@@ -75,7 +75,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
                            int idxSource, int idxSink, ECheckFlags checkInput)
 {
 
-    int i,j;
+    int i;
     nVerts = numVerts; verts = vertexList;
     nEdges = numEdges; edges = edgeList;
     nFaces = numFaces; faces = faceList;
@@ -141,10 +141,8 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
 
     }
 
-    DEBUG_OUT("capEps %f\n",(float)capEps);
     capEps = capMin / (capEps * 2);
-    DEBUG_OUT("capEps %f\n",(float)capEps);
-
+ 
     if (capEps == 0)   //the graph completely consists of zero edges
         capEps = 0.1;
 
@@ -162,12 +160,8 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
 
     }
 
-    for (i=0;i<nVerts;i++){
-        for (j=0;j<verts[i].getNumEdges();j++){
-            DEBUG_OUT("[%d].edge[%d] %d\n",i,j,verts[i].getEdge(j)->idx);
-        }        
-    }
 
+#if 0
     DEBUG_OUT("sourceID %d sinkID %d\n",sourceID,sinkID);
     for (i=0;i<nEdges;i++){
         CapType cap, rcap;
@@ -185,7 +179,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
             edges[i].getHeadDual()->idx,
             edges[i].getTailDual()->idx);        
     }
-
+#endif
 }
 
 
