@@ -258,8 +258,8 @@ func (g *DijGraph) Dijkstra() (dist float64, err error) {
 
 	for {
 		cvert = g.GetQueue2()
-		if cvert == nil || cvert == dstvert {
-			//if cvert == nil {
+		//if cvert == nil || cvert == dstvert {
+		if cvert == nil {
 			break
 		}
 		//Debug("get (%s) dist (%d)", cvert.GetName(), cvert.GetDist())
