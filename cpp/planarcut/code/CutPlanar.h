@@ -121,6 +121,8 @@ private:
 
     //constructs the primal and dual spanning trees used by maxflow()
     void constructSpanningTrees();
+    void debugGraph();
+    void formatCapString(char* str,int strsize,CapType cap);
 };
 
 

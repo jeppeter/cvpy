@@ -102,12 +102,14 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     //determine minimum weight that is considered = infinity...
     for (i = 0, e = edges; i < numEdges; i++, e++) {
         cap = e->getCapacity();
-        if (cap != CAP_INF)
+        if (cap != CAP_INF){
             capInf += cap;
+        }
 
         cap = e->getRevCapacity();
-        if (cap != CAP_INF)
+        if (cap != CAP_INF){
             capInf += cap;
+        }
     }
 
     capInf += 1.;
@@ -142,7 +144,7 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
     }
 
     capEps = capMin / (capEps * 2);
- 
+
     if (capEps == 0)   //the graph completely consists of zero edges
         capEps = 0.1;
 
@@ -159,27 +161,53 @@ void CutPlanar::initialize(int numVerts, PlanarVertex *vertexList,
         }
 
     }
+    this->debugGraph();
 
+}
 
-#if 0
-    DEBUG_OUT("sourceID %d sinkID %d\n",sourceID,sinkID);
-    for (i=0;i<nEdges;i++){
-        CapType cap, rcap;
-        cap = edges[i].getCapacity();
-        rcap = edges[i].getRevCapacity();
-        DEBUG_OUT("[%d] flags(0x%08x) .cap %f .rcap %f head %d([%d][%d]) tail %d([%d][%d]) headdual %d taildual %d\n", edges[i].idx,
-            (int) edges[i].getFlags(), 
-            (float)cap,(float)rcap,
-            edges[i].getHead()->idx,
-            edges[i].getHead()->GetY(),
-            edges[i].getHead()->GetX(),
-            edges[i].getTail()->idx,
-            edges[i].getTail()->GetY(),
-            edges[i].getTail()->GetX(),
-            edges[i].getHeadDual()->idx,
-            edges[i].getTailDual()->idx);        
+void CutPlanar::formatCapString(char* str, int strsize, CapType cap)
+{
+    if (cap == CAP_INF) {
+        _snprintf(str, strsize, "CAP_INF");
+    } else if (fabs((float)cap) <= EPSILON) {
+        _snprintf(str, strsize, "CAP_EPSILON");
+    } else {
+        _snprintf(str,strsize, "%f", (float)cap);
     }
-#endif
+    return;
+}
+
+
+void CutPlanar::debugGraph()
+{
+    int i, j;
+
+    for (i = 0; i < this->nVerts; i++) {
+        for (j = 0; j < this->verts[i].getNumEdges(); j++) {
+            DEBUG_OUT("[%d].edge[%d] %d\n", i, j, this->verts[i].getEdge(j)->idx);
+        }
+    }
+    DEBUG_OUT("sourceID %d sinkID %d\n", sourceID, sinkID);
+    for (i = 0; i < this->nEdges; i++) {
+        CapType cap, rcap;
+        char capstr[32], rcapstr[32];
+        cap = this->edges[i].getCapacity();
+        rcap = this->edges[i].getRevCapacity();
+        this->formatCapString(capstr,sizeof(capstr),cap);
+        this->formatCapString(rcapstr,sizeof(rcapstr),rcap);
+        DEBUG_OUT("[%d] flags(0x%08x) .cap %s .rcap %s head %d([%d][%d]) tail %d([%d][%d]) headdual %d taildual %d\n", edges[i].idx,
+                  (int) edges[i].getFlags(),
+                  capstr, rcapstr,
+                  this->edges[i].getHead()->idx,
+                  edges[i].getHead()->GetY(),
+                  edges[i].getHead()->GetX(),
+                  edges[i].getTail()->idx,
+                  edges[i].getTail()->GetY(),
+                  edges[i].getTail()->GetX(),
+                  edges[i].getHeadDual()->idx,
+                  edges[i].getTailDual()->idx);
+    }
+    return;
 }
 
 
@@ -622,19 +650,21 @@ void CutPlanar::preFlow()
 
         srcFaceIdx = getFaceIdx(edges[i].getTailDual());
         dstFaceIdx = getFaceIdx(edges[i].getHeadDual());
-        DEBUG_OUT("srcFaceIdx[%d] -> dstFaceIdx[%d] edges[%d].cap %f\n", srcFaceIdx, dstFaceIdx, i, edges[i].getCapacity());
 
         graph.addEdge(cgNodes[srcFaceIdx],
                       cgNodes[dstFaceIdx],
                       edges[i].getCapacity());
 
-        DEBUG_OUT("dstFaceIdx[%d] -> srcFaceIdx[%d] edges[%d].recap %f\n", dstFaceIdx, srcFaceIdx, i, edges[i].getRevCapacity());
         graph.addEdge(cgNodes[dstFaceIdx],
                       cgNodes[srcFaceIdx],
                       edges[i].getRevCapacity());
 
+        DEBUG_OUT("%d -> %d .cap %f .rcap %f\n",
+                  srcFaceIdx, dstFaceIdx, (float)edges[i].getCapacity(), (float)edges[i].getRevCapacity());
+
     }
 
+    DEBUG_OUT("infFaceIdx %d\n",infFaceIdx);
     graph.runDijkstra(cgNodes[infFaceIdx]);
 
     int faceTIdx, faceHIdx;

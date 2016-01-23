@@ -14,11 +14,12 @@ func (planar *PlanarGraph) preflow() {
 
 	for _, e := range planar.edges {
 		/**/
-		srcfidx := e.GetHeadDual().GetIdx()
-		dstfidx := e.GetTailDual().GetIdx()
+		srcfidx := e.GetTailDual().GetIdx()
+		dstfidx := e.GetHeadDual().GetIdx()
 
 		dijgraph.AddEdge(fmt.Sprint("%d", srcfidx), fmt.Sprint("%d", dstfidx), e.GetCap(),
 			e.GetRevCap())
+		Debug("%d -> %d .cap %f .rcap %f", srcfidx, dstfidx, e.GetCap(), e.GetRevCap())
 	}
 	srcidx := -1
 	sinkidx := -1
@@ -37,6 +38,7 @@ func (planar *PlanarGraph) preflow() {
 		sinkidx = infedge.GetTailDual().GetIdx()
 	}
 
+	Debug("infFaceIdx %d", sinkidx)
 	dijgraph.SetSource(fmt.Sprint("%d", srcidx))
 	dijgraph.SetSink(fmt.Sprint("%d", sinkidx))
 

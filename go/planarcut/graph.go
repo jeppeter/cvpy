@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -275,6 +276,15 @@ func NewPlanarGraph() *PlanarGraph {
 	return p
 }
 
+func (planar *PlanarGraph) formatCapString(caps float64) string {
+	if caps == CAP_INF {
+		return "CAP_INF"
+	} else if math.Abs(caps) <= CAP_EPSILON {
+		return "CAP_EPSILON"
+	}
+	return fmt.Sprintf("%f", caps)
+}
+
 func (planar *PlanarGraph) DebugGraph() {
 	for i, v := range planar.verts {
 		for j := 0; j < v.GetEdgeNum(); j++ {
@@ -283,15 +293,8 @@ func (planar *PlanarGraph) DebugGraph() {
 	}
 	fmt.Fprintf(os.Stdout, "sourceid %d sinkid %d\n", planar.sourceid, planar.sinkid)
 	for _, e := range planar.edges {
-		scap := fmt.Sprintf("%f", e.GetCap())
-		srcap := fmt.Sprintf("%f", e.GetRevCap())
-		if e.GetCap() == CAP_INF {
-			scap = "1.#INF00"
-		}
-
-		if e.GetRevCap() == CAP_INF {
-			srcap = "1.#INF00"
-		}
+		scap := planar.formatCapString(e.GetCap())
+		srcap := planar.formatCapString(e.GetRevCap())
 
 		fmt.Fprintf(os.Stdout, "[%d] flags(0x%08x) .cap %s .rcap %s head %d tail %d headdual %d taildual %d\n",
 			e.GetIdx(), e.GetFlags(), scap, srcap, e.GetHead().GetIdx(),
@@ -530,6 +533,7 @@ func MakePlanarGraph(infile string) (planar *PlanarGraph, err error) {
 	planar.sinkid = sinkid
 	planar.SetCounterClockWise()
 	planar.SetCapNormalize()
+	planar.DebugGraph()
 	err = nil
 	return
 }
