@@ -45,14 +45,20 @@ func (planar *PlanarGraph) preflow() {
 	dijgraph.Dijkstra()
 
 	/*we now preflowed the */
-	for _, e := range planar.edges {
+	for i, e := range planar.edges {
 		tailfidx := e.GetTailDual().GetIdx()
 		headfidx := e.GetHeadDual().GetIdx()
+		Debug("edges[%d].TailDual %d HeadDual %d", i, tailfidx, headfidx)
 
 		w := e.GetCap()
 		rw := e.GetRevCap()
+		headw := dijgraph.GetWeigth(fmt.Sprintf("%d", headfidx))
+		tailw := dijgraph.GetWeigth(fmt.Sprintf("%d", tailfidx))
 
-		ew := dijgraph.GetWeigth(fmt.Sprintf("%d", headfidx)) - dijgraph.GetWeigth(fmt.Sprintf("%d", tailfidx))
+		ew := headw - tailw
+		Debug("edge[%d].cap (%f) .rcap (%f) dualgraph nodes[%d].dijkWeight (%f) - nodes[%d].dijkWeight (%f) eta (%f)",
+			i, w, rw, headfidx, headw, tailfidx,
+			tailw, ew)
 
 		w = w - ew
 		rw = rw + ew
