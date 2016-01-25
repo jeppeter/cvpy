@@ -122,7 +122,7 @@ func (vert *Vertice) SetNext(pnext *Vertice) {
 }
 
 func FormEdgeName(from, to *Vertice) string {
-	return fmt.Sprint("%s->%s", from.GetName(), to.GetName())
+	return fmt.Sprintf("%s->%s", from.GetName(), to.GetName())
 }
 
 type Edge struct {

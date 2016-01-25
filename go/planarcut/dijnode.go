@@ -123,7 +123,7 @@ func (vert *DijVertice) SetNext(pnext *DijVertice) {
 }
 
 func DijFormEdgeName(from, to *DijVertice) string {
-	return fmt.Sprint("%s->%s", from.GetName(), to.GetName())
+	return fmt.Sprintf("%s->%s", from.GetName(), to.GetName())
 }
 
 func NewDijEdge(from, to *DijVertice, length float64) *DijEdge {

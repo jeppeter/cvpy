@@ -17,7 +17,7 @@ func (planar *PlanarGraph) preflow() {
 		srcfidx := e.GetTailDual().GetIdx()
 		dstfidx := e.GetHeadDual().GetIdx()
 
-		dijgraph.AddEdge(fmt.Sprint("%d", srcfidx), fmt.Sprint("%d", dstfidx), e.GetCap(),
+		dijgraph.AddEdge(fmt.Sprintf("%d", srcfidx), fmt.Sprintf("%d", dstfidx), e.GetCap(),
 			e.GetRevCap())
 		Debug("%d -> %d .cap %f .rcap %f", srcfidx, dstfidx, e.GetCap(), e.GetRevCap())
 	}
@@ -39,8 +39,8 @@ func (planar *PlanarGraph) preflow() {
 	}
 
 	Debug("infFaceIdx %d", sinkidx)
-	dijgraph.SetSource(fmt.Sprint("%d", srcidx))
-	dijgraph.SetSink(fmt.Sprint("%d", sinkidx))
+	dijgraph.SetSource(fmt.Sprintf("%d", srcidx))
+	dijgraph.SetSink(fmt.Sprintf("%d", sinkidx))
 
 	dijgraph.Dijkstra()
 
@@ -48,7 +48,6 @@ func (planar *PlanarGraph) preflow() {
 	for i, e := range planar.edges {
 		tailfidx := e.GetTailDual().GetIdx()
 		headfidx := e.GetHeadDual().GetIdx()
-		Debug("edges[%d].TailDual %d HeadDual %d", i, tailfidx, headfidx)
 
 		w := e.GetCap()
 		rw := e.GetRevCap()
